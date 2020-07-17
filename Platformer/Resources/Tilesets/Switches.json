@@ -1,0 +1,22 @@
+{
+    "Name": "Dungeon Switches", 
+    "Source": "https://0x72.itch.io/dungeontileset-ii",
+    "License": "CC0",
+    "File": "Resources/Tilesets/Switches.png", 
+    "Width": 16, 
+    "Height": 16, 
+    "Tiles": {
+        "0": {
+            "X": 0, 
+            "Y": 0,
+            "Name": "Off Switch", 
+            "Description": "A red switch in the off position."
+        }, 
+        "1": {
+            "X": 1, 
+            "Y": 0,
+            "Name": "On Switch", 
+            "Description": "A green switch in the on position."
+        }
+	}
+}

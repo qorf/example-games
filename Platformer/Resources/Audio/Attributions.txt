@@ -1,0 +1,61 @@
+PlayerAttack (Weapon_swing6.wav)
+Created by EverHeat, used under Creative Commons Attribution 3.0
+https://freesound.org/people/EverHeat/sounds/205553/
+
+Respawn (Menusound4.wav)
+Created by EverHeat, used under Creative Commons Attribution 3.0
+https://freesound.org/people/EverHeat/sounds/205543/
+
+AltitudeDanger (button.wav)
+Created by Leszek_Szary, dedicated to Public Domain
+https://freesound.org/people/Leszek_Szary/sounds/146718/
+
+AltitudePing (menu click)
+Created by Leszek_Szary, dedicated to Public Domain
+https://freesound.org/people/Leszek_Szary/sounds/146721/
+
+SwitchEffect
+Created from audio by Breviceps (Light Switch (on / off) ) and yummy9987 (Thud3.wav)
+Both effects used under the Public Domain.
+https://freesound.org/people/Breviceps/sounds/457037/
+https://freesound.org/people/yummy9987/sounds/494931/
+
+Wall_Impact (book-impact-02.aif)
+Created by Tritus, used under Creative Commons Attribution 3.0
+https://freesound.org/people/Tritus/sounds/240990/
+
+Ground_Impact (Thump 1.wav)
+Created by _stubb, dedicated to Public Domain
+https://freesound.org/people/_stubb/sounds/389636/
+
+Powerup (Powerup.wav)
+Created by sharesynth, dedicated to Public Domain
+https://freesound.org/people/sharesynth/sounds/341227/
+
+Running (RUNNING 1.wav)
+Created by vmgraw, dedicated to Public Domain
+https://freesound.org/people/vmgraw/sounds/257700/
+
+EdgePing, EdgePingIntermediate, & EdgePingLong (Gunpoint.wav)
+Created by MATRIXXX_, used Creative Commons Attribution 3.0
+https://freesound.org/people/MATRIXXX_/sounds/527850/
+
+Jump (Jump05.wav)
+Created by sharesynth, dedicated to Public Domain
+https://freesound.org/people/sharesynth/sounds/344500/
+
+Victory (Victory Fanfare)
+Created by humanoide9000, used under Creative Commons Attribution 3.0
+https://freesound.org/people/humanoide9000/sounds/466133/
+
+Shimmer (Shimmering Object 3.wav)
+Created by opticaillusions, dedicated to Public Domain
+https://freesound.org/people/opticaillusions/sounds/521884/
+
+Mechanism (chattering teeth - mechanism hit)
+Created by ChrisReierson, used under Creative Commons Attribution 3.0
+https://freesound.org/people/ChrisReierson/sounds/383182/
+
+Ancient Winds by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 3.0
+http://creativecommons.org/licenses/by/3.0/

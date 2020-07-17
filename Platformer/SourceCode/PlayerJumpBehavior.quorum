@@ -1,0 +1,14 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+
+class PlayerJumpBehavior is Behavior
+
+    GameStateManager manager
+
+    action Run(BehaviorEvent event)
+        Main main = cast(Main, manager:GetGame())
+        main:PlayerJump()
+    end
+
+end

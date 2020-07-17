@@ -1,0 +1,42 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.GameStateManager
+use Libraries.Game.Game
+use Libraries.Sound.Audio
+
+class GateSwitchBehavior is Behavior
+
+    boolean triggered = false
+    Array<Item2D> blocks
+    Audio audio = undefined
+
+    action AddBlock(Item2D item)
+        blocks:Add(item)
+    end
+
+    action SetAudio(Audio audio)
+        me:audio = audio
+    end
+
+    action Run(BehaviorEvent event)
+        if triggered
+            return now
+        end
+
+        triggered = true
+
+        GameStateManager manager
+        Game game = manager:GetGame()
+
+        integer counter = 0
+        repeat while counter < blocks:GetSize()
+            game:Remove(blocks:Get(counter))
+            counter = counter + 1
+        end
+
+        audio:Play()
+    end
+
+end

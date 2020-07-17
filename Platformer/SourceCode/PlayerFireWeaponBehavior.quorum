@@ -1,0 +1,21 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+
+class PlayerFireWeaponBehavior is Behavior
+
+    number x = 0
+    number y = 0
+
+    action SetDirection(number x, number y)
+        me:x = x
+        me:y = y
+    end
+
+    action Run(BehaviorEvent event)
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        main:FireProjectile(x, y)
+    end
+
+end

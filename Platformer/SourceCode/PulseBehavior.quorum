@@ -1,0 +1,28 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Math
+
+class PulseBehavior is Behavior
+
+    Drawable drawable
+    Math math
+    number timer = 0
+    number startY = 0
+    number movementY = 5
+
+    action Run(BehaviorEvent event)
+        drawable = cast(Drawable, event:GetItem())
+        startY = drawable:GetY() + movementY
+    end
+
+    action Update(number seconds)
+        timer = timer + seconds / 1.0
+        drawable:SetY(startY + math:Sine(timer) * movementY)
+    end
+
+    action IsFinished returns boolean
+        return false
+    end
+
+end

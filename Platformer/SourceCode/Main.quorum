@@ -1,0 +1,876 @@
+use Libraries.Game.Game
+use Libraries.Game.Scenes.Scene
+use Libraries.System.File
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Vector2
+use Libraries.Game.InputSet
+use Libraries.Game.InputTable
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Interface.Events.CollisionListener2D
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.CollisionEvent2D
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Camera
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.TextureRegion
+use Libraries.Game.Graphics.Texture
+use Libraries.Game.Layer2D
+use Libraries.Containers.Iterator
+use Libraries.Game.Layer
+use Libraries.Sound.Audio
+use Libraries.Sound.Speech
+use Libraries.Compute.Math
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.FramesPerSecondLabel
+
+/*
+    This is a default class for creating a game in Quorum. Note that the Main 
+    action begins by calling StartGame(), which loads a window a game can 
+    be displayed in. The action CreateGame is where the game should load any 
+    assets, like images to be displayed, frames of animation, or sounds to be
+    played. 
+*/
+class Main is Game, CollisionListener2D
+    Drawable player = undefined
+    Camera camera = undefined
+    Camera backgroundCamera = undefined
+    KeyboardEvent keys
+    Vector2 vector
+
+    TextureRegion onSwitchRegion
+    GateSwitchBehavior gateSwitchABehavior
+    BridgeSwitchBehavior bridgeSwitchBBehavior
+    GateSwitchBehavior gateSwitchCBehavior
+    GateSwitchBehavior gateSwitchDBehavior
+    Drawable gateSwitchA = undefined
+    Drawable bridgeSwitchB = undefined
+    Drawable gateSwitchC = undefined
+    Drawable gateSwitchD = undefined
+    Drawable weaponPowerup = undefined
+    Drawable jumpPowerup = undefined
+    Drawable goal = undefined
+
+    TextureRegion weaponRegion
+    number weaponRotationSpeed = -20
+    boolean weaponUnlocked = false
+    boolean doubleJumpUnlocked = false
+    boolean doubleJumpUsed = false
+
+    PlayerFireWeaponBehavior fireLeftBehavior
+    PlayerFireWeaponBehavior fireRightBehavior
+    PlayerFireWeaponBehavior fireUpBehavior
+    PlayerFireWeaponBehavior fireDownBehavior
+    InputSet fireLeftInput
+    InputSet fireRightInput
+    InputSet fireUpInput
+    InputSet fireDownInput
+
+    number movementSpeed = 150
+    PlayerRunBehavior playerRunBehavior
+    InputSet runLeftInput
+    InputSet runRightInput
+
+    boolean jumping = true
+    number jumpSpeed = 250
+    PlayerJumpBehavior playerJumpBehavior
+    InputSet jumpInput
+
+    InputMonitor monitor
+
+    number gravity = -250
+
+    Array<TextureRegion> runFrames
+    Array<boolean> runFlipStates
+    number runAnimationTimerMax = 0.1
+    number runAnimationTimer = runAnimationTimerMax
+    integer runFrameCounter = 0
+
+    Vector2 resetPosition
+    number resetThreshold = -50
+
+    Array<number> heightMap
+    number tileWidth = 32
+    integer startOffset = -7
+    integer mapLength = 1000
+    number maxHeight = 400
+    text floorTileName = "Dirt to Grass - Bottom to Top"
+    text bridgeTileName = "Bridge Block"
+
+    Array<Drawable> projectiles
+
+    Audio respawnSound
+    Audio altitudePing
+    Audio altitudeDanger
+    Audio switchEffect
+    Audio playerAttack
+    Audio wallImpact
+    Audio groundImpact
+    Audio powerupAudio
+    Audio runningAudio
+    Audio edgePing
+    Audio edgePingLong
+    Audio jumpAudio
+    Audio doubleJumpAudio
+    Audio victoryAudio
+    
+    Audio powerupShimmer1
+    Audio powerupShimmer2
+    Audio powerupShimmer3
+    Audio switchMechanism1
+    Audio switchMechanism2
+    Audio switchMechanism3
+    Audio switchMechanism4
+
+    Audio music
+
+    Math math
+    Speech speech
+
+    /*
+        This action, Main, starts our computer program. In Quorum, programs always
+        begin from Main.
+    */
+    action Main
+        SetScreenSize(1200, 800)
+        StartGame()
+    end
+
+    /*
+        Inside of this template, we load up a scene from on disk. The game automatically knows and can read these files.
+    */
+    action CreateGame
+        File file
+        file:SetPath("Scenes/Scene.qs")
+        LoadScene(file)
+
+        file:SetPath("Scenes/Background Scene.qs")
+        LoadScene(file)
+        Layer2D backgroundLayer = undefined
+        Iterator<Layer> layers = GetLayerIterator()
+        repeat while backgroundLayer = undefined
+            Layer layer = layers:Next()
+            if layer:GetName():Contains("Background")
+                backgroundLayer = cast(Layer2D, layer)
+            end
+        end
+
+        RemoveLayer(0)
+        RemoveLayer(backgroundLayer)
+        AddLayer(0, backgroundLayer)
+
+        backgroundLayer:SetColorFilter(0.8, 0.8, 0.8, 1)
+
+        camera = GetCamera2D()
+        backgroundCamera = backgroundLayer:GetCamera()
+
+        AddCollisionListener(me)
+        EnablePhysics2D(true)
+        SetGravity2D(0, gravity)
+
+        player = cast(Drawable, FindItem2DByName("Player"))
+        player:CanRotate(false)
+
+        gateSwitchA = cast(Drawable, FindItem2DByName("Off Switch A"))
+        gateSwitchA:SetCollidable(true)
+
+        bridgeSwitchB = cast(Drawable, FindItem2DByName("Bridge Switch B"))
+        bridgeSwitchB:SetCollidable(true)
+
+        gateSwitchC = cast(Drawable, FindItem2DByName("Gate Switch C"))
+        gateSwitchC:SetCollidable(true)
+
+        gateSwitchD = cast(Drawable, FindItem2DByName("Gate Switch D"))
+        gateSwitchD:SetCollidable(true)
+
+        weaponPowerup = cast(Drawable, FindItem2DByName("Weapon Powerup"))
+        PulseBehavior pulse
+        weaponPowerup:AddBehavior(pulse)
+        weaponPowerup:SetCollidable(true)
+
+        jumpPowerup = cast(Drawable, FindItem2DByName("Jump Powerup"))
+        PulseBehavior pulse2
+        jumpPowerup:AddBehavior(pulse2)
+        jumpPowerup:SetCollidable(true)
+
+        goal = cast(Drawable, FindItem2DByName("Goal"))
+        goal:SetCollidable(true)
+        goal:Hide()
+        PulseBehavior pulse3
+        goal:AddBehavior(pulse3)
+
+        Texture switchTexture
+        switchTexture:LoadFromFile("Resources/Tilesets/Switches.png")
+        onSwitchRegion:LoadTextureRegion(switchTexture, 16, 0, 16, 16)
+
+        Texture weaponTexture
+        weaponTexture:LoadFromFile("Resources/Tilesets/Dungeon.png")
+        weaponRegion:LoadTextureRegion(weaponTexture, 323, 26, 10, 21)
+
+        SetDefaultInputs()
+        LoadAnimationFrames()
+        LoadAudio()
+        LoadTerrain()
+
+        Color color
+        Drawable sky1
+        sky1:Load("Resources/Images/sky1.png")
+        sky1:FlipX()
+        sky1:SetColor(color:White())
+        sky1:SetPosition(-1000, 0)
+        backgroundLayer:Add(0, sky1)
+
+        Drawable sky2
+        sky2:Load("Resources/Images/sky1.png")
+        sky2:SetColor(color:White())
+        sky2:SetPosition(sky1:GetX() + sky1:GetWidth(), 0)
+        backgroundLayer:Add(1, sky2)
+    end
+
+    action SetDefaultInputs
+        runLeftInput:SetKeyboardInput(keys:LEFT)
+        runRightInput:SetKeyboardInput(keys:RIGHT)
+        jumpInput:SetKeyboardInput(keys:SPACE)
+
+        fireLeftInput:SetKeyboardInput(keys:A)
+        fireRightInput:SetKeyboardInput(keys:D)
+        fireUpInput:SetKeyboardInput(keys:W)
+        fireDownInput:SetKeyboardInput(keys:S)
+
+        fireLeftBehavior:SetDirection(-300, 0)
+        fireRightBehavior:SetDirection(300, 0)
+        fireUpBehavior:SetDirection(0, 300)
+        fireDownBehavior:SetDirection(0, -300)
+
+        SetInputs()
+    end
+
+    action SetInputs
+        InputTable table = GetDefaultInputTable()
+        
+        InputSet runLeftStopInput = runLeftInput:Copy()
+        runLeftStopInput:SetInputTrigger(runLeftStopInput:FINISH)
+
+        InputSet runRightStopInput = runRightInput:Copy()
+        runRightStopInput:SetInputTrigger(runRightStopInput:FINISH)
+
+        table:Add(runLeftInput, playerRunBehavior)
+        table:Add(runLeftStopInput, playerRunBehavior)
+        table:Add(runRightInput, playerRunBehavior)
+        table:Add(runRightStopInput, playerRunBehavior)
+        table:Add(fireLeftInput, fireLeftBehavior)
+        table:Add(fireRightInput, fireRightBehavior)
+        table:Add(fireUpInput, fireUpBehavior)
+        table:Add(fireDownInput, fireDownBehavior)
+
+        table:Add(jumpInput, playerJumpBehavior)
+    end
+
+    action LoadAnimationFrames
+        integer width = 24
+        integer height = 24
+        Texture texture
+        texture:LoadFromFile("Resources/Tilesets/Characters.png")
+
+        integer counter = 0
+        repeat while counter < 7
+            TextureRegion region
+            region:LoadTextureRegion(texture, width * counter, height, width, height)
+            runFrames:Add(region)
+            counter = counter + 1
+
+            runFlipStates:Add(false)
+        end
+    end
+
+    action LoadAudio
+        respawnSound:Load("Resources/Audio/Respawn.wav")
+
+        altitudePing:Load("Resources/Audio/AltitudePing.wav")
+        altitudePing:EnableLooping()
+        altitudePing:SetVolume(0.25)
+
+        altitudeDanger:Load("Resources/Audio/AltitudeDanger.wav")
+        altitudeDanger:EnableLooping()
+        altitudeDanger:SetVolume(0.25)
+
+        switchEffect:Load("Resources/Audio/SwitchEffect.wav")
+        gateSwitchABehavior:SetAudio(switchEffect)
+        bridgeSwitchBBehavior:SetAudio(switchEffect)
+        gateSwitchCBehavior:SetAudio(switchEffect)
+        gateSwitchDBehavior:SetAudio(switchEffect)
+
+        playerAttack:Load("Resources/Audio/PlayerAttack.wav")
+
+        wallImpact:Load("Resources/Audio/Wall_Impact.wav")
+        groundImpact:Load("Resources/Audio/Ground_Impact.wav")
+        powerupAudio:Load("Resources/Audio/Powerup.wav")
+
+        runningAudio:Load("Resources/Audio/Running.wav")
+        runningAudio:EnableLooping()
+        edgePing:Load("Resources/Audio/EdgePing.wav")
+        edgePing:EnableLooping()
+        edgePing:SetVolume(0.5)
+        edgePingLong:Load("Resources/Audio/EdgePing.wav")
+        edgePingLong:EnableLooping()
+        edgePingLong:SetPitch(0.7)
+        edgePingLong:SetVolume(0.5)
+
+        jumpAudio:Load("Resources/Audio/Jump.wav")
+        jumpAudio:SetPitch(0.75)
+        jumpAudio:SetVolume(0.75)
+        doubleJumpAudio:Load("Resources/Audio/Jump.wav")
+        doubleJumpAudio:SetVolume(0.75)
+
+        victoryAudio:Load("Resources/Audio/Victory.wav")
+
+        powerupShimmer1:Load("Resources/Audio/Shimmer.wav")
+        powerupShimmer1:EnableLooping()
+        powerupShimmer1:SetVolume(0)
+        powerupShimmer1:Play()
+
+        powerupShimmer2:Load("Resources/Audio/Shimmer.wav")
+        powerupShimmer2:EnableLooping()
+        powerupShimmer2:SetVolume(0)
+        powerupShimmer2:Play()
+
+        powerupShimmer3:Load("Resources/Audio/Shimmer.wav")
+        powerupShimmer3:EnableLooping()
+        powerupShimmer3:SetVolume(0)
+        
+        switchMechanism1:Load("Resources/Audio/Mechanism.wav")
+        switchMechanism1:EnableLooping()
+        switchMechanism1:SetVolume(0)
+        switchMechanism1:Play()
+
+        switchMechanism2:Load("Resources/Audio/Mechanism.wav")
+        switchMechanism2:EnableLooping()
+        switchMechanism2:SetVolume(0)
+        switchMechanism2:SetBalance(1)
+        switchMechanism2:Play()
+
+        switchMechanism3:Load("Resources/Audio/Mechanism.wav")
+        switchMechanism3:EnableLooping()
+        switchMechanism3:SetVolume(0)
+        switchMechanism3:Play()
+
+        switchMechanism4:Load("Resources/Audio/Mechanism.wav")
+        switchMechanism4:EnableLooping()
+        switchMechanism4:SetVolume(0)
+        switchMechanism4:Play()
+
+        music:LoadToStream("Resources/Audio/Ancient Winds.ogg")
+        music:SetVolume(0.5)
+        music:Play()
+    end
+
+    action LoadTerrain
+        integer counter = 0
+        repeat while counter < mapLength
+            heightMap:Add(-1)
+            counter = counter + 1
+        end
+
+        Layer2D layer = GetCurrentLayer2D()
+        Iterator<Item2D> iterator = layer:GetIterator()
+        repeat while iterator:HasNext()
+            Item2D item = iterator:Next()
+            if item:GetName():Contains(floorTileName)
+                integer index = GetHeightMapIndex(item:GetX())
+                heightMap:Set(index, item:GetY() + item:GetHeight())
+            elseif item:GetName():Contains("Gate Block A")
+                gateSwitchABehavior:AddBlock(item)
+            elseif item:GetName():Contains(bridgeTileName + " B")
+                item:EnablePhysics(false)
+                item:Hide()
+                bridgeSwitchBBehavior:AddBlock(item)
+            elseif item:GetName():Contains("Gate Block C")
+                gateSwitchCBehavior:AddBlock(item)
+            elseif item:GetName():Contains("Gate Block D")
+                gateSwitchDBehavior:AddBlock(item)
+            end
+        end
+    end
+
+    action GetHeightMapIndex(number x) returns integer
+        integer index = cast(integer, (x / tileWidth)) - startOffset
+        if index < 0 or index > heightMap:GetSize()
+            index = 0
+        end
+        return index
+    end
+
+    action UpdateHeightMap(Item2D item)
+        integer index = GetHeightMapIndex(item:GetX())
+        heightMap:Set(index, item:GetY() + item:GetHeight())
+    end
+
+    /*
+        The update action is called on every "frame" of animation in a game. This
+        action should be used to do operations on items. So, for example, we 
+        might use this action to change frames of animation, to rotate items, 
+        or to make creatures jump.
+    */
+    action Update(number seconds)
+        if camera = undefined
+            return now
+        end
+
+        music:Stream()
+
+        if player:GetY() < resetThreshold
+            player:SetPosition(resetPosition:GetX(), resetPosition:GetY() + 20)
+            respawnSound:Play()
+        end
+
+        camera:SetPosition(player:GetX(), camera:GetPosition():GetY(), camera:GetPosition():GetZ())
+        backgroundCamera:SetPosition(player:GetX() / 8.0, backgroundCamera:GetPosition():GetY(), backgroundCamera:GetPosition():GetZ())
+
+        if player:GetLinearVelocity():GetX() not= 0
+            if not jumping
+                runAnimationTimer = runAnimationTimer - seconds
+                if runAnimationTimer < 0
+                    runAnimationTimer = runAnimationTimerMax
+                    runFrameCounter = runFrameCounter + 1
+                    if runFrameCounter = runFrames:GetSize()
+                        runFrameCounter = 0
+                    end
+                    LoadAnimationFrame(runFrameCounter)
+                end
+                if runningAudio:IsPlaying() = false
+                    runningAudio:Play()
+                end
+                integer distanceToDrop = GetDistanceToDrop(player:GetLinearVelocity():GetX() > 0)
+                if distanceToDrop = 1
+                    SetActiveEdgePing(edgePing)
+                elseif distanceToDrop = 2
+                    SetActiveEdgePing(edgePingLong)
+                else
+                    SetActiveEdgePing(undefined)
+                end
+            else
+                if runningAudio:IsPlaying()
+                    runningAudio:Stop()
+                end
+                LoadAnimationFrame(6)
+            end
+        else
+            if runningAudio:IsPlaying()
+                runningAudio:Stop()
+            end
+        end
+
+        if not jumping
+            if altitudePing:IsPlaying()
+                altitudePing:Stop()
+            end
+            if altitudeDanger:IsPlaying()
+                altitudeDanger:Stop()
+            end
+        else
+            integer index = GetHeightMapIndex(player:GetX())
+            number height = heightMap:Get(index)
+            if height < 0
+                number value = player:GetY() / (maxHeight * 2)
+                altitudeDanger:SetPitch(1.0 - value)
+                if altitudePing:IsPlaying()
+                    altitudePing:Stop()
+                end
+                if altitudeDanger:IsPlaying() = false
+                    altitudeDanger:Play()
+                end
+            else
+                number value = (player:GetY() - height) / maxHeight
+                altitudePing:SetPitch(1.0 - value)
+                if altitudePing:IsPlaying() = false
+                    altitudePing:Play()
+                end
+                if altitudeDanger:IsPlaying()
+                    altitudeDanger:Stop()
+                end
+            end
+        end
+
+        integer counter = 0
+        repeat while counter < projectiles:GetSize()
+            Drawable projectile = projectiles:Get(counter)
+            if projectile:GetY() > 1000 or projectile:GetY() < resetThreshold
+                RemoveProjectile(projectile)
+            end
+            counter = counter + 1
+        end
+
+        // Spatial audio for the weapon powerup.
+        vector:Set(weaponPowerup:GetX(), weaponPowerup:GetY())
+        number distance = vector:Distance(player:GetX(), player:GetY())
+        number volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 100
+            if volume < 0
+                volume = 0
+            end
+        end
+        powerupShimmer1:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - weaponPowerup:GetX()) / 100
+        powerupShimmer1:SetBalance(balance)
+
+        // Spatial audio for the double jump powerup.
+        vector:Set(jumpPowerup:GetX(), jumpPowerup:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 100
+            if volume < 0
+                volume = 0
+            end
+        end
+        powerupShimmer2:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - jumpPowerup:GetX()) / 100
+        powerupShimmer2:SetBalance(balance)
+
+        // Spatial audio for the goal.
+        vector:Set(goal:GetX(), goal:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 100
+            if volume < 0
+                volume = 0
+            end
+        end
+        powerupShimmer3:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - goal:GetX()) / 100
+        powerupShimmer3:SetBalance(balance)
+
+        // Spatial audio for the first switch.
+        vector:Set(gateSwitchA:GetX(), gateSwitchA:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 350
+            if volume < 0
+                volume = 0
+            end
+        end
+        switchMechanism1:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - gateSwitchA:GetX()) / 100
+          switchMechanism1:SetBalance(balance)
+
+        // Spatial audio for the second switch.
+        // No balance is calculated -- it's guaranteed to play in the right ear due to how the player approaches.
+        vector:Set(bridgeSwitchB:GetX(), bridgeSwitchB:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 350
+            if volume < 0
+                volume = 0
+            end
+        end
+        switchMechanism2:SetVolume(volume)
+
+        // Spatial audio for the third switch.
+        vector:Set(gateSwitchC:GetX(), gateSwitchC:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 350
+            if volume < 0
+                volume = 0
+            end
+        end
+        switchMechanism3:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - gateSwitchC:GetX()) / 100
+        switchMechanism3:SetBalance(balance)
+
+        // Spatial audio for the fourth switch.
+        vector:Set(gateSwitchD:GetX(), gateSwitchD:GetY())
+        distance = vector:Distance(player:GetX(), player:GetY())
+        volume = 1.0
+        if distance > 32
+            volume = 1.0 - (distance - 32) / 450
+            if volume < 0
+                volume = 0
+            end
+        end
+        switchMechanism4:SetVolume(volume)
+
+        balance = 0
+        distance = (player:GetX() - gateSwitchD:GetX()) / 100
+        switchMechanism4:SetBalance(balance)
+    end
+
+    /*
+    Returns how many height-map units it is to the nearest drop. If the nearest drop is more than
+    3 tiles away, returns -1.
+    */
+    action GetDistanceToDrop(boolean toTheRight) returns integer
+        integer direction = 1
+        if toTheRight = false
+            direction = -1
+        end
+
+        integer index = GetHeightMapIndex(player:GetX())
+        number height = heightMap:Get(index)
+
+        integer distanceToDrop = direction
+        check
+            repeat while heightMap:Get(index + distanceToDrop) >= height and math:AbsoluteValue(distanceToDrop) <= 3
+                distanceToDrop = distanceToDrop + direction
+            end
+        detect e
+            return -1
+        end
+
+        distanceToDrop = math:AbsoluteValue(distanceToDrop)
+        if distanceToDrop > 3
+            return -1
+        end
+
+        return distanceToDrop
+    end
+
+    action SetActiveEdgePing(Audio audio)
+        if audio not= edgePing
+            if edgePing:IsPlaying()
+                edgePing:Stop()
+            end
+        end
+        if audio not= edgePingLong
+            if edgePingLong:IsPlaying()
+                edgePingLong:Stop()
+            end
+        end
+
+        if audio not= undefined and audio:IsPlaying() = false
+            audio:Play()
+        end
+    end
+
+    action BeginCollision(CollisionEvent2D event)
+        if event:GetItemA():Equals(player) or event:GetItemB():Equals(player)
+            Item2D other = undefined
+            if event:GetItemA():Equals(player)
+                other = event:GetItemB()
+            elseif event:GetItemB():Equals(player)
+                other = event:GetItemA()
+            end
+    
+            if other:IsShowing() = false
+                return now
+            end
+
+            if (other:GetName():Contains(floorTileName) or other:GetName():Contains(bridgeTileName))
+                if (jumping = true) and (player:GetY() > (other:GetY() + other:GetHeight() / 2.0))
+                    groundImpact:Play()
+                    jumping = false
+                    doubleJumpUsed = false
+                    runFrameCounter = 0
+                    LoadAnimationFrame(runFrameCounter)
+                end
+            elseif (other:GetName():Contains("Dirt") or other:GetName():Contains("Block"))
+                if player:GetLinearVelocity():GetX() not= 0
+                    wallImpact:Play()
+                end
+            elseif other:Equals(gateSwitchA)
+                gateSwitchABehavior:Run(undefined)
+                gateSwitchA:Load(onSwitchRegion)
+                switchMechanism1:Stop()
+            elseif other:Equals(gateSwitchC)
+                gateSwitchCBehavior:Run(undefined)
+                gateSwitchC:Load(onSwitchRegion)
+                switchMechanism3:Stop()
+            elseif other:Equals(gateSwitchD)
+                gateSwitchDBehavior:Run(undefined)
+                gateSwitchD:Load(onSwitchRegion)
+                switchMechanism4:Stop()
+            elseif other:GetName() = "Weapon Powerup"
+                weaponUnlocked = true
+                Remove(other)
+                powerupAudio:Play()
+                powerupShimmer1:Stop()
+                speech:Say("You've found a weapon! Use A and D to throw daggers left and right, or W and S to throw daggers up or down. Use the daggers to hit far away switches!")
+            elseif other:GetName() = "Jump Powerup"
+                doubleJumpUnlocked = true
+                Remove(other)
+                powerupAudio:Play()
+                powerupShimmer2:Stop()
+                powerupShimmer3:Play()
+                speech:Say("You've unlocked the double jump! Use it to jump in mid-air and return to the start!")
+                goal:Show()
+            elseif other:GetName() = "Goal"
+                Remove(other)
+                powerupShimmer3:Stop()
+                victoryAudio:Play()
+                speech:Say("Congratulations! You've won!")
+            end
+        elseif event:GetItemA():GetName():Contains("Projectile") or event:GetItemB():GetName():Contains("Projectile")
+            Drawable projectile = undefined
+            Item2D other = undefined
+            if event:GetItemA():GetName():Contains("Projectile")
+                projectile = cast(Drawable, event:GetItemA())
+                other = event:GetItemB()
+            else
+                other = event:GetItemA()
+                projectile = cast(Drawable, event:GetItemB())
+            end
+
+            if other:Equals(bridgeSwitchB)
+                bridgeSwitchBBehavior:Run(undefined)
+                bridgeSwitchB:Load(onSwitchRegion)
+                switchMechanism2:Stop()
+            elseif other:Equals(gateSwitchC)
+                gateSwitchCBehavior:Run(undefined)
+                gateSwitchC:Load(onSwitchRegion)
+                switchMechanism3:Stop()
+            elseif other:Equals(gateSwitchD)
+                gateSwitchDBehavior:Run(undefined)
+                gateSwitchD:Load(onSwitchRegion)
+                switchMechanism4:Stop()
+            end
+
+            RemoveProjectile(projectile)
+        end
+    end
+
+    action FinishCollision(CollisionEvent2D event)
+        Item2D other = undefined
+        if event:GetItemA():Equals(player)
+            other = event:GetItemB()
+        elseif event:GetItemB():Equals(player)
+            other = event:GetItemA()
+        end
+
+        if other not= undefined
+            if other:IsShowing() = false
+                return now
+            end
+
+            if (other:GetName():Contains(floorTileName) or other:GetName():Contains(bridgeTileName)) and jumping = false
+                integer index = GetHeightMapIndex(player:GetX() + player:GetWidth() / 2.0)
+                number height = heightMap:Get(index)
+                if height < 0 or player:GetY() - height > other:GetHeight()
+                    jumping = true
+                    SetActiveEdgePing(undefined)
+                    runFrameCounter = 6
+                    LoadAnimationFrame(runFrameCounter)
+            
+                    resetPosition:Set(other:GetX(), other:GetY() + other:GetHeight())
+                end
+            end
+        end
+    end
+
+    action RemoveProjectile(Drawable projectile)
+        projectiles:Remove(projectile)
+        Remove(projectile)
+    end
+
+    action UpdatePlayerSpeed
+        number totalSpeed = 0
+        if monitor:IsKeyPressed(runLeftInput:GetInputValue())
+            totalSpeed = -movementSpeed
+        end
+        if monitor:IsKeyPressed(runRightInput:GetInputValue())
+            totalSpeed = totalSpeed + movementSpeed
+        end
+
+        Vector2 velocity
+        velocity:Set(totalSpeed, player:GetLinearVelocity():GetY())
+        player:SetLinearVelocity(velocity)
+
+        if not jumping and totalSpeed = 0
+            runFrameCounter = 0
+            LoadAnimationFrame(runFrameCounter)
+        end
+    end
+
+    action PlayerJump
+        if (jumping and doubleJumpUnlocked = false) or (doubleJumpUnlocked = true and doubleJumpUsed = true)
+            return now
+        end
+
+        Vector2 velocity
+        velocity:Set(player:GetLinearVelocity():GetX(), jumpSpeed)
+        
+        if jumping = false
+            jumping = true
+        else
+            doubleJumpUsed = true
+        end
+
+        SetActiveEdgePing(undefined)
+
+        player:SetLinearVelocity(velocity)
+        runFrameCounter = 6
+        LoadAnimationFrame(runFrameCounter)
+
+        if doubleJumpUsed
+            doubleJumpAudio:Play()
+        else
+            resetPosition:Set(player:GetX(), player:GetY())
+            jumpAudio:Play()
+        end
+    end
+
+    action LoadAnimationFrame(integer counter)
+        player:Load(runFrames:Get(counter))
+        boolean shouldFlip = false
+        if player:GetLinearVelocity():GetX() >= 0
+            shouldFlip = runFlipStates:Get(counter)
+        else
+            shouldFlip = not runFlipStates:Get(counter)
+        end
+
+        if shouldFlip
+            player:FlipX()
+        end
+    end
+
+    action FireProjectile(number x, number y)
+        if weaponUnlocked = false
+            return now
+        end
+
+        Drawable weapon
+        weapon:SetName("Projectile")
+        weapon:Load(weaponRegion)
+
+        if x < 0
+            weapon:SetX(player:GetX() - weapon:GetWidth() - 2)
+        elseif x > 0
+            weapon:SetX(player:GetX() + player:GetWidth() + 2)
+        else
+            weapon:SetX(player:GetX() + player:GetWidth() / 2 - weapon:GetWidth() / 2)
+        end
+
+        if y < 0
+            weapon:SetY(player:GetY() - weapon:GetHeight() - 2)
+        elseif y > 0
+            weapon:SetY(player:GetY() + player:GetHeight() + 2)
+        else
+            weapon:SetY(player:GetY() + player:GetHeight() / 2 - weapon:GetHeight() / 2)
+        end
+
+        weapon:EnablePhysics(true)
+        weapon:SetNonResponsive()
+        weapon:SetAngularVelocity(weaponRotationSpeed)
+
+        Vector2 vector
+        vector:Set(x, y)
+        weapon:SetLinearVelocity(vector)
+        Add(weapon)
+
+        playerAttack:Play()
+    end
+
+end
