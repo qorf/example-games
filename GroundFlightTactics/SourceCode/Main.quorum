@@ -40,7 +40,7 @@ class Main is Game, KeyboardListener
     InputMonitor monitor
 
     boolean isPlayerTurn = false
-    integer currentLevel = 3
+    integer currentLevel = 1
     constant integer totalLevels = 3
 
     action Main
