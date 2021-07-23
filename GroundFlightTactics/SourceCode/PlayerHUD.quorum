@@ -1,0 +1,74 @@
+use Libraries.Game.Graphics.Label
+use Libraries.Interface.Controls.Control
+use Libraries.Interface.Layouts.ManualLayout
+use Libraries.Interface.Controls.Button
+
+class PlayerHUD is Control
+
+    HealthDisplay health
+    MoveDisplay move
+    ShotsDisplay shots
+    Button endTurn
+
+    on create
+        ManualLayout layout
+        SetLayout(layout)
+    end
+
+    action Initialize(Player player)
+        SetPixelHeight(50)
+        SetPercentageWidth(1.0)
+        
+        health:SetPixelX(50)
+        health:SetPixelY(10)
+        health:UpdateHealth(player:GetCurrentHealth(), player:GetMaxHealth())
+        health:SetNextFocus(move)
+        health:SetPreviousFocus(endTurn)
+        Add(health)
+
+        move:SetPixelX(500)
+        move:SetPixelY(10)
+        move:UpdateMove(player:GetMovesLeft(), player:GetMovement())
+        move:SetNextFocus(shots)
+        move:SetPreviousFocus(health)
+        Add(move)
+
+        shots:SetPixelX(900)
+        shots:SetPixelY(10)
+        shots:UpdateShots(player:GetShotsLeft(), player:GetShotsPerTurn())
+        shots:SetNextFocus(endTurn)
+        shots:SetPreviousFocus(move)
+        Add(shots)
+
+        endTurn:SetName(" End Turn ")
+        endTurn:SetFontSize(28)
+        endTurn:SetPixelX(1400)
+        endTurn:SetPixelY(0)
+        endTurn:SetNextFocus(health)
+        endTurn:SetPreviousFocus(shots)
+        endTurn:SetDescription("Ends the turn. This can be done from anywhere with the shortcut CONTROL SPACE.")
+
+        EndTurnBehavior behavior
+        endTurn:SetBehavior(behavior)
+
+        Add(endTurn)
+    end
+
+    action Refresh(Player player)
+        health:UpdateHealth(player:GetCurrentHealth())
+        move:UpdateMove(player:GetMovesLeft())
+        shots:UpdateShots(player:GetShotsLeft())
+    end
+
+    action EndTurn
+        endTurn:Activate()
+    end
+
+    action ElementsFocused returns boolean
+        return health:IsFocused() or move:IsFocused() or shots:IsFocused() or endTurn:IsFocused()
+    end
+
+    action FocusFirstElement
+        health:Focus()
+    end
+end

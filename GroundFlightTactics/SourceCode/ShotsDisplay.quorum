@@ -1,0 +1,34 @@
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Color
+
+class ShotsDisplay is Label
+
+    on create
+        Color color
+        SetColor(color:White())
+        SetAccessibilityCode(parent:Item:CUSTOM)
+        SetFocusable(true)
+
+        SetFontSize(30)
+    end
+
+    integer currentShots = 0
+    integer maxShots = 0
+
+    action UpdateShots(integer current, integer max)
+        currentShots = current
+        maxShots = max
+        UpdateText()
+    end
+
+    action UpdateShots(integer current)
+        currentShots = current
+        UpdateText()
+    end
+
+    private action UpdateText
+        SetText("SHOTS: " + currentShots + " / " + maxShots)
+        SetName(GetText())
+        SetDescription(" ")
+    end
+end

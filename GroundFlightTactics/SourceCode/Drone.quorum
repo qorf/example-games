@@ -1,0 +1,116 @@
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Math
+use Libraries.Compute.Random
+use Libraries.Containers.Array
+
+class Drone is Enemy
+
+    CustomGameManager manager
+    Math math
+    Random random
+
+    action Load(Model model)
+        parent:GameItem:Load(model)
+
+        SetDefaultColors()
+        SetMaxHealth(1)
+    end
+
+    private action SetDefaultColors
+        Color color
+        SetMaterialColor(1, color:Pink())
+        SetMaterialColor(2, color:Red())
+    end
+
+    action GetMovement returns integer
+        return 5
+    end
+
+    action CanMove returns boolean
+        return true
+    end
+
+    action DoMove
+        Player player = manager:GetPlayer()
+        Map map = manager:GetMap()
+
+        Array<Tile> leftTarget = map:FindPath(GetGridX(), GetGridZ(), player:GetGridX() - 1, player:GetGridZ())
+        Array<Tile> rightTarget = map:FindPath(GetGridX(), GetGridZ(), player:GetGridX() + 1, player:GetGridZ())
+        Array<Tile> forwardTarget = map:FindPath(GetGridX(), GetGridZ(), player:GetGridX(), player:GetGridZ() + 1)
+        Array<Tile> backTarget = map:FindPath(GetGridX(), GetGridZ(), player:GetGridX(), player:GetGridZ() - 1)
+
+        Array<Array<Tile>> candidatePaths
+
+        if leftTarget not= undefined
+            candidatePaths:Add(leftTarget)
+        end
+
+        if rightTarget not= undefined
+            candidatePaths:Add(rightTarget)
+        end
+
+        if forwardTarget not= undefined
+            candidatePaths:Add(forwardTarget)
+        end
+
+        if backTarget not= undefined
+            candidatePaths:Add(backTarget)
+        end
+
+        if candidatePaths:IsEmpty()
+            return now
+        end
+
+        ChatterStep chatter
+        chatter:SetItem(me)
+        manager:GetStepProcessor():Add(chatter)
+
+        integer shortestPath = candidatePaths:Get(0):GetSize()
+        integer counter = 1
+        repeat until counter = candidatePaths:GetSize()
+            integer length = candidatePaths:Get(counter):GetSize()
+
+            // If the destination tile is occupied, it's still a viable end point, but we want to heavily disincentivize going here if other, better options are available
+            if candidatePaths:Get(counter):GetFromEnd():GetItem() not= undefined
+                length = length + 100
+            end
+
+            if length > shortestPath
+                candidatePaths:RemoveAt(counter)
+            elseif length < shortestPath
+                shortestPath = length
+                repeat counter times
+                    candidatePaths:RemoveFromFront()
+                end
+                counter = 1
+            else
+                counter = counter + 1
+            end
+        end
+        
+        // If there's only one path, return that. Otherwise, randomly select from the multiple equally close paths.
+        Array<Tile> finalPath = candidatePaths:Get(random:RandomIntegerBetween(0, candidatePaths:GetSize() - 1))
+        
+        // We can't move more than our total movement, so trim the end of the path we want to traverse to fit.
+        // Alternatively, if we ended up with a path that involves ending in an occupied space, we follow as much of the path as possible without doubling up in a spot.
+        integer movement = 5
+        repeat while finalPath:IsEmpty() = false and (finalPath:GetSize() > movement or finalPath:GetFromEnd():GetItem() not= undefined)
+            finalPath:RemoveFromEnd()
+        end
+
+        Move(finalPath)
+    end
+
+    action CanAttack returns boolean
+        return true
+    end
+
+    action DoAttack
+        StepProcessor process = manager:GetStepProcessor()
+        DroneArmStep step
+        step:SetItem(me)
+        process:Add(step)
+    end
+
+end

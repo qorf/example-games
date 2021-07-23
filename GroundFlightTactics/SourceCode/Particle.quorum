@@ -1,0 +1,25 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Vector3
+
+class Particle is Model
+
+    number lifeSpan = 1
+    number currentTime = 0
+
+    action GetLifeSpan returns number
+        return lifeSpan
+    end
+
+    action SetLifeSpan(number lifeSpan)
+        me:lifeSpan = lifeSpan
+    end
+
+    action IsExpired returns boolean
+        return currentTime > lifeSpan
+    end
+
+    action Update(number seconds)
+        currentTime = currentTime + seconds
+    end
+
+end

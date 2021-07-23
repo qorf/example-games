@@ -1,0 +1,190 @@
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Model
+use Libraries.Containers.HashTable
+use Libraries.Compute.Math
+
+class Map
+
+    Array<Array<Tile>> tiles
+
+    // The amounts that need to be added to convert a grid coordinate into a world coordinate.
+    integer offsetX = 0
+    integer offsetZ = 0
+    
+    // The gate needs to be passed as a point of reference.
+    // We use it to determine the difference between the in-game
+    // coordinates and the grid coordinates.
+    action LoadTiles(JavaScriptObjectNotation json, number gateX, number gateZ)
+        Array<text> keys = json:GetKeys()
+        integer i = 0
+        repeat while i < keys:GetSize()
+            JavaScriptObjectNotation row = json:GetObject(keys:Get(i))
+            integer j = 0
+            Array<Tile> array
+            repeat while j < row:GetSize()
+                JavaScriptObjectNotation value = row:Get(j)
+                Tile tile
+                integer tileValue = cast(integer, value:GetNumber())
+
+                if tileValue = tile:GOAL_GATE
+                    offsetX = cast(integer, gateX - j)
+                    offsetZ = cast(integer, gateZ - i)
+                end
+                
+                tile:Load(tileValue, j, i)
+                array:Add(tile)
+                j = j + 1
+            end
+            tiles:Add(array)
+            i = i + 1
+        end
+    end
+
+    action GetTile(integer x, integer y) returns Tile
+        check
+            return tiles:Get(y):Get(x)
+        detect e
+        end
+
+        return undefined
+    end
+    
+    action ToWorldX(number gridX) returns number
+        return gridX + offsetX
+    end
+
+    action ToWorldZ(number gridZ) returns number
+        return gridZ + offsetZ
+    end
+
+    action ToGridX(number worldX) returns integer
+        return cast(integer, worldX - offsetX)
+    end
+
+    action ToGridZ(number worldZ) returns integer
+        return cast(integer, worldZ - offsetZ)
+    end
+
+    action GetWidth returns integer
+        return tiles:Get(0):GetSize()
+    end
+
+    action GetHeight returns integer
+        return tiles:GetSize()
+    end
+
+    /*
+    A path finding algorithm using an implementation of A*.
+    */
+    action FindPath(integer startX, integer startZ, integer endX, integer endZ) returns Array<Tile>
+        if startX < 0 or startX >= GetWidth() or startZ < 0 or startZ >= GetHeight()
+            or endX < 0 or endX >= GetWidth() or endZ < 0 or endZ >= GetHeight()
+            // No viable path can exist that starts or ends in an illegal space.
+            return undefined
+        end
+
+        Array<Tile> path
+
+        Array<Tile> candidates
+        Tile startTile = GetTile(startX, startZ)
+        candidates:Add(startTile)
+
+        HashTable<Tile, Tile> returnRoute
+        HashTable<Tile, number> costToTile
+        costToTile:Add(startTile, 0)
+        
+        HashTable<Tile, number> totalTileCost
+        totalTileCost:Add(startTile, 0)
+
+        Tile goal = GetTile(endX, endZ)
+        Math math
+
+        repeat until candidates:IsEmpty()
+            integer currentIndex = 0
+            number currentCost = 0
+            currentCost = currentCost:GetPositiveInfinityValue()
+
+            // We need the candidate with the lowest total cost so far.
+            // Iterating through the list is absolutely not the ideal way
+            // to do this for performance. Ideally, we'd use a heap or a
+            // similar structure that'd let us find this in O(1).
+            integer i = 0
+            repeat while i < candidates:GetSize()
+                Tile tile = candidates:Get(i)
+                number candidateCost = totalTileCost:GetValue(tile)
+                if candidateCost < currentCost
+                    currentIndex = i
+                    currentCost = candidateCost
+                end
+                i = i + 1
+            end
+
+            Tile current = candidates:Get(currentIndex)
+            if current = goal
+                Tile backTrace = goal
+                repeat until backTrace = undefined
+                    path:AddToFront(backTrace)
+                    if returnRoute:HasKey(backTrace)
+                        backTrace = returnRoute:GetValue(backTrace)
+                    else
+                        backTrace = undefined
+                    end
+                end
+
+                integer k = 0
+                repeat while k < path:GetSize()
+                    Tile tile = path:Get(k)
+                    k = k + 1
+                end
+
+                return path
+            end
+
+            candidates:RemoveAt(currentIndex)
+
+            Array<Tile> newCandidates
+            integer currentX = current:GetX()
+            integer currentZ = current:GetZ()
+            if currentZ > 0
+                newCandidates:Add(GetTile(currentX, currentZ - 1))
+            end
+            if currentZ + 1 < GetHeight()
+                newCandidates:Add(GetTile(currentX, currentZ + 1))
+            end
+            if currentX + 1 < GetWidth()
+                newCandidates:Add(GetTile(currentX + 1, currentZ))
+            end
+            if current:GetX() > 0
+                newCandidates:Add(GetTile(currentX - 1, currentZ))
+            end
+            
+
+            i = 0
+            repeat while i < newCandidates:GetSize()
+                Tile newTile = newCandidates:Get(i)
+                if newTile:IsMovable()
+                    // TO-DO: Consider modifying this to penalize movements that make frequent turns
+                    number candidateCost = costToTile:GetValue(current) + 1
+                    number previousCost = candidateCost:GetPositiveInfinityValue()
+                    if costToTile:HasKey(newTile)
+                        previousCost = costToTile:GetValue(newTile)
+                    end
+
+                    if candidateCost < previousCost
+                        returnRoute:Set(newTile, current)
+                        costToTile:Set(newTile, candidateCost)
+                        totalTileCost:Set(newTile, candidateCost + math:AbsoluteValue(goal:GetX() - newTile:GetX()) + math:AbsoluteValue(goal:GetZ() - newTile:GetZ())              )
+                        if candidates:Has(newTile) = false
+                            candidates:Add(newTile)
+                        end
+                    end
+                end
+                i = i + 1
+            end
+        end
+
+        // No viable path could be found.
+        return undefined
+    end
+end

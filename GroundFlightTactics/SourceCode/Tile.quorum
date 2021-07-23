@@ -1,0 +1,103 @@
+
+
+class Tile
+
+    // Tiles that are movable and provide no cover
+    public constant integer LANDING_PAD = 0
+    public constant integer DESERT = 1
+    public constant integer CONCRETE = 2
+
+    // Tiles that are unmovable, but do not provide cover
+    public constant integer LOW_ROCKS = 20
+    public constant integer STRUTS = 21
+
+    // Tiles which are both unmovable and provide cover
+    public constant integer DENSE_ROCK = 40
+    public constant integer GOAL_GATE = 41
+    public constant integer GENERATOR = 42
+    public constant integer PILLAR = 43
+    public constant integer TALL_ROCKS = 44
+    public constant integer TURRET = 45
+    public constant integer PIPES = 46
+
+    integer type = -1
+
+    integer x = -1
+    integer z = -1
+
+    GameItem item = undefined
+
+    action Load(integer value, integer x, integer z)
+        type = value
+        me:x = x
+        me:z = z
+    end
+
+    action GetName returns text
+        if type = LANDING_PAD
+            return "Landing Pad"
+        elseif type = DESERT
+            return "Sand"
+        elseif type = CONCRETE
+            return "Concrete"
+        elseif type = LOW_ROCKS
+            return "Rocks"
+        elseif type = STRUTS    
+            return "Girder Supports"
+        elseif type = DENSE_ROCK
+            return "Solid Rock"
+        elseif type = GOAL_GATE
+            return "Exit Gate"
+        elseif type = GENERATOR
+            return "Generator"
+        elseif type = PILLAR
+            return "Structure"
+        elseif type = TALL_ROCKS
+            return "Rock Spires"
+        elseif type = TURRET
+            return "Turret"
+        elseif type = PIPES
+            return "Pipes"
+        else
+            return "Unknown Tile"
+        end
+    end
+
+    action IsMovable returns boolean
+        return type < LOW_ROCKS
+    end
+
+    action IsCover returns boolean
+        return type >= DENSE_ROCK
+    end
+
+    action SetItem(GameItem item)
+        if me:item not= undefined and item not= undefined
+            output "WARNING: Replaced item in Tile:SetItem()"
+        end
+
+        me:item = item
+    end
+
+    action GetItem returns GameItem
+        return item
+    end
+
+    action GetX returns integer
+        return x
+    end
+
+    action GetZ returns integer
+        return z
+    end
+
+    action GetWorldX returns number
+        CustomGameManager manager
+        return manager:GetMap():ToWorldX(x)
+    end
+
+    action GetWorldZ returns number
+        CustomGameManager manager
+        return manager:GetMap():ToWorldZ(z)
+    end
+end

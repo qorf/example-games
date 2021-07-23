@@ -1,0 +1,60 @@
+
+class Enemy is GameItem
+
+    integer maxHealth = 1
+    integer health = maxHealth
+    boolean destroyed = false
+
+    CustomGameManager manager
+
+    blueprint action CanMove returns boolean
+
+    blueprint action DoMove
+
+    blueprint action CanAttack returns boolean
+
+    blueprint action DoAttack
+
+    action GetMaxHealth returns integer
+        return maxHealth
+    end
+
+    action SetMaxHealth(integer maxHealth)
+        me:maxHealth = maxHealth
+        SetHealth(health)
+    end
+
+    action GetHealth returns integer
+        return health
+    end
+
+    action SetHealth(integer health)
+        me:health = health
+    end
+
+    action Damage(integer amount)
+        SetHealth(health - amount)
+        if health <= 0
+            Destroy()
+        end
+    end
+
+    action Destroy
+        if destroyed
+            return now
+        else
+            destroyed = true
+        end
+
+        Main main = manager:GetMain()
+        Tile tile = GetTile()
+        main:RemoveEnemy(me)
+
+        main:ExplodeTile(GetTile(), 40)        
+    end
+
+    action IsDestroyed returns boolean
+        return destroyed
+    end
+
+end

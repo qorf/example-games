@@ -1,0 +1,34 @@
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Color
+
+class MoveDisplay is Label
+
+    on create
+        Color color
+        SetColor(color:White())
+        SetFocusable(true)
+        SetAccessibilityCode(parent:Item:CUSTOM)
+
+        SetFontSize(30)
+    end
+
+    integer currentMove = 0
+    integer maxMove = 0
+
+    action UpdateMove(integer current, integer max)
+        currentMove = current
+        maxMove = max
+        UpdateText()
+    end
+
+    action UpdateMove(integer current)
+        currentMove = current
+        UpdateText()
+    end
+
+    private action UpdateText
+        SetText("MOVES: " + currentMove + " / " + maxMove)
+        SetName(GetText())
+        SetDescription(" ")
+    end
+end

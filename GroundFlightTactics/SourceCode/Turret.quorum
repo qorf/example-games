@@ -1,0 +1,168 @@
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+
+class Turret is Enemy
+
+    CustomGameManager manager
+
+    action Load(Model model)
+        parent:GameItem:Load(model)
+
+        SetDefaultColors()
+        SetMaxHealth(100)
+    end
+
+    private action SetDefaultColors
+        Color color
+        SetMaterialColor(3, color:Red())
+    end
+
+    action GetMovement returns integer
+        return 0
+    end
+
+    action CanMove returns boolean
+        return false
+    end
+
+    action DoMove
+        // Do nothing
+    end
+
+    action CanAttack returns boolean
+        Player player = manager:GetPlayer()
+        return CanTargetTile(player:GetTile(), true)
+    end
+
+    action CanTargetTile(Tile tile, boolean friendlyFire) returns boolean
+        integer myX = GetGridX()
+        integer myZ = GetGridZ()
+
+        integer xDirection = 0
+        integer zDirection = 0
+
+        // We must be in the same row or column as the target to fire on it
+        if tile:GetX() = myX
+            if tile:GetZ() < myZ
+                zDirection = -1
+            else
+                zDirection = 1
+            end
+        elseif tile:GetZ() = myZ
+            if tile:GetX() < myX
+                xDirection = -1
+            else
+                xDirection = 1
+            end
+        else
+            return false
+        end
+
+        Map map = manager:GetMap()
+        Tile current = map:GetTile(myX + xDirection, myZ + zDirection)
+        integer i = 1
+        repeat until current = tile
+            if current:IsCover()
+                return false
+            end
+
+            if current:GetItem() is Enemy and friendlyFire = false
+                return false
+            end
+
+            i = i + 1
+            current = map:GetTile(myX + i * xDirection, myZ + i * zDirection)
+        end
+
+        return true
+    end
+
+    action GetActualTarget(Tile tile) returns Tile
+        integer myX = GetGridX()
+        integer myZ = GetGridZ()
+
+        integer xDirection = 0
+        integer zDirection = 0
+
+        // We must be in the same row or column as the target to fire on it
+        if tile:GetX() = myX
+            if tile:GetZ() < myZ
+                zDirection = -1
+            else
+                zDirection = 1
+            end
+        elseif tile:GetZ() = myZ
+            if tile:GetX() < myX
+                xDirection = -1
+            else
+                xDirection = 1
+            end
+        else
+            return undefined
+        end
+
+        Map map = manager:GetMap()
+        Tile current = map:GetTile(myX + xDirection, myZ + zDirection)
+        boolean foundFriendly = false
+        integer i = 1
+        repeat until current = tile or foundFriendly
+            if current:IsCover()
+                return undefined
+            end
+
+            if current:GetItem() is Enemy
+                foundFriendly = true
+            else
+                i = i + 1
+                current = map:GetTile(myX + i * xDirection, myZ + i * zDirection)
+            end
+        end
+
+        return current
+    end
+
+    action DoAttack
+        Player player = manager:GetPlayer()
+        Tile tile = GetActualTarget(player:GetTile())
+        if tile = undefined
+            return now
+        end
+
+        integer newDirection = parent:GameItem:BACK
+        if tile:GetX() < GetGridX()
+            newDirection = parent:GameItem:LEFT
+        elseif tile:GetX() > GetGridX()
+            newDirection = parent:GameItem:RIGHT
+        elseif tile:GetZ() > GetGridZ()
+            newDirection = parent:GameItem:FORWARD
+        end
+
+        StepProcessor processor = manager:GetStepProcessor()
+        integer direction = GetDirection()
+
+        if direction not= newDirection
+            RotationStep step
+            step:SetItem(me)
+    
+            if (direction + 2) mod 4 = newDirection
+                step:SetStepsRight(2)
+            elseif (direction + 1) mod 4 = newDirection
+                step:SetStepsRight(1)
+            else
+                step:SetStepsLeft(1)
+            end
+    
+            processor:Add(step)
+            direction = newDirection
+            SetDirection(direction)
+        end
+
+        FireLasersStep fireStep
+        fireStep:SetItem(me)
+        fireStep:SetTarget(tile:GetItem())
+        fireStep:SetDamageDone(1)
+        fireStep:GetBulletColor():SetColor(1, 0.25, 0.25, 1)
+        processor:Add(fireStep)
+    end
+
+end

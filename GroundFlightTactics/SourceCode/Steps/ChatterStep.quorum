@@ -1,0 +1,29 @@
+use Libraries.Sound.Audio
+
+class ChatterStep is Step
+
+    action Start
+        CustomGameManager manager
+        SoundManager sounds = manager:GetSoundManager()
+        Audio chatter = sounds:GetRandomDroneChatter()
+        chatter:Play()
+    end
+
+    action Update(number seconds)
+
+    end
+
+    action Finish
+
+    end
+
+    action IsFinished returns boolean
+        return true
+    end
+
+    action IsValid returns boolean
+        Enemy enemy = cast(Enemy, GetItem())
+        return enemy:IsDestroyed() = false
+    end
+
+end

@@ -1,0 +1,30 @@
+use Libraries.Compute.Math
+
+class DroneDetonateStep is Step
+
+    CustomGameManager manager
+
+    number waitTime = 0.5
+    number timer = 0
+
+    action Start
+        Drone drone = cast(Drone, GetItem())
+        drone:Destroy()
+    end
+
+    action Update(number seconds)
+        timer = timer + seconds
+    end
+
+    action Finish
+    end
+
+    action IsFinished returns boolean
+        return timer > waitTime
+    end
+
+    action IsValid returns boolean
+        Enemy enemy = cast(Enemy, GetItem())
+        return enemy:IsDestroyed() = false
+    end
+end

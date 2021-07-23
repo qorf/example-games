@@ -1,0 +1,13 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class EndTurnBehavior is Behavior
+
+    CustomGameManager manager
+
+    action Run(BehaviorEvent event)
+        Main main = manager:GetMain()
+        main:EndPlayerTurn()
+    end
+
+end

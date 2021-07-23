@@ -1,0 +1,24 @@
+
+class Step
+
+    GameItem item = undefined
+
+    blueprint action Start
+
+    blueprint action Update(number seconds)
+
+    blueprint action Finish
+
+    blueprint action IsFinished returns boolean
+
+    blueprint action IsValid returns boolean
+
+    action GetItem returns GameItem
+        return item
+    end
+
+    action SetItem(GameItem item)
+        me:item = item
+    end
+
+end

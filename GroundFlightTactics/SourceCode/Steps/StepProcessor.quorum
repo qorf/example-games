@@ -1,0 +1,48 @@
+use Libraries.Containers.Array
+
+class StepProcessor
+
+    Array<Step> queue
+    Step currentStep = undefined
+
+    action Update(number seconds)
+        if currentStep = undefined
+            if queue:IsEmpty()
+                return now
+            else
+                currentStep = queue:RemoveFromFront()
+                if currentStep:IsValid() = false
+                    currentStep = undefined
+                    Update(seconds)
+                end
+                currentStep:Start()
+            end
+        end
+
+        
+        if currentStep:IsFinished()
+            currentStep:Finish()
+            currentStep = undefined
+            Update(seconds)
+        else
+            currentStep:Update(seconds)    
+        end
+    end
+
+    action Add(Step step)
+        queue:Add(step)
+    end
+
+    action AddPriorityStep(Step step)
+        queue:AddToFront(step)
+    end
+
+    action Empty
+        if currentStep not= undefined
+            currentStep:Finish()
+            currentStep = undefined
+        end
+
+        queue:Empty()
+    end
+end

@@ -1,0 +1,46 @@
+use Libraries.Sound.Audio
+
+class BlockingSoundStep is Step
+
+    Audio audio = undefined
+    text sayText = ""
+
+    action Start
+        if sayText not= ""
+            say sayText
+        end
+
+        audio:Play()
+    end
+
+    action Update(number seconds)
+    end
+
+    action Finish
+    end
+
+    action IsFinished returns boolean
+        return audio:IsPlaying() = false
+    end
+
+    action GetAudio returns Audio
+        return audio
+    end
+
+    action SetAudio(Audio audio)
+        me:audio = audio
+    end
+
+    action GetSayText returns text
+        return sayText
+    end
+
+    action SetSayText(text sayText)
+        me:sayText = sayText
+    end
+
+    action IsValid returns boolean
+        return true
+    end
+
+end

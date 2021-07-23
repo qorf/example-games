@@ -1,0 +1,50 @@
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+use Libraries.Sound.Audio
+
+class Generator is GameItem
+
+    boolean isActive = false
+    CustomGameManager manager
+
+    action Load(Model model)
+        parent:GameItem:Load(model)
+
+        SetOffColors()
+    end
+
+    action Deactivate
+        isActive = false
+
+        SetOffColors()
+    end
+
+    private action SetOffColors
+        Color color
+        SetMaterialColor(0, color:Blue())
+        SetMaterialColor(1, color:Gray())
+        SetMaterialColor(2, color:Gray())
+    end
+
+    action Activate
+        if isActive = true
+            return now
+        end
+
+        isActive = true
+
+        Color color
+        SetMaterialColor(0, color:Blue())
+        SetMaterialColor(1, color:Yellow())
+        SetMaterialColor(2, color:Yellow())
+
+        manager:GetMain():GeneratorActivated()
+        
+        Audio audio = manager:GetSoundManager():GetGeneratorActivate()
+        audio:Play()
+    end
+
+    action IsActive returns boolean
+        return isActive
+    end
+end

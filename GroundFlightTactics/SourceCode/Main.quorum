@@ -1,0 +1,469 @@
+use Libraries.Game.Game
+use Libraries.Game.Scenes.Scene
+use Libraries.System.File
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.GraphicsManager
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.Game.Graphics.PerspectiveCamera
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Interface.Layouts.FlowLayout
+use Libraries.Game.Layer3D
+use Libraries.Containers.Iterator
+use Libraries.Game.Graphics.DirectionalLight
+use Libraries.Game.Layer
+use Libraries.Game.Graphics.Camera
+use Libraries.Compute.Vector3
+use Libraries.Game.InputMonitor
+use Libraries.Compute.Random
+
+class Main is Game, KeyboardListener
+
+    Player player = undefined
+    GoalGate goalGate = undefined
+    Array<Generator> generators
+    Array<Enemy> enemies
+    Map map
+    PlayerActionCursor playerCursor
+    StepProcessor stepProcessor
+    PlayerHUD hud
+    SoundManager sounds
+    CameraController camera
+
+    Array<Particle> particles
+    Random random
+
+    // Used only to check for keyboard modifiers when handling keys, e.g. Shift + Tab
+    InputMonitor monitor
+
+    boolean isPlayerTurn = false
+    integer currentLevel = 3
+    constant integer totalLevels = 3
+
+    action Main
+        SetGameName("Ground Flight Tactics")
+        StartGame()
+    end
+
+    action CreateGame
+        SetScreenSize(1600, 1200)
+
+        LoadLevel(currentLevel)
+
+        EnablePhysics3D(true)
+        SetGravity3D(0, -10, 0)
+
+        GameStateManager manager
+        GraphicsManager graphics = manager:GetGameGraphics()
+        graphics:ClearScreenColor(0.1, 0.1, 0.1, 1)
+
+        hud:Initialize(player)
+        FlowLayout layout
+        SetLayout(layout)
+        Add(hud)
+
+        AddKeyboardListener(me)
+    end
+
+    action LoadLevel(integer level)
+        GridPlane plane
+        plane:Load()
+        Add(plane)
+
+        File file
+        file:SetPath("Scenes/Level " + level + ".qs")
+        LoadScene(file)
+
+        File levelFile
+        levelFile:SetPath("MapInfo/Level " + level + ".json")
+        LoadLevel(levelFile)
+
+        sounds:PlayLevelMusic(level)
+    end
+
+    action LoadLevel(File file)
+        // TO-DO: Remove any existing elements here before continuing
+
+        Model gateModel = cast(Model, FindItem3DByName("Goal Gate"))
+        
+        Map map
+        JavaScriptObjectNotation json
+        json:Read(file)
+        map:LoadTiles(json, gateModel:GetX(), gateModel:GetZ())
+        me:map = map
+
+        GoalGate newGate
+        newGate:Load(gateModel)
+        goalGate = newGate
+
+        Model playerModel = cast(Model, FindItem3DByName("Player"))
+        Player newPlayer
+        if player not= undefined
+            // Migrate information, e.g. health or powerups, to new player
+        end
+
+        player = newPlayer
+        player:Load(playerModel)
+        playerCursor:Load()
+        playerCursor:SetX(player:GetModel():GetX())
+        playerCursor:SetZ(player:GetModel():GetZ())
+
+        integer counter = 1
+        Model generatorModel = cast(Model, FindItem3DByName("Generator 1"))
+        repeat until generatorModel = undefined
+            Generator generator
+            generator:Load(generatorModel)
+            generators:Add(generator)
+            counter = counter + 1
+            generatorModel = cast(Model, FindItem3DByName("Generator " + counter))
+        end
+
+        counter = 1
+        Model turretModel = cast(Model, FindItem3DByName("Turret 1"))
+        repeat until turretModel = undefined
+            Turret turret
+            turret:Load(turretModel)
+            enemies:Add(turret)
+            counter = counter + 1
+            turretModel = cast(Model, FindItem3DByName("Turret " + counter))
+        end
+
+        counter = 1
+        Model droneModel = cast(Model, FindItem3DByName("Drone 1"))
+        repeat until droneModel = undefined
+            Drone drone
+            drone:Load(droneModel)
+            enemies:Add(drone)
+            counter = counter + 1
+            droneModel = cast(Model, FindItem3DByName("Drone " + counter))
+        end
+
+        playerCursor:SetGridX(map:ToGridX(playerCursor:GetX()))
+        playerCursor:SetGridZ(map:ToGridZ(playerCursor:GetZ()))
+        Add(playerCursor)
+
+        PerspectiveCamera perspective = cast(PerspectiveCamera, GetCamera3D())
+        camera:Load(perspective, playerCursor)
+
+        EnablePhysics3D(true)
+        SetGravity3D(0, -10, 0)
+
+        isPlayerTurn = true
+        playerCursor:Focus()
+    end
+
+    action ClearLevel
+        Layer3D layer = GetCurrentLayer3D()
+        layer:Empty()
+        generators:Empty()
+    end
+
+    action Update(number seconds)
+        stepProcessor:Update(seconds)
+
+        integer i = 0
+        repeat while i < particles:GetSize()
+            Particle particle = particles:Get(i)
+            if particle:IsExpired()
+                particles:RemoveAt(i)
+                Remove(particle)
+            else
+                i = i + 1
+            end
+        end
+
+        camera:Update(seconds)
+        sounds:Update(seconds)
+    end
+
+    action PressedKey(KeyboardEvent event)
+        integer key = event:keyCode
+
+        if isPlayerTurn = false
+            return now
+        else
+            if key = event:SPACE
+                if monitor:IsKeyPressed(event:CONTROL_LEFT) or monitor:IsKeyPressed(event:CONTROL_RIGHT)
+                    hud:EndTurn()
+                    return now
+                end
+            end
+
+            if playerCursor:HasAccessibilityFocus()
+                if key = event:LEFT
+                    playerCursor:MoveLeft()
+                elseif key = event:RIGHT
+                    playerCursor:MoveRight()
+                elseif key = event:UP
+                    playerCursor:MoveForward()
+                elseif key = event:DOWN
+                    playerCursor:MoveBack()
+                elseif key = event:ENTER or key = event:SPACE
+                    playerCursor:ActivateTile()
+                elseif key = event:TAB
+                    if monitor:IsKeyPressed(event:SHIFT_LEFT) or monitor:IsKeyPressed(event:SHIFT_RIGHT)
+                        TabPriorityBackward()
+                    else
+                        TabPriorityForward()
+                    end
+                elseif key = event:ALT_LEFT or key = event:ALT_RIGHT
+                    hud:FocusFirstElement()
+                end
+
+                RefreshHUD()
+            else
+                if key = event:ALT_LEFT or key = event:ALT_RIGHT or key = event:ESCAPE
+                    playerCursor:Focus()
+                end
+            end
+        end
+    end
+
+    action RefreshHUD
+        hud:Refresh(player)
+    end
+
+    action GetMap returns Map
+        return map
+    end
+
+    action GetPlayer returns Player
+        return player
+    end
+
+    action GetPlayerCursor returns PlayerActionCursor
+        return playerCursor
+    end
+
+    action GetStepProcessor returns StepProcessor
+        return stepProcessor 
+    end
+
+    action GeneratorActivated
+        integer i = 0
+        repeat while i < generators:GetSize()
+            if generators:Get(i):IsActive() = false
+                return now
+            end
+            i = i + 1
+        end
+
+        goalGate:Enable()
+    end
+
+    action LevelComplete
+        currentLevel = currentLevel + 1
+        sounds:StopMusic()
+
+        if currentLevel <= totalLevels
+            ClearLevel()
+            Iterator<DirectionalLight> lights = GetDirectionalLights()
+            repeat while lights:HasNext()
+                DirectionalLight light = lights:Next()
+                Remove(light)
+            end
+            Camera camera = GetCamera2D()
+            Vector3 position
+            position:Set(camera:GetPosition():GetX(), camera:GetPosition():GetY(), camera:GetPosition():GetZ())
+            Vector3 direction
+            direction:Set(camera:GetDirection():GetX(), camera:GetDirection():GetY(), camera:GetDirection():GetZ())
+            Vector3 up
+            up:Set(camera:GetUp():GetX(), camera:GetUp():GetY(), camera:GetUp():GetZ())
+            number width = camera:GetWidth()
+            number height = camera:GetHeight()
+            number near = camera:GetNear()
+            number far = camera:GetFar()
+            number zoom = camera:GetZoom()
+
+            Remove(hud)
+            LoadLevel(currentLevel)
+            camera = cast(PerspectiveCamera, GetCamera3D())
+            camera:SetSize(GetScreenWidth(), GetScreenHeight())
+
+            Camera camera2D = GetCamera2D()
+            camera2D:SetPosition(position)
+            camera2D:SetDirection(direction)
+            camera2D:SetUp(up)
+            camera2D:SetSize(width, height)
+            camera2D:SetNear(near)
+            camera2D:SetFar(far)
+            camera2D:SetZoom(zoom)
+
+            Add(hud)
+        else
+            output "You've won! That was the last level!"
+        end
+    end
+
+    action EndPlayerTurn
+        isPlayerTurn = false
+        playerCursor:Hide()
+        
+        BeginEnemyTurn()
+
+        CameraPanStep panStep
+        panStep:SetNewTarget(player:GetModel())
+        stepProcessor:Add(panStep)
+
+        BeginPlayerTurnStep playerStep
+        stepProcessor:Add(playerStep)
+    end
+
+    private action BeginEnemyTurn
+        integer i = 0
+        repeat while i < enemies:GetSize()
+            Enemy enemy = enemies:Get(i)
+
+            if enemy:CanMove() or enemy:CanAttack()
+                CameraPanStep step
+                step:SetNewTarget(enemy:GetModel())
+                stepProcessor:Add(step)
+            end
+
+            if enemy:CanMove()
+                enemy:DoMove()
+            end
+
+            if enemy:CanAttack()
+                enemy:DoAttack()
+            end
+            i = i + 1
+        end
+    end
+
+    action BeginPlayerTurn
+        playerCursor:JumpTo(player)
+        playerCursor:Show()
+        camera:SetTarget(playerCursor)
+        isPlayerTurn = true
+        player:StartOfTurnReset()
+        playerCursor:Focus()
+        RefreshHUD()
+    end
+
+    action TabPriorityForward
+        GameItem item = playerCursor:GetTile():GetItem()
+        if item = undefined
+            playerCursor:JumpTo(player)
+        end
+
+        Array<GameItem> array = GetPriorityItems()
+        
+        integer index = array:GetFirstLocation(item)
+        if index < 0
+            playerCursor:JumpTo(player)
+        end
+
+        index = index + 1
+        if index >= array:GetSize()
+            index = 0
+        end
+
+        playerCursor:JumpTo(array:Get(index))
+    end
+
+    action TabPriorityBackward
+        GameItem item = playerCursor:GetTile():GetItem()
+        if item = undefined
+            playerCursor:JumpTo(player)
+        end
+
+        Array<GameItem> array = GetPriorityItems()
+        
+        integer index = array:GetFirstLocation(item)
+        if index < 0
+            playerCursor:JumpTo(player)
+        end
+
+        index = index - 1
+        if index < 0
+            index = array:GetSize() - 1
+        end
+
+        playerCursor:JumpTo(array:Get(index))
+    end
+
+    action GetPriorityItems returns Array<GameItem>
+        Array<GameItem> array
+        array:Add(player)
+        array:Add(goalGate)
+        
+        integer i = 0
+        repeat while i < generators:GetSize()
+            array:Add(generators:Get(i))
+            i = i + 1
+        end
+
+        i = 0
+        repeat while i < enemies:GetSize()
+            array:Add(enemies:Get(i))
+            i = i + 1
+        end
+
+        return array
+    end
+
+    action ExplodeTile(Tile tile, number particleCount)
+        Color color
+        integer i = 0
+        repeat while i < particleCount
+            Particle mote
+            mote:LoadSphere(0.1, 0.1, 0.1, color:Yellow())
+            particles:Add(mote)
+
+            mote:SetLifeSpan(3)
+            mote:SetPosition(map:ToWorldX(tile:GetX()), 0, map:ToWorldZ(tile:GetZ()))
+            mote:EnablePhysics(true)
+            mote:SetResponsive()
+            mote:SetCollidable(false)
+            Vector3 vector
+            vector:SetX((random:RandomNumber() - 0.5) * 250)
+            vector:SetY(random:RandomNumber() * 150 + 350)
+            vector:SetZ((random:RandomNumber() - 0.5) * 250)
+            
+            Add(mote)
+
+            mote:ApplyForceToCenter(vector)
+
+            i = i + 1
+        end
+
+        Tile leftTile = map:GetTile(tile:GetX() - 1, tile:GetZ())
+        Tile rightTile = map:GetTile(tile:GetX() + 1, tile:GetZ())
+        Tile frontTile = map:GetTile(tile:GetX(), tile:GetZ() + 1)
+        Tile backTile = map:GetTile(tile:GetX(), tile:GetZ() - 1)
+
+        if leftTile not= undefined and leftTile:GetItem() not= undefined
+            leftTile:GetItem():Damage(1)
+        end
+        if rightTile not= undefined and rightTile:GetItem() not= undefined
+            rightTile:GetItem():Damage(1)
+        end
+        if frontTile not= undefined and frontTile:GetItem() not= undefined
+            frontTile:GetItem():Damage(1)
+        end
+        if backTile not= undefined and backTile:GetItem() not= undefined
+            backTile:GetItem():Damage(1)
+        end
+
+        sounds:GetExplosion():Play()
+    end
+
+    action RemoveEnemy(Enemy enemy)
+        enemies:Remove(enemy)
+        Remove(enemy:GetModel())
+        enemy:GetTile():SetItem(undefined)
+    end
+
+    action GetSoundManager returns SoundManager
+        return sounds
+    end
+
+    action GetCameraController returns CameraController
+        return camera
+    end
+
+end

@@ -1,0 +1,37 @@
+
+class AccessibilityNotifyStep is Step
+
+    text message = ""
+    
+
+    action Start
+        CustomGameManager manager
+        PlayerActionCursor cursor = manager:GetPlayerCursor()
+        cursor:UpdateAccessibility(message)
+    end
+
+    action Update(number seconds)
+
+    end
+
+    action Finish
+
+    end
+
+    action IsFinished returns boolean
+        return true
+    end
+
+    action GetMessage returns text
+        return message
+    end
+
+    action SetMessage(text message)
+        me:message = message
+    end
+    
+    action IsValid returns boolean
+        return true
+    end
+
+end

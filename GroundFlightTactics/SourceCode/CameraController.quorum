@@ -1,0 +1,113 @@
+use Libraries.Game.Graphics.PerspectiveCamera
+use Libraries.Interface.Item3D
+use Libraries.Compute.Vector3
+use Libraries.Compute.Matrix4
+use Libraries.Compute.Quaternion
+
+class CameraController
+
+    PerspectiveCamera camera = undefined
+    Item3D target = undefined
+
+    // A matrix storing the rotation component of the assigned yaw/pitch.
+    Matrix4 rotationMatrix
+
+    // A reusable quaternion used to recalculate the rotation matrix when the yaw/pitch changes.
+    Quaternion calcQuaternion
+
+    // Reusable vectors used for calculations.
+    Vector3 calcVector1
+    Vector3 calcVector2
+
+    number distance = 10
+
+    // Euler angle values used for rotation.
+    number yaw = -45
+    number pitch = 65
+    number roll = 0
+
+    boolean isPanning = false
+
+    action Load(PerspectiveCamera camera, Item3D target)
+        me:camera = camera
+        me:target = target
+        
+        calcQuaternion:SetEulerAngles(yaw, pitch, roll)
+        rotationMatrix:Set(calcQuaternion)
+
+        // The raw values are used to position the camera in UpdateCameraPosition.
+        // We pass the negative values here to make the camera look back at the focus position.
+        camera:SetYawPitchRoll(-yaw, -pitch, -roll)
+
+        calcVector1:Set(0, 0, -distance)
+        // The position stored in calcVector1 is transformed by our precomputed rotations and stored in calcVector2.
+        rotationMatrix:TransformWorldCoordinate(calcVector1, calcVector2)
+
+        camera:SetPosition(calcVector2)
+        UpdateCameraRotation()
+    end
+
+    action Load(PerspectiveCamera camera, GameItem item)
+        Load(camera, item:GetModel())
+    end
+
+    action Update(number seconds)
+        if isPanning = false
+            if target not= undefined
+                UpdateCameraPosition()
+            end
+        end
+    end
+
+    private action UpdateCameraRotation
+        calcQuaternion:SetEulerAngles(yaw, pitch, roll)
+        rotationMatrix:Set(calcQuaternion)
+
+        // The raw values are used to position the camera in UpdateCameraPosition.
+        // We pass the negative values here to make the camera look back at the focus position.
+        camera:SetYawPitchRoll(yaw, -pitch, roll)
+
+        UpdateCameraPosition()
+    end
+
+    action UpdateCameraPosition
+        if target = undefined
+            return now
+        end
+
+        calcVector1:Set(0, 0, -distance)
+        calcVector2:Set(0, 0, 0)
+        // The position stored in calcVector1 is transformed by our precomputed rotations and stored in calcVector2.
+        rotationMatrix:TransformWorldCoordinate(calcVector1, calcVector2)
+
+        calcVector1:Set(target:GetPosition())
+        calcVector1:Add(calcVector2)
+
+        camera:SetPosition(calcVector1)
+        camera:Update()
+    end
+
+    action GetCamera returns PerspectiveCamera
+        return camera
+    end
+
+    action GetTarget returns Item3D
+        return target
+    end
+
+    action SetTarget(Item3D target)
+        me:target = target
+        if isPanning = false
+            UpdateCameraRotation()
+        end
+    end
+
+    action SetPanning(boolean panning)
+        isPanning = panning
+    end
+
+    action IsPanning returns boolean
+        return isPanning
+    end
+
+end

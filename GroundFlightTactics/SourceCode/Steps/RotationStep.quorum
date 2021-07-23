@@ -1,0 +1,67 @@
+use Libraries.Game.Graphics.Model
+
+class RotationStep is Step
+
+    number targetYaw = 0
+    integer steps = 0
+    number direction = 1
+    number yawTraveled = 0
+    number currentYaw = 0
+    boolean done = false
+
+    number speed = 720
+
+    action SetStepsLeft(integer steps)
+        me:steps = steps
+        direction = 1
+    end
+    
+    action SetStepsRight(integer steps)
+        me:steps = steps
+        direction = -1
+    end
+
+    action Start
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+
+        currentYaw = model:GetYaw()
+        if currentYaw < 0
+            currentYaw = currentYaw + 360
+        end
+
+        targetYaw = currentYaw + (direction * steps * 90)
+    end
+
+    action Update(number seconds)
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+
+        number value = speed * seconds
+        yawTraveled = yawTraveled + value
+        if yawTraveled > (steps * 90)
+            model:SetYawPitchRoll(targetYaw, 0, 0)
+            done = true
+        else
+            currentYaw = currentYaw + direction * value
+            model:SetYawPitchRoll(currentYaw, 0, 0)
+        end
+    end
+
+    action Finish
+
+    end
+
+    action IsFinished returns boolean
+        return done
+    end
+
+    action IsValid returns boolean
+        if GetItem() is Enemy
+            Enemy enemy = cast(Enemy, GetItem())
+            return enemy:IsDestroyed() = false
+        else
+            return true
+        end
+    end
+end

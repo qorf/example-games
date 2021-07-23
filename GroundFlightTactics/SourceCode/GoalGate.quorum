@@ -1,0 +1,45 @@
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+use Libraries.Sound.Audio
+
+class GoalGate is GameItem
+
+    boolean isEnabled = false
+
+    action Load(Model model)
+        parent:GameItem:Load(model)
+
+        SetOffColors()
+    end
+
+    action Deactivate
+        isActive = false
+
+        SetOffColors()
+    end
+
+    private action SetOffColors
+        Color color
+        SetMaterialColor(1, color:Gray())
+        SetMaterialColor(2, color:DarkGray())
+        SetMaterialColor(3, color:DarkGray())
+    end
+
+    action Enable
+        isEnabled = true
+
+        Color color
+        SetMaterialColor(1, color:White())
+        SetMaterialColor(2, color:Yellow())
+        SetMaterialColor(3, color:Yellow())
+
+        CustomGameManager manager
+        SoundManager sounds = manager:GetSoundManager()
+        Audio audio = sounds:GetGateEnabled()
+        audio:Play()
+    end
+
+    action IsEnabled returns boolean
+        return isEnabled
+    end
+end

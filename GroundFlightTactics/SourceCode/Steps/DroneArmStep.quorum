@@ -1,0 +1,54 @@
+use Libraries.Compute.Math
+use Libraries.Sound.Audio
+
+class DroneArmStep is Step
+
+    CustomGameManager manager
+    Math math
+    Audio audio = undefined
+
+    boolean inRange = false
+
+    action Start
+        GameItem drone = GetItem()
+        Player player = manager:GetPlayer()
+        number playerX = player:GetGridX()
+        number playerZ = player:GetGridZ()
+        number gridX = drone:GetGridX()
+        number gridZ = drone:GetGridZ()
+        number distance = math:AbsoluteValue(playerX - gridX) + math:AbsoluteValue(playerZ - gridZ)
+        inRange = (distance = 1)
+
+        if inRange
+            DroneDetonateStep step
+            step:SetItem(drone)
+            StepProcessor processor = manager:GetStepProcessor()
+            processor:AddPriorityStep(step)
+
+            SoundManager sounds = manager:GetSoundManager()
+            audio = sounds:GetDroneArming()
+            audio:Play()
+        end
+    end
+
+    action Update(number seconds)
+        // TO-DO: Have a light blink here as part of a timer
+    end
+
+    action Finish
+        
+    end
+
+    action IsFinished returns boolean
+        if audio not= undefined
+            return not (audio:IsPlaying())
+        else
+            return true
+        end
+    end
+
+    action IsValid returns boolean
+        Enemy enemy = cast(Enemy, GetItem())
+        return enemy:IsDestroyed() = false
+    end
+end

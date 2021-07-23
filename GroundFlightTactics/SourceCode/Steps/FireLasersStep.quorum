@@ -1,0 +1,125 @@
+use Libraries.Compute.Vector3
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Random
+use Libraries.Sound.Audio
+
+class FireLasersStep is Step
+
+    GameItem target = undefined
+    integer damageDone = 1
+    Color bulletColor
+    Random random
+
+    on create
+        bulletColor:SetColor(0.2, 0.6, 1, 1)
+    end
+
+    Vector3 origin
+    Array<Model> bullets
+    Array<Vector3> directions
+    Array<number> distanceTargets
+    Array<number> distancesTravelled
+
+    CustomGameManager manager
+    number timer = 0
+    number timeBetweenShots = 0.1
+    integer bulletsFired = 0
+    number speed = 10
+
+    boolean done = false
+
+    action Start
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+        origin:Set(model:GetX(), model:GetY() + 0.1, model:GetZ())
+
+        Model targetModel = target:GetModel()
+        repeat 4 times
+            Vector3 destination
+            number offsetX = (random:RandomNumber() - 0.5) * 0.75
+            number offsetZ = (random:RandomNumber() - 0.5) * 0.75
+            destination:Set(targetModel:GetX() + offsetX, targetModel:GetY(), targetModel:GetZ() + offsetZ)
+
+            Vector3 direction = destination:Copy()
+            direction:Subtract(origin)
+            direction:Normalize()
+            directions:Add(direction)
+
+            number distance = origin:Distance(destination)
+            distanceTargets:Add(distance)
+            distancesTravelled:Add(0)
+        end
+
+        SoundManager sounds = manager:GetSoundManager()
+        Audio audio = sounds:GetLasers()
+        audio:Play()
+    end
+
+    action Update(number seconds)
+        timer = timer + seconds
+        if timer > (bulletsFired * timeBetweenShots) and bulletsFired < 4
+            bulletsFired = bulletsFired + 1
+            Model bullet
+            bullet:LoadSphere(0.15, 0.15, 0.15, bulletColor)
+            bullet:SetPosition(origin)
+            bullets:Add(bullet)
+            manager:GetMain():Add(bullet)
+        end
+
+        integer i = 0
+        repeat while i < bullets:GetSize()
+            Model bullet = bullets:Get(i)
+            if bullet not= undefined
+                Vector3 direction = directions:Get(i):Copy()
+                direction:Scale(speed * seconds)
+                bullet:Move(direction)
+                
+                distancesTravelled:Set(i, distancesTravelled:Get(i) + speed * seconds)
+                if distancesTravelled:Get(i) > distanceTargets:Get(i)
+                    bullets:Set(i, undefined)
+                    manager:GetMain():Remove(bullet)
+                    if i = 3
+                        done = true
+                    end
+                end
+            end
+
+            i = i + 1
+        end
+    end
+
+    action Finish
+        target:Damage(damageDone)
+    end
+
+    action IsFinished returns boolean
+        return done
+    end
+
+    action GetTarget returns GameItem
+        return target
+    end
+
+    action SetTarget(GameItem target)
+        me:target = target
+    end
+
+    action GetDamageDone returns integer
+        return damageDone
+    end
+
+    action SetDamageDone(integer damageDone)
+        me:damageDone = damageDone
+    end
+
+    action GetBulletColor returns Color
+        return bulletColor
+    end
+
+    action IsValid returns boolean
+        return true
+    end 
+
+end

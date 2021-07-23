@@ -1,0 +1,172 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.ColorAttribute
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Material
+
+class GameItem
+
+    Model model = undefined
+    CustomGameManager manager
+
+    public constant integer BACK = 0
+    public constant integer LEFT = 1
+    public constant integer FORWARD = 2
+    public constant integer RIGHT = 3
+
+    integer direction = BACK
+
+    action Load(Model model)
+        me:model = model
+
+        Map map = manager:GetMap()
+        if map not= undefined
+            Tile tile = GetTile()
+            tile:SetItem(me)
+        end
+    end
+
+    action GetModel returns Model
+        return model
+    end
+
+    action GetMovement returns integer
+        return 0
+    end
+
+    action SetMaterialColor(integer materialIndex, Color color)
+        Array<Material> materials = model:GetMaterials()
+        Material material = materials:Get(materialIndex)
+
+        ColorAttribute attribute
+        if material:HasAttribute(attribute:GetDiffuseValue())
+            attribute = cast(ColorAttribute, material:GetAttribute(attribute:GetDiffuseValue()))
+            attribute:SetAttribute(attribute:GetDiffuseValue(), color)
+        else
+            attribute:SetAttribute(attribute:GetDiffuseValue(), color)
+            material:Add(attribute)
+        end
+    end
+
+    action GetGridX returns integer
+        Map map = manager:GetMap()
+        return map:ToGridX(model:GetX())
+    end
+
+    action GetGridZ returns integer
+        Map map = manager:GetMap()
+        return map:ToGridZ(model:GetZ())
+    end
+
+    action GetTile returns Tile
+        Map map = manager:GetMap()
+        return map:GetTile(GetGridX(), GetGridZ())
+    end
+
+    // Updates the internal direction value only.
+    // Does not rotate or have any visual effect.
+    action SetDirection(integer direction)
+        me:direction = direction
+    end
+
+    action GetDirection returns integer
+        return direction
+    end
+
+    action GetName returns text
+        return model:GetName()
+    end
+
+    action Move(Array<Tile> path)
+        if GetMovement() <= 0 or path:GetSize() <= 1
+            return now
+        end
+
+        StepProcessor processor = manager:GetStepProcessor()
+        integer direction = GetDirection()
+        Array<integer> tileDirections = PathToDirections(path)
+        if direction not= tileDirections:Get(0)
+            integer newDirection = tileDirections:Get(0)
+            RotationStep step
+            step:SetItem(me)
+
+            if (direction + 2) mod 4 = newDirection
+                step:SetStepsRight(2)
+            elseif (direction + 1) mod 4 = newDirection
+                step:SetStepsRight(1)
+            else
+                step:SetStepsLeft(1)
+            end
+
+            processor:Add(step)
+            direction = newDirection
+        end
+
+        Tile moveEnd = path:Get(1)
+        integer i = 1
+        repeat while i < path:GetSize()
+            integer newDirection = tileDirections:Get(i - 1)
+            if newDirection not= direction
+                MoveStep moveStep
+                moveStep:SetItem(me)
+                moveStep:SetDestination(moveEnd:GetWorldX(), moveEnd:GetWorldZ())
+                processor:Add(moveStep)
+
+                RotationStep step
+                step:SetItem(me)
+
+                if (direction + 2) mod 4 = newDirection
+                    step:SetStepsRight(2)
+                elseif (direction + 1) mod 4 = newDirection
+                    step:SetStepsRight(1)
+                else
+                    step:SetStepsLeft(1)
+                end
+
+                processor:Add(step)
+                direction = newDirection
+            end
+            
+            moveEnd = path:Get(i)
+            i = i + 1
+        end
+
+        MoveStep step
+        step:SetDestination(moveEnd:GetWorldX(), moveEnd:GetWorldZ())
+        step:SetItem(me)
+        
+        processor:Add(step)
+
+        SetDirection(direction)
+    end
+
+    private action PathToDirections(Array<Tile> path) returns Array<integer>
+        Array<integer> directions
+        GameItem item
+
+        Tile last = path:Get(0)
+        integer i = 1
+        repeat while i < path:GetSize()
+            Tile current = path:Get(i)
+            if current:GetX() < last:GetX()
+                directions:Add(item:LEFT)
+            elseif current:GetX() > last:GetX()
+                directions:Add(item:RIGHT)
+            elseif current:GetZ() > last:GetZ()
+                directions:Add(item:FORWARD)
+            elseif current:GetZ() < last:GetZ()
+                directions:Add(item:BACK)
+            end
+
+            last = current
+            i = i + 1
+        end
+
+        return directions
+    end
+
+    action Damage(integer amount)
+        // Does nothing by default, but this is overridden by the Player and Enemies.
+    end
+
+end

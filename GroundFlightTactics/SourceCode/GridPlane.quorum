@@ -1,0 +1,58 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Material
+use Libraries.Game.Graphics.BlendingAttribute
+use Libraries.Game.Graphics.ColorAttribute
+use Libraries.Game.Graphics.TextureAttribute
+use Libraries.Game.Graphics.Texture
+use Libraries.Game.Graphics.TextureWrap
+use Libraries.Game.Graphics.NumberAttribute
+
+class GridPlane is Model
+
+    number scaleFactor = 60
+
+    action Load
+        SetFocusable(false)
+        SetAccessibilityCode(parent:Item:NOT_ACCESSIBLE)
+
+        LoadPlane(1, 1, "Resources/GridSquare.png", true)
+        Scale(scaleFactor, 1, scaleFactor)
+
+        Array<Material> value = GetMaterials()
+        Material material = value:Get(0)
+        
+        BlendingAttribute blend
+        material:Add(blend)
+
+        ColorAttribute lightAttribute
+        lightAttribute = lightAttribute:CreateAmbientLight(1, 1, 1, 1)
+        material:Add(lightAttribute)
+
+        ColorAttribute diffuseAttribute = lightAttribute:CreateDiffuse(0, 0, 0, 0.1)
+        material:Add(diffuseAttribute)
+
+        TextureAttribute diffuseTexture
+        diffuseTexture = cast(TextureAttribute, material:GetAttribute(diffuseTexture:GetDiffuseValue()))
+        Texture texture = diffuseTexture:descriptor:texture
+        TextureWrap uWrap
+        TextureWrap vWrap
+        uWrap:ConstructTextureWrap(uWrap:REPEAT)
+        vWrap:ConstructTextureWrap(vWrap:REPEAT)
+        texture:SetWrap(uWrap, vWrap)
+        diffuseTexture:scaleU = scaleFactor
+        diffuseTexture:scaleV = scaleFactor
+
+        // The alpha test attribute allows the shader to discard fragments that are
+        // below a provided alpha (transparency) threshold.
+        NumberAttribute alphaTestAttribute
+        constant number alphaThreshold = 0.05
+        alphaTestAttribute:SetAttribute(alphaTestAttribute:GetAlphaTestValue(), alphaThreshold)
+        material:Add(alphaTestAttribute)
+
+        SetAcceptsMouseInput(false)
+
+        SetPosition(0.5, 0.1, 0.5)
+    end
+
+end

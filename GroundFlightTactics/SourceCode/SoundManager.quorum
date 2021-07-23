@@ -1,0 +1,157 @@
+use Libraries.Sound.Audio
+use Libraries.Containers.Array
+use Libraries.Compute.Random
+
+class SoundManager
+
+    Array<Audio> droneChatter
+    Random random
+
+    Audio droneMove
+    Audio droneArming
+    Audio explosion
+    Audio jet
+    Audio generatorActivate
+    Audio gateEnabled
+    Audio gateActivate
+    Audio success
+    Audio moveClick
+    Audio moveError
+    Audio shucks
+    Audio lasers
+
+    Audio currentMusic = undefined
+
+    on create
+        droneArming:Load("Resources/Audio/Bomb Arming.ogg")
+        droneArming:SetVolume(0.5)
+        
+        explosion:Load("Resources/Audio/Medium Explosion.wav")
+        explosion:SetVolume(0.75)
+
+        jet:Load("Resources/Audio/Jet.wav")
+        
+        droneMove:Load("Resources/Audio/Crunchy Driving.ogg")
+
+        generatorActivate:Load("Resources/Audio/Generator Activate.ogg")
+        generatorActivate:SetVolume(0.75)
+
+        gateEnabled:Load("Resources/Audio/Ambient Generator Hum.ogg")
+        gateEnabled:EnableLooping()
+        gateEnabled:SetVolume(0.5)
+
+        gateActivate:Load("Resources/Audio/Gate Activate.ogg")
+
+        success:Load("Resources/Audio/Success.wav")
+
+        moveClick:Load("Resources/Audio/Move Click.wav")
+        moveClick:SetVolume(0.25)
+
+        moveError:Load("Resources/Audio/Move Error.wav")
+
+        shucks:Load("Resources/Audio/Aw Shucks.wav")
+
+        lasers:Load("Resources/Audio/Laser Burst.ogg")
+        lasers:SetVolume(0.85)
+
+        integer i = 1
+        repeat while i <= 5
+            Audio chatter
+            chatter:Load("Resources/Audio/Robot" + i + ".wav")
+            chatter:SetVolume(0.7)
+            droneChatter:Add(chatter)
+            i = i + 1
+        end
+    end
+
+    action StopMusic
+        if currentMusic not= undefined
+            currentMusic:Stop()
+            currentMusic:Dispose()
+            currentMusic = undefined
+        end
+    end
+
+    action PlayLevelMusic(integer level)
+        if currentMusic not= undefined
+            currentMusic:Stop()
+            currentMusic:Dispose()
+        end
+
+        Audio song
+
+        if level = 1
+            song:Load("Resources/Audio/Screen Saver.ogg")
+        elseif level = 2
+            song:Load("Resources/Audio/Hiding Your Reality.ogg")
+        elseif level = 3
+            song:Load("Resources/Audio/Jet Fueled Vixen.ogg")
+        else
+            return now
+        end 
+
+        currentMusic = song
+        currentMusic:SetVolume(0.2)
+        currentMusic:EnableLooping()
+        currentMusic:Play()
+    end
+
+    action Update(number seconds)
+        if currentMusic not= undefined and currentMusic:IsStreaming()
+            currentMusic:Stream()
+        end
+    end
+
+    action GetDroneArming returns Audio
+        return droneArming
+    end
+
+    action GetExplosion returns Audio
+        return explosion
+    end
+
+    action GetJet returns Audio
+        return jet
+    end
+
+    action GetDroneMove returns Audio
+        return droneMove
+    end
+
+    action GetRandomDroneChatter returns Audio
+        return droneChatter:Get(random:RandomIntegerBetween(0, 4))
+    end
+
+    action GetGeneratorActivate returns Audio
+        return generatorActivate
+    end
+
+    action GetGateEnabled returns Audio
+        return gateEnabled
+    end
+
+    action GetGateActivate returns Audio
+        return gateActivate
+    end
+
+    action GetSuccess returns Audio
+        return success
+    end
+
+    action GetMoveClick returns Audio
+        return moveClick
+    end
+
+    action GetMoveError returns Audio
+        return moveError
+    end
+
+    action GetShucks returns Audio
+        return shucks
+    end
+
+    action GetLasers returns Audio
+        return lasers
+    end
+
+end

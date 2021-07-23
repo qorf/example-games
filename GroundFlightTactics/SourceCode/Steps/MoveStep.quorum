@@ -1,0 +1,101 @@
+use Libraries.Compute.Vector2
+use Libraries.Game.Graphics.Model
+use Libraries.Sound.Audio
+
+class MoveStep is Step
+
+    Tile startTile = undefined
+    Vector2 direction
+    number destinationX = 0
+    number destinationZ = 0
+
+    number speed = 10
+
+    Audio audio = undefined
+
+    action SetDestination(number x, number z)
+        destinationX = x
+        destinationZ = z
+    end
+
+    action Start
+        GameItem item = GetItem()
+        startTile = item:GetTile()
+        Model model = item:GetModel()
+        number x = model:GetX()
+        number z = model:GetZ()
+
+        direction:Set(destinationX - x, destinationZ - z)
+        direction:Normalize()
+
+        CustomGameManager manager
+        SoundManager sounds = manager:GetSoundManager()
+        if item is Player
+            audio = sounds:GetJet()
+        elseif item is Drone
+            audio = sounds:GetDroneMove()
+        end
+
+        if audio not= undefined
+            audio:Play()
+        end
+    end
+
+    action Update(number seconds)
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+
+        model:Move(direction:GetX() * speed * seconds, 0, direction:GetY() * speed * seconds)
+
+        if (direction:GetX() > 0 and model:GetX() > destinationX) or (direction:GetX() < 0 and model:GetX() < destinationX)
+            model:SetX(destinationX)
+        end
+
+        if (direction:GetY() > 0 and model:GetZ() > destinationZ) or (direction:GetY() < 0 and model:GetZ() < destinationZ)
+            model:SetZ(destinationZ)
+        end
+
+    end
+
+    action Finish
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+        model:SetX(destinationX)
+        model:SetZ(destinationZ)
+
+        /*
+        The item calculates its tile by translating its world coordinates via the Map.
+        The tile stores its item in a field.
+        That means that item:GetTile() and tile:GetItem() don't necessarily point to each other.
+        If there's already something in the tile, don't override it, we're only moving through its space.
+        */
+        if item:GetTile():GetItem() = undefined
+            startTile:SetItem(undefined)
+            item:GetTile():SetItem(item)
+        end
+
+        if audio not= undefined
+            audio:Stop()
+        end
+    end
+
+    action IsFinished returns boolean
+        GameItem item = GetItem()
+        Model model = item:GetModel()
+
+        if destinationX = model:GetX() and destinationZ = model:GetZ()
+            return true
+        end
+
+        return false
+    end
+
+    action IsValid returns boolean
+        if GetItem() is Enemy
+            Enemy enemy = cast(Enemy, GetItem())
+            return enemy:IsDestroyed() = false
+        else
+            return true
+        end
+    end
+end

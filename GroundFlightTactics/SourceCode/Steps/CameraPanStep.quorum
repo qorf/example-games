@@ -1,0 +1,68 @@
+use Libraries.Compute.Vector3
+use Libraries.Interface.Item3D
+use Libraries.Game.Graphics.PerspectiveCamera
+
+class CameraPanStep is Step
+
+    Item3D newTarget = undefined
+
+    CustomGameManager manager
+    number cameraSpeed = 10
+    Vector3 direction
+    number distanceTravelled = 0
+    number distanceTarget = 0
+
+    boolean done = false
+
+    action Start
+        CameraController camera = manager:GetCameraController()
+
+        Vector3 origin = camera:GetTarget():GetPosition():Copy()
+        Vector3 destination = newTarget:GetPosition():Copy()
+
+        distanceTarget = origin:Distance(destination)
+
+        direction:Set(destination):Subtract(origin)
+        direction:Normalize()
+
+        camera:SetPanning(true)
+    end
+
+    action Update(number seconds)
+        CameraController controller = manager:GetCameraController()
+        PerspectiveCamera camera = controller:GetCamera()
+
+        number travel = cameraSpeed * seconds
+        distanceTravelled = distanceTravelled + travel
+
+        if distanceTravelled > distanceTarget
+            done = true
+        else
+            Vector3 vector = direction:Copy():Scale(travel)
+            camera:Move(vector)
+        end
+    end
+
+    action Finish
+        CameraController controller = manager:GetCameraController()
+        controller:SetTarget(newTarget)
+        controller:SetPanning(false)
+    end
+
+    action IsFinished returns boolean
+        return done
+    end
+
+    action GetNewTarget returns Item3D
+        return newTarget
+    end
+
+    action SetNewTarget(Item3D newTarget)
+        me:newTarget = newTarget
+    end
+
+    action IsValid returns boolean
+        return true
+    end
+
+end

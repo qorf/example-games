@@ -1,0 +1,157 @@
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+
+class Player is GameItem
+
+    integer maxMovement = 5
+    integer movesLeft = maxMovement
+
+    integer maxHealth = 5
+    integer currentHealth = maxHealth
+
+    integer shotsPerTurn = 1
+    integer shotsLeft = shotsPerTurn
+
+    integer attackValue = 3
+
+    CustomGameManager manager
+
+    on create
+        SetDirection(parent:GameItem:FORWARD)
+    end
+
+    action Load(Model model)
+        parent:GameItem:Load(model)
+
+        ResetPlayerColor()
+    end
+
+    action ResetPlayerColor
+        Color color
+        SetMaterialColor(0, color:CustomColor(0.9, 0.9, 1, 1))
+        SetMaterialColor(1, color:White())
+        SetMaterialColor(3, color:Blue())
+    end
+
+    action GetMovement returns integer
+        return maxMovement
+    end
+
+    action SetMovement(integer maxMovement)
+        me:maxMovement = maxMovement
+    end
+
+
+    action StartOfTurnReset
+        SetMovesLeft(GetMovement())
+        SetShotsLeft(GetShotsPerTurn())
+    end
+
+    action GetMaxHealth returns integer
+        return maxHealth
+    end
+
+    action SetMaxHealth(integer maxHealth)
+        me:maxHealth = maxHealth
+    end
+
+    action GetCurrentHealth returns integer
+        return currentHealth
+    end
+
+    action SetCurrentHealth(integer currentHealth)
+        me:currentHealth = currentHealth
+    end
+
+    action GetMovesLeft returns integer
+        return movesLeft
+    end
+
+    action SetMovesLeft(integer moves)
+        movesLeft = moves
+    end
+
+    action Damage(integer amount)
+        SetCurrentHealth(currentHealth - amount)
+        if currentHealth <= 0
+            SoundManager sounds = manager:GetSoundManager()
+            StepProcessor processor = manager:GetStepProcessor()
+
+            BlockingSoundStep step1
+            step1:SetAudio(sounds:GetShucks())
+            step1:SetSayText("Aw shucks! You've been destroyed!")
+            processor:Add(step1)
+
+            BlockingSoundStep step2
+            step2:SetAudio(sounds:GetExplosion())
+            processor:Add(step2)
+        end
+
+        Main main = manager:GetMain()
+        main:RefreshHUD()
+    end
+
+    action CanTargetTile(Tile tile) returns boolean
+        integer myX = GetGridX()
+        integer myZ = GetGridZ()
+
+        integer xDirection = 0
+        integer zDirection = 0
+
+        // We must be in the same row or column as the target to fire on it
+        if tile:GetX() = myX
+            if tile:GetZ() < myZ
+                zDirection = -1
+            else
+                zDirection = 1
+            end
+        elseif tile:GetZ() = myZ
+            if tile:GetX() < myX
+                xDirection = -1
+            else
+                xDirection = 1
+            end
+        else
+            return false
+        end
+
+        Map map = manager:GetMap()
+        Tile current = map:GetTile(myX + xDirection, myZ + zDirection)
+        integer i = 1
+        repeat until current = tile
+            if current:IsCover() or current:GetItem() is Enemy
+                return false
+            end
+
+            i = i + 1
+            current = map:GetTile(myX + i * xDirection, myZ + i * zDirection)
+        end
+
+        return true
+    end
+
+    action GetAttackValue returns integer
+        return attackValue
+    end
+
+    action SetAttackValue(integer attackValue)
+        me:attackValue = attackValue
+    end
+
+    action GetShotsPerTurn returns integer
+        return shotsPerTurn
+    end
+
+    action SetShotsPerTurn(integer shotsPerTurn)
+        me:shotsPerTurn = shotsPerTurn
+    end
+
+    action GetShotsLeft returns integer
+        return shotsLeft
+    end
+
+    action SetShotsLeft(integer shotsLeft)
+        me:shotsLeft = shotsLeft
+    end
+
+end

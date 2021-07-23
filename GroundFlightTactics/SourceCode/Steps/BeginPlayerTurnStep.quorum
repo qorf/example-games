@@ -1,0 +1,26 @@
+
+class BeginPlayerTurnStep is Step
+
+    action Start
+        CustomGameManager manager
+        Main main = manager:GetMain()
+        main:BeginPlayerTurn()
+    end
+
+    action Update(number seconds)
+
+    end
+
+    action Finish
+
+    end
+
+    action IsFinished returns boolean
+        return true
+    end
+
+    action IsValid returns boolean
+        return true
+    end
+
+end

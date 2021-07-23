@@ -1,0 +1,35 @@
+use Libraries.Game.GameStateManager
+
+class CustomGameManager
+
+    GameStateManager manager
+
+    action GetMain returns Main
+        return cast(Main, manager:GetGame())
+    end
+
+    action GetMap returns Map
+        return GetMain():GetMap()
+    end
+
+    action GetPlayer returns Player
+        return GetMain():GetPlayer()
+    end
+
+    action GetPlayerCursor returns PlayerActionCursor
+        return GetMain():GetPlayerCursor()
+    end
+
+    action GetStepProcessor returns StepProcessor
+        return GetMain():GetStepProcessor()
+    end
+
+    action GetSoundManager returns SoundManager
+        return GetMain():GetSoundManager()
+    end
+
+    action GetCameraController returns CameraController
+        return GetMain():GetCameraController()
+    end
+
+end

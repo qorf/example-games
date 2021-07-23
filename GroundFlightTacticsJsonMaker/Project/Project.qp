@@ -1,0 +1,11 @@
+{
+    "DevelopmentEnvironmentVersion" : "Quorum Studio 2.0",
+    "ExecutableName" : "Default",
+    "IOS_BUNDLE" : "org.quorumlanguage",
+    "IOS_DEVICE" : "iPhone 12",
+    "Main" : "/SourceCode/Main.quorum",
+    "MobileAssets" : "media",
+    "ProjectName" : "GroundFlightTacticsJsonMaker",
+    "ProjectType" : "JavaType",
+    "iosVersion" : "14.1"
+}

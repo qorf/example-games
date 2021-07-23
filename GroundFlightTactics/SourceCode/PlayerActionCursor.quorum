@@ -1,0 +1,528 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Material
+use Libraries.Game.Graphics.BlendingAttribute
+use Libraries.Game.Graphics.ColorAttribute
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Math
+use Libraries.Sound.Audio
+
+class PlayerActionCursor is Model
+
+    integer gridX = 0
+    integer gridZ = 0
+
+    Model spinnerCube
+    number spinTimer = 0
+    number spinModifier = 1.0
+    number spinSpeed = 180
+    number bounceBaseOffset = 1.0
+    number bounceMax = 0.1
+    Math math
+    
+    boolean isLoaded = false
+
+    Color color
+
+    // Used to ping-pong focus events so we can reliably update the screen reader
+    Item3D accessibilityDummy
+
+    CustomGameManager manager
+
+    action Load
+        if isLoaded
+            return now
+        end
+
+        isLoaded = true
+
+        SetFocusable(true)
+        SetAccessibilityCode(parent:Item:CUSTOM)
+
+        accessibilityDummy:SetFocusable(true)
+        accessibilityDummy:SetAccessibilityCode(parent:Item:CUSTOM)
+
+        LoadPlane(0.95, 0.95, "Resources/GridSquare.png", true)
+
+        Array<Material> value = GetMaterials()
+        Material material = value:Get(0)
+        
+        BlendingAttribute blend
+        material:Add(blend)
+
+        ColorAttribute lightAttribute
+        lightAttribute = lightAttribute:CreateAmbientLight(1, 1, 1, 1)
+        material:Add(lightAttribute)
+
+        ColorAttribute diffuseAttribute = lightAttribute:CreateDiffuse(0, 0, 0, 0.1)
+        material:Add(diffuseAttribute)
+
+        SetAcceptsMouseInput(false)
+
+        SetColor(color:Yellow())
+        SetY(0.11)
+
+        spinnerCube:LoadBox(0.3, 0.3, 0.1, color:Yellow())
+        spinnerCube:SetYawPitchRoll(0, 0, 45)
+        Add(spinnerCube)
+
+        UpdateAccessibility()
+    end
+
+    action Update(number seconds)
+        spinTimer = spinTimer + seconds * spinModifier
+        spinnerCube:SetPosition(GetX(), bounceBaseOffset + math:Sine(spinTimer) * bounceMax, GetZ())
+        spinnerCube:Rotate(1, 1, 0, spinSpeed * spinModifier * seconds)
+    end
+    action GetGridX returns integer
+        return gridX
+    end
+
+    action SetGridX(integer gridX)
+        me:gridX = gridX
+    end
+
+    action GetGridZ returns integer
+        return gridZ
+    end
+
+    action SetGridZ(integer gridZ)
+        me:gridZ = gridZ
+    end
+
+    action GetTile returns Tile
+        Map map = manager:GetMap()
+        return map:GetTile(gridX, gridZ)
+    end
+
+    action HasAccessibilityFocus returns boolean
+        return IsFocused() or accessibilityDummy:IsFocused()
+    end
+
+    action MoveLeft
+        if IsFocused() = false and accessibilityDummy:IsFocused() = false
+            Focus()
+        end
+
+        if gridX = 0
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+            return now
+        end
+
+        gridX = gridX - 1
+        
+        SoundManager sounds = manager:GetSoundManager()
+        sounds:GetMoveClick():Play()
+
+        UpdateWorldPosition()
+    end
+
+    action MoveRight
+        if IsFocused() = false and accessibilityDummy:IsFocused() = false
+            Focus()
+        end
+
+        Map map = manager:GetMap()
+        if gridX + 1 = map:GetWidth()
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+            return now
+        end
+
+        gridX = gridX + 1
+
+        SoundManager sounds = manager:GetSoundManager()
+        sounds:GetMoveClick():Play()
+
+        UpdateWorldPosition()
+    end
+
+    action MoveForward
+        if IsFocused() = false and accessibilityDummy:IsFocused() = false
+            Focus()
+        end
+
+        Map map = manager:GetMap()
+        if gridZ + 1 = map:GetHeight()
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+            return now
+        end
+
+        gridZ = gridZ + 1
+
+        SoundManager sounds = manager:GetSoundManager()
+        sounds:GetMoveClick():Play()
+
+        UpdateWorldPosition()
+    end
+
+    action MoveBack
+        if IsFocused() = false and accessibilityDummy:IsFocused() = false
+            Focus()
+        end
+
+        if gridZ = 0
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+            return now
+        end
+
+        gridZ = gridZ - 1
+        
+        SoundManager sounds = manager:GetSoundManager()
+        sounds:GetMoveClick():Play()
+
+        UpdateWorldPosition()
+    end
+    
+    action ActivateTile
+        Tile tile = GetTile()
+        if tile:GetItem() = undefined
+            MovePlayerToCursor()
+        elseif tile:GetItem() is Generator
+            Player player = manager:GetPlayer()
+            Tile playerTile = player:GetTile()
+            integer distance = math:AbsoluteValue(tile:GetX() - playerTile:GetX()) + math:AbsoluteValue(tile:GetZ() - playerTile:GetZ())
+            if distance = 1 and player:GetMovesLeft() >= 1
+                Generator generator = cast(Generator, tile:GetItem())
+                generator:Activate()
+                player:SetMovesLeft(player:GetMovesLeft() - 1)
+            else
+                SoundManager sounds = manager:GetSoundManager()
+                sounds:GetMoveError():Play()
+            end
+        elseif tile:GetItem() is GoalGate
+            Player player = manager:GetPlayer()
+            Tile playerTile = player:GetTile()
+            integer distance = math:AbsoluteValue(tile:GetX() - playerTile:GetX()) + math:AbsoluteValue(tile:GetZ() - playerTile:GetZ())
+            GoalGate gate = cast(GoalGate, tile:GetItem())
+
+            if distance = 1 and gate:IsEnabled() and player:GetMovesLeft() >= 1
+                SoundManager sounds = manager:GetSoundManager()
+                Audio gateLoop = sounds:GetGateEnabled()
+                gateLoop:Stop()
+
+                Audio gateActivate = sounds:GetGateActivate()
+                Audio success = sounds:GetSuccess()
+
+                gateActivate:Play()
+                success:Play()
+
+                manager:GetMain():LevelComplete()
+            else
+                SoundManager sounds = manager:GetSoundManager()
+                sounds:GetMoveError():Play()
+            end
+        elseif tile:GetItem() is Enemy
+            FireOnTile(tile)
+        end
+
+        // TO-DO: Add code for if there is an enemy here
+    end
+
+    action MovePlayerToCursor
+        Map map = manager:GetMap()
+        Tile tile = map:GetTile(gridX, gridZ)
+        if tile:IsMovable() = false
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+        else
+            Player player = manager:GetPlayer()
+            Array<Tile> path = PathFromPlayerToCursor()
+            if path:GetSize() <= 1
+                return now
+            end
+
+            StepProcessor processor = manager:GetStepProcessor()
+
+            if path:GetSize() - 1 <= player:GetMovesLeft()
+                integer direction = player:GetDirection()
+                Array<integer> tileDirections = PathToDirections(path)
+                if direction not= tileDirections:Get(0)
+                    integer newDirection = tileDirections:Get(0)
+                    RotationStep step
+                    step:SetItem(player)
+
+                    if (direction + 2) mod 4 = newDirection
+                        step:SetStepsRight(2)
+                    elseif (direction + 1) mod 4 = newDirection
+                        step:SetStepsRight(1)
+                    else
+                        step:SetStepsLeft(1)
+                    end
+
+                    processor:Add(step)
+                    direction = newDirection
+                end
+
+                Tile moveEnd = path:Get(1)
+                integer i = 1
+                repeat while i < path:GetSize()
+                    integer newDirection = tileDirections:Get(i - 1)
+                    if newDirection not= direction
+                        MoveStep moveStep
+                        moveStep:SetItem(player)
+                        moveStep:SetDestination(moveEnd:GetWorldX(), moveEnd:GetWorldZ())
+                        processor:Add(moveStep)
+
+                        RotationStep step
+                        step:SetItem(player)
+
+                        if (direction + 2) mod 4 = newDirection
+                            step:SetStepsRight(2)
+                        elseif (direction + 1) mod 4 = newDirection
+                            step:SetStepsRight(1)
+                        else
+                            step:SetStepsLeft(1)
+                        end
+    
+                        processor:Add(step)
+                        direction = newDirection
+                    end
+                    
+                    moveEnd = path:Get(i)
+                    i = i + 1
+                end
+
+                MoveStep step
+                step:SetDestination(moveEnd:GetWorldX(), moveEnd:GetWorldZ())
+                step:SetItem(player)
+                
+                processor:Add(step)
+
+                player:SetDirection(direction)
+                Tile startTile = player:GetTile()
+//                startTile:SetItem(undefined)
+//                moveEnd:SetItem(player)
+
+                integer distance = path:GetSize() - 1
+                player:SetMovesLeft(player:GetMovesLeft() - distance)
+
+                // TO-DO: Update with hotkey information to end turn if moves left = 0
+                AccessibilityNotifyStep accessStep
+                accessStep:SetMessage(player:GetMovesLeft() + " moves remaining.")
+                processor:Add(accessStep)
+            else
+                SoundManager sounds = manager:GetSoundManager()
+                sounds:GetMoveError():Play()
+            end
+        end
+    end
+
+    private action PathFromPlayerToCursor returns Array<Tile>
+        Map map = manager:GetMap()
+        Player player = manager:GetPlayer()
+        Array<Tile> path = map:FindPath(map:ToGridX(player:GetModel():GetX()), map:ToGridZ(player:GetModel():GetZ()), gridX, gridZ)
+        return path
+    end
+
+    private action PathToDirections(Array<Tile> path) returns Array<integer>
+        Array<integer> directions
+        GameItem item
+
+        Tile last = path:Get(0)
+        integer i = 1
+        repeat while i < path:GetSize()
+            Tile current = path:Get(i)
+            if current:GetX() < last:GetX()
+                directions:Add(item:LEFT)
+            elseif current:GetX() > last:GetX()
+                directions:Add(item:RIGHT)
+            elseif current:GetZ() > last:GetZ()
+                directions:Add(item:FORWARD)
+            elseif current:GetZ() < last:GetZ()
+                directions:Add(item:BACK)
+            end
+
+            last = current
+            i = i + 1
+        end
+
+        return directions
+    end
+
+    private action FireOnTile(Tile tile)
+        Player player = manager:GetPlayer()
+        if player:CanTargetTile(tile) = false or player:GetShotsLeft() <= 0 or tile:GetItem() = undefined
+            SoundManager sounds = manager:GetSoundManager()
+            sounds:GetMoveError():Play()
+            return now
+        end
+
+        integer newDirection = player:parent:GameItem:BACK
+        if tile:GetX() < player:GetGridX()
+            newDirection = player:parent:GameItem:LEFT
+        elseif tile:GetX() > player:GetGridX()
+            newDirection = player:parent:GameItem:RIGHT
+        elseif tile:GetZ() > player:GetGridZ()
+            newDirection = player:parent:GameItem:FORWARD
+        end
+
+        StepProcessor processor = manager:GetStepProcessor()
+        integer direction = player:GetDirection()
+
+        if direction not= newDirection
+            RotationStep step
+            step:SetItem(player)
+    
+            if (direction + 2) mod 4 = newDirection
+                step:SetStepsRight(2)
+            elseif (direction + 1) mod 4 = newDirection
+                step:SetStepsRight(1)
+            else
+                step:SetStepsLeft(1)
+            end
+    
+            processor:Add(step)
+            direction = newDirection
+            player:SetDirection(direction)
+        end
+
+        FireLasersStep fireStep
+        fireStep:SetItem(player)
+        fireStep:SetTarget(tile:GetItem())
+        fireStep:SetDamageDone(player:GetAttackValue())
+        processor:Add(fireStep)
+
+        player:SetShotsLeft(player:GetShotsLeft() - 1)
+        manager:GetMain():RefreshHUD()
+    end
+
+    private action UpdateWorldPosition
+        Map map = manager:GetMap()
+        SetX(map:ToWorldX(gridX))
+        SetZ(map:ToWorldZ(gridZ))
+        
+        // TO-DO: Red color if tile has an enemy
+
+        Tile tile = map:GetTile(gridX, gridZ)
+        if tile:IsMovable() = false
+            if tile:GetItem() is Generator or tile:GetItem() is GoalGate
+                Player player = manager:GetPlayer()
+                Tile playerTile = player:GetTile()
+                integer interactDistance = math:AbsoluteValue(tile:GetX() - playerTile:GetX()) + math:AbsoluteValue(tile:GetZ() - playerTile:GetZ())
+                if interactDistance = 1
+                    SetColor(color:Yellow())
+                    spinnerCube:SetColor(color:Yellow())
+                else
+                    Color paleBlue
+                    paleBlue:SetColor(0.3, 0.3, 1, 1)
+                    SetColor(color:Blue())
+                    spinnerCube:SetColor(paleBlue)
+                end
+            else
+                SetColor(color:Gray())
+                spinnerCube:SetColor(color:Gray())
+            end
+        elseif tile:GetItem() is Enemy
+            Player player = manager:GetPlayer()
+            if player:CanTargetTile(tile)
+                Color darkRed
+                darkRed:SetColor(0.75, 0.2, 0.2, 1)
+                SetColor(color:Red())
+                spinnerCube:SetColor(darkRed)
+            else
+                SetColor(color:Purple())
+                spinnerCube:SetColor(color:Purple())
+            end
+        else
+            Player player = manager:GetPlayer()
+            Array<Tile> path = PathFromPlayerToCursor()
+
+            if path:GetSize() - 1 <= player:GetMovesLeft()
+                SetColor(color:Yellow())
+                spinnerCube:SetColor(color:Yellow())
+            else
+                Color paleBlue
+                paleBlue:SetColor(0.3, 0.3, 1, 1)
+                SetColor(color:Blue())
+                spinnerCube:SetColor(paleBlue)
+            end
+        end
+
+        UpdateAccessibility()
+    end
+
+    action JumpTo(GameItem item)
+        if IsFocused() = false and accessibilityDummy:IsFocused() = false
+            Focus()
+        end
+
+        gridX = item:GetGridX()
+        gridZ = item:GetGridZ()
+        
+        // TO-DO: Play cursor movement click
+
+        UpdateWorldPosition()
+    end
+
+    action UpdateAccessibility
+        UpdateAccessibility("")
+    end
+
+    action UpdateAccessibility(text priorityInfo)
+        Tile tile = GetTile()
+        GameItem item = tile:GetItem()
+
+        text name = priorityInfo
+        if priorityInfo not= ""
+            priorityInfo = priorityInfo + ". "
+        end
+
+        if item not= undefined
+            name = name + " " + item:GetName()
+            if item is Enemy
+                Player player = manager:GetPlayer()
+                if player:GetGridX() not= gridX and player:GetGridZ() not= gridZ
+                    name = name + " not on cardinal direction"
+                elseif player:CanTargetTile(tile)
+                    name = name + " in sights"
+                else
+                    name = name + " behind cover"
+                end
+            elseif item is Generator
+                Generator generator = cast(Generator, item)
+                if generator:IsActive()
+                    name = name + " activated"
+                else
+                    name = name + " not active"
+                end
+            end
+        end
+
+        name = name + ", "
+
+        if tile:IsMovable() = false
+            name = name + "impassable "
+        end
+
+        if tile:IsCover()
+            name = name + "cover "
+        end
+
+        name = name + tile:GetName() + ", "
+        name = name + GetGridX() + " " + GetGridZ()
+
+        if item is Player
+            // TO-DO: Update to provide hotkey information
+            name = name + ". "
+        else
+            Array<Tile> path = PathFromPlayerToCursor()
+            if path not= undefined
+                name = name + ", " + (path:GetSize() - 1) + " moves to reach."
+            end
+        end
+
+        SetName(name)
+        accessibilityDummy:SetName(name)
+
+        if IsFocused()
+            accessibilityDummy:Focus()
+        elseif accessibilityDummy:IsFocused()
+            Focus()
+        end
+    end
+
+end
