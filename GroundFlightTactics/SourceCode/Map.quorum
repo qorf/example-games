@@ -19,7 +19,7 @@ class Map
         Array<text> keys = json:GetKeys()
         integer i = 0
         repeat while i < keys:GetSize()
-            JavaScriptObjectNotation row = json:GetObject(keys:Get(i))
+            JavaScriptObjectNotation row = json:GetObject(keys:Get(i)):GetArray()
             integer j = 0
             Array<Tile> array
             repeat while j < row:GetSize()
