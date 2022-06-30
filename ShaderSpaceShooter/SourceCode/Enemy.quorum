@@ -1,0 +1,116 @@
+use Libraries.Compute.Vector2
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Math
+use Libraries.Containers.Array
+
+
+class Enemy is Character
+
+    GameStateManager manager
+    Math math
+    integer health = 1
+
+    number spawnX = 800
+    number spawnY = 460
+
+    Array<EnemyPlan> plans
+    number timer = 0
+
+    on create
+        SetName("Enemy")
+    end
+
+    blueprint action Fire(Main main)
+
+    blueprint action LoadVisuals(Main main)
+
+    action Update(number seconds)
+        /*
+        Main main = cast(Main, manager:GetGame())
+        Player player = main:GetPlayer()
+        Vector2 direction = GetCenterPosition():Subtract(player:GetCenterPosition())
+
+        Model model = GetPairedModel()
+        model:SetYawPitchRoll(270 + direction:AngleInRadians() * (180 / math:pi), model:GetPitch(), model:GetRoll())
+        */
+
+        Main main = cast(Main, manager:GetGame())
+        if plans:IsEmpty() or main:IsPaused()
+            return now
+        end
+
+        EnemyPlan currentPlan = plans:GetFromFront()
+        repeat until currentPlan = undefined
+            if currentPlan:phase = currentPlan:LEAD_IN
+                timer = timer + seconds
+                if timer >= currentPlan:GetLeadInTime()
+                    timer = 0
+                    currentPlan:phase = currentPlan:MAIN
+                else
+                    return now
+                end
+            end
+
+            if currentPlan:phase = currentPlan:MAIN
+                if currentPlan:HasStarted() = false
+                    currentPlan:Start(main)
+                end
+                if currentPlan:IsDone(main)
+                    currentPlan:OnEnd(main)
+                    currentPlan:phase = currentPlan:LEAD_OUT
+                else
+                    currentPlan:Update(main, seconds)
+                    if currentPlan:IsDone(main)
+                        currentPlan:OnEnd(main)
+                        currentPlan:phase = currentPlan:LEAD_OUT
+                    else
+                        return now
+                    end
+                end
+            end
+
+            if currentPlan:phase = currentPlan:LEAD_OUT
+                timer = timer + seconds
+                if timer >= currentPlan:GetLeadOutTime()
+                    timer = 0
+                    plans:RemoveFromFront()
+                    if plans:IsEmpty() = false
+                        currentPlan = plans:GetFromFront()
+                    else
+                        currentPlan = undefined
+                    end
+                else
+                    return now
+                end
+            end
+        end
+    end
+
+    action Damage(Bullet bullet)
+        health = health - 1
+    end
+
+    action IsAlive returns boolean
+        return health > 0
+    end
+
+    action Spawn(Main main)
+        LoadVisuals(main)
+        SetPosition(spawnX - GetWidth() / 2.0, spawnY - GetHeight() / 2.0)
+    end
+
+    action SetSpawnPosition(number x, number y)
+        spawnX = x
+        spawnY = y
+    end
+
+    action AddPlan(EnemyPlan plan)
+        plan:SetEnemy(me)
+        plans:Add(plan)
+    end
+
+    action IsSynchronizing returns boolean
+        return plans:IsEmpty() = false and plans:Get(0) is SynchronizePlan
+    end
+end

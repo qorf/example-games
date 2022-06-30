@@ -1,0 +1,240 @@
+use Libraries.Sound.Audio
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+
+class RowDetails
+
+    Audio warningBlip
+    Audio dangerBlip
+    Audio passingObject
+
+    integer rowIndex = 0
+
+    number emergencyDistance = 280
+    number passingDistance = 130
+
+    Array<Item2D> accessibleItems
+    XSorter sorter
+
+    action InitializeAudio
+        warningBlip:Load("Resources/Audio/Warning Blip.wav")
+        warningBlip:EnableLooping()
+        warningBlip:SetVolume(0.25)
+        dangerBlip:Load("Resources/Audio/Danger Blip.wav")
+        dangerBlip:EnableLooping()
+        dangerBlip:SetVolume(0.25)
+        passingObject:Load("Resources/Audio/Jet.wav")
+        passingObject:SetVolume(2)
+        passingObject:SetPitch(2)
+    end
+
+    action Update(Main main, integer activeRow, number seconds)
+        if main:IsPaused()
+            StopAllSounds()
+            return now
+        end
+
+        boolean adjacent = false
+        boolean upper = false
+        boolean passing = false
+
+        if activeRow > rowIndex + 1 or activeRow < rowIndex - 1
+            StopAllSounds()
+            return now
+        elseif activeRow = rowIndex + 1
+            adjacent = true
+            upper = true
+        elseif activeRow = rowIndex - 1
+            adjacent = true
+            upper = false
+        elseif activeRow = rowIndex
+            adjacent = false
+            upper = false
+        end
+
+        Array<Bullet> bullets = main:GetBullets()
+        number bulletDistance = 5000
+        integer i = 0
+        repeat while i < bullets:GetSize()
+            Bullet bullet = bullets:Get(i)
+            if bullet:GetCurrentRow() = rowIndex and bullet:GetOwner() is Enemy
+                number x = bullet:GetX()
+                if adjacent and x < passingDistance
+                    passing = true
+                    bulletDistance = x
+                elseif x < bulletDistance
+                    bulletDistance = x
+                end
+            end
+            i = i + 1
+        end
+
+        if (adjacent and passing) = false
+            if passingObject:IsPlaying()
+                passingObject:Stop()
+            end
+        else
+            if passingObject:IsPlaying() = false
+                passingObject:Play()
+            end
+            // Set directional audio based on whether this row is above or below the active row
+            if upper
+                passingObject:SetBalance(1)
+            else
+                passingObject:SetBalance(-1)
+            end
+        end
+
+        if adjacent
+            if dangerBlip:IsPlaying()
+                dangerBlip:Stop()
+            end
+        else
+            if warningBlip:IsPlaying()
+                warningBlip:Stop()
+            end
+        end
+
+        if bulletDistance < 5000
+            if adjacent
+                if warningBlip:IsPlaying() = false
+                    warningBlip:Play()
+                end
+                if bulletDistance < emergencyDistance
+                    warningBlip:SetPitch(1.75)
+                else
+                    warningBlip:SetPitch(1.0)
+                end
+
+                // Set directional audio based on whether this row is above or below the active row
+                if upper
+                    warningBlip:SetBalance(1)
+                else
+                    warningBlip:SetBalance(-1)
+                end
+            else
+                if dangerBlip:IsPlaying() = false
+                    dangerBlip:Play()
+                end
+                if bulletDistance < emergencyDistance
+                    dangerBlip:SetPitch(1.5)
+                else
+                    dangerBlip:SetPitch(1.0)
+                end
+            end
+        else
+            if dangerBlip:IsPlaying()
+                dangerBlip:Stop()
+            end
+            if warningBlip:IsPlaying()
+                warningBlip:Stop()
+            end
+        end
+    end
+
+    private action StopAllSounds
+        if warningBlip:IsPlaying()
+            warningBlip:Stop()
+        end
+        if dangerBlip:IsPlaying()
+            dangerBlip:Stop()
+        end
+        if passingObject:IsPlaying()
+            passingObject:Stop()
+        end
+    end
+
+    action GetRowIndex returns integer
+        return rowIndex
+    end
+
+    action SetRowIndex(integer rowIndex)
+        me:rowIndex = rowIndex
+    end
+
+    action LoadAccessibleItems(Main main)
+        Player player = main:GetPlayer()
+        if player:GetTargetRow() = rowIndex
+            accessibleItems:Add(player)
+        end
+
+        Array<Enemy> enemies = main:GetEnemies()
+        integer i = 0
+        repeat while i < enemies:GetSize()
+            Enemy enemy = enemies:Get(i)
+            if enemy:GetCurrentRow() = rowIndex
+                accessibleItems:Add(enemy)
+            end
+            i = i + 1
+        end
+
+        Array<Bullet> bullets = main:GetBullets()
+        i = 0
+        repeat while i < bullets:GetSize()
+            Bullet bullet = bullets:Get(i)
+            if bullet:GetCurrentRow() = rowIndex
+                accessibleItems:Add(bullet)
+            end
+            i = i + 1
+        end
+
+        accessibleItems:Sort(sorter)
+    end
+
+    action UnloadAccessibleItems(Main main)
+        accessibleItems:Empty()
+    end
+
+    action GetAccessibleEnemyCount returns integer
+        integer i = 0
+        integer count = 0
+        repeat while i < accessibleItems:GetSize()
+            Item2D item = accessibleItems:Get(i)
+            if item is Enemy
+                count = count + 1
+            end
+            i = i + 1
+        end
+
+        return count
+    end
+
+    action GetAccessibleEnemyBulletCount returns integer
+        integer i = 0
+        integer count = 0
+        repeat while i < accessibleItems:GetSize()
+            Item2D item = accessibleItems:Get(i)
+            if item is Bullet
+                Bullet bullet = cast(Bullet, item)
+                if bullet:GetOwner() is Enemy
+                    count = count + 1
+                end
+            end
+            i = i + 1
+        end
+
+        return count
+    end
+
+    action GetAccessibleFriendlyBulletCount returns integer
+        integer i = 0
+        integer count = 0
+        repeat while i < accessibleItems:GetSize()
+            Item2D item = accessibleItems:Get(i)
+            if item is Bullet
+                Bullet bullet = cast(Bullet, item)
+                if bullet:GetOwner() is Player
+                    count = count + 1
+                end
+            end
+            i = i + 1
+        end
+
+        return count
+    end
+
+    action GetAccessibleItems returns Array<Item2D>
+        return accessibleItems
+    end
+
+end

@@ -1,0 +1,29 @@
+use Libraries.Game.Graphics.Shaders.ShaderProgram
+use Libraries.Game.Graphics.Shaders.ShaderManager
+use Libraries.Game.Graphics.Shaders.Shader
+use Libraries.Game.Graphics.Shaders.ControlFragmentShader
+
+class PyroclasmProgram is ShaderProgram
+
+    public constant text DEFAULT_NAME = "Pyroclasm Shader Program"
+    constant text FRAGMENT_NAME = "Pyroclasm Shader"
+
+    on create
+        SetName(DEFAULT_NAME)
+        ShaderManager manager
+        Shader vertex = manager:GetDefaultVertexShader2D()
+        Add(vertex)
+
+        if manager:HasShader(FRAGMENT_NAME)
+            Shader fragment = manager:GetShader(FRAGMENT_NAME)
+            Add(fragment)
+        else
+            PyroclasmShader fragment
+            Add(fragment)
+        end
+
+        PyroclasmMapping mapping
+        SetShaderMapping(mapping)
+    end
+
+end

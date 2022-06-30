@@ -1,0 +1,126 @@
+use Libraries.Game.GameStateManager
+use Libraries.Containers.Array
+use Libraries.Compute.Math
+
+
+class Player is Character
+
+    integer health = 5
+    integer targetRow = 3
+    boolean moving = false
+    boolean ascending = false
+
+    GameStateManager manager
+    Math math
+
+    on create
+        SetName("Player")
+        SetSpeed(3000)
+        SetRollSpeed(800)
+        SetBulletVelocity(800)
+    end
+
+    action Fire(Main main)
+        main:CreatePlasmaBullet(me, GetBulletVelocity(), 0)
+    end
+
+    action Damage(Bullet bullet)
+        health = health - 1
+        
+        if IsAlive()
+            Main main = cast(Main, manager:GetGame())
+            AudioManager audio = main:GetAudioManager()
+            audio:PlayerDamage()
+        end
+    end
+
+    action IsAlive returns boolean
+        return health > 0
+    end
+
+    action GetTargetRow returns integer
+        return targetRow
+    end
+
+    private action GetTargetY returns number
+        Main main = cast(Main, manager:GetGame())
+        Array<number> rowPositions = main:GetRowPositions()
+        return rowPositions:Get(targetRow)
+    end
+
+    action IncrementTargetRow
+        Main main = cast(Main, manager:GetGame())
+        AudioManager audio = main:GetAudioManager()
+
+        if targetRow < 6
+            moving = true
+            ascending = true
+            SetTargetRoll(-40)
+            targetRow = targetRow + 1
+            audio:MoveClick(targetRow)
+
+            Array<Enemy> enemies = main:GetEnemies()
+            integer i = 0
+            repeat while i < enemies:GetSize()
+                Enemy enemy = enemies:Get(i)
+                if enemy:GetCurrentRow() = targetRow
+                    audio:EnemyPresentBlip()
+                    return now
+                end
+                i = i + 1
+            end
+        else
+            audio:MoveError()
+        end
+    end
+
+    action DecrementTargetRow
+        Main main = cast(Main, manager:GetGame())
+        AudioManager audio = main:GetAudioManager()
+
+        if targetRow > 0
+            moving = true
+            ascending = false
+            SetTargetRoll(40)
+            targetRow = targetRow - 1
+            audio:MoveClick(targetRow)
+
+            Array<Enemy> enemies = main:GetEnemies()
+            integer i = 0
+            repeat while i < enemies:GetSize()
+                Enemy enemy = enemies:Get(i)
+                if enemy:GetCurrentRow() = targetRow
+                    audio:EnemyPresentBlip()
+                    return now
+                end
+                i = i + 1
+            end
+        else
+            audio:MoveError()
+        end
+    end
+
+    action Update(number seconds)
+        if moving
+            if ascending
+                MoveY(GetSpeed() * seconds)
+                number targetY = GetTargetY()
+                if GetY() + GetHeight() / 2.0 > targetY
+                    SetY(targetY - GetHeight() / 2.0)
+                    SetTargetRoll(0)
+                    moving = false
+                end
+            else
+                MoveY(-GetSpeed() * seconds)
+                number targetY = GetTargetY()
+                if GetY() + GetHeight() / 2.0 < targetY
+                    SetY(targetY - GetHeight() / 2.0)
+                    SetTargetRoll(0)
+                    moving = false
+                end
+            end
+        end        
+
+        parent:PairedItem2D:Update(seconds)
+    end
+end

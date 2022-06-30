@@ -1,0 +1,206 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Sound.Audio
+
+class Stage2 is Stage
+
+    on create
+        GetAmbientLight():SetColor(0.4, 0.35, 0.3, 1)
+        GetDirectionalLight():SetColor(0.6, 0.5, 0.4, 1)
+    end
+
+    action SetBackground(Drawable background)
+        MagmaWorldProgram program
+        MagmaWorldMapping mapping
+        background:SetShaderProgram(program)
+        background:SetShaderMapping(mapping)
+        program:Compile()
+    end
+
+    action GetMusic returns Audio
+        Audio audio
+        audio:Load("Resources/Audio/Jet Fueled Vixen.ogg")
+        return audio
+    end
+
+    action GetStageSteps returns Array<StageStep>
+        Array<StageStep> steps
+
+        AwaitInputStep await
+        await:SetLeadInTime(5)
+        steps:Add(await)
+
+        steps:Add(EnemyStep1())
+        steps:Add(EnemyStep2())
+        steps:Add(EnemyStep3())
+
+        AwaitInputStep bossWarning
+        bossWarning:SetText("PRESS ENTER TO FIGHT THE BOSS")
+        bossWarning:SetLeadInTime(2)
+        steps:Add(bossWarning)
+        
+        EnemyStageStep bossStep
+        bossStep:SetLeadInTime(2)
+        Pyroclasm pyro
+        pyro:SetSpawnPosition(1800, GetRowY(3))
+        MovePlan move
+        move:SetTarget(1350, GetRowY(3))
+        pyro:AddPlan(move)
+        bossStep:AddEnemy(pyro, 0)
+        steps:Add(bossStep)
+
+        AwaitInputStep oops
+        oops:SetText("(I ran out of time to program the boss)")
+        oops:SetLeadInTime(2)
+        steps:Add(oops)
+        
+        AwaitInputStep prepareTransition
+        prepareTransition:SetText("PRESS ENTER TO PARTY")
+        prepareTransition:SetLeadInTime(1)
+        steps:Add(prepareTransition)
+        
+        TransitionStep transition
+        transition:SetLeadInTime(1)
+        steps:Add(transition)
+
+        return steps
+    end
+
+    private action EnemyStep1 returns EnemyStageStep
+        EnemyStageStep step
+        step:SetLeadInTime(1)
+
+        integer i = 0
+        repeat while i < 7
+            if i not= 3
+                Skiff skiff
+                if i < 3
+                    skiff:SetName("Skiff " + i)
+                else
+                    skiff:SetName("Skiff " + (i - 1))
+                end
+                skiff:SetSpawnPosition(1640, GetRowY(i))
+    
+                MovePlan move1
+                move1:SetTarget(1300, GetRowY(i))
+                move1:SetLeadOutTime(0)
+                skiff:AddPlan(move1)
+    
+                RepeatPlan loop
+                FirePlan fire
+                fire:SetLeadInTime(1.5)
+                fire:SetLeadOutTime(1.5)
+                loop:AddPlan(fire)
+                skiff:AddPlan(loop)
+    
+                step:AddEnemy(skiff, 0)
+            end
+            i = i + 1
+        end
+
+        return step
+    end
+
+    private action EnemyStep2 returns EnemyStageStep
+        EnemyStageStep step
+        step:SetLeadInTime(1)
+
+        integer i = 0
+        repeat while i < 6
+            Skiff skiff
+            skiff:SetName("Skiff " + i)
+            skiff:SetSpawnPosition(1640, GetRowY(i))
+
+            MovePlan move1
+            move1:SetTarget(1200, GetRowY(i))
+            move1:SetLeadOutTime(0)
+            skiff:AddPlan(move1)
+
+            RepeatPlan loop
+            FirePlan fire
+            fire:SetLeadInTime(1.8 + i * 0.2)
+            fire:SetLeadOutTime(4.8 - i * 0.2)
+            loop:AddPlan(fire)
+            skiff:AddPlan(loop)
+
+            step:AddEnemy(skiff, 0)
+
+            i = i + 1
+        end
+
+        i = 0
+        repeat while i < 6
+            Skiff skiff
+            skiff:SetName("Skiff " + (6 + i))
+            skiff:SetSpawnPosition(1840, GetRowY(6 - i))
+
+            MovePlan move1
+            move1:SetTarget(1400, GetRowY(6 - i))
+            skiff:AddPlan(move1)
+
+            RepeatPlan loop
+            FirePlan fire
+            fire:SetLeadInTime(3.5 + i * 0.2)
+            fire:SetLeadOutTime(3.5 - i * 0.2)
+            loop:AddPlan(fire)
+            skiff:AddPlan(loop)
+
+            step:AddEnemy(skiff, 0)
+            i = i + 1
+        end
+
+        return step
+    end
+
+    private action EnemyStep3 returns EnemyStageStep
+        EnemyStageStep step
+        step:SetLeadInTime(1)
+
+        integer i = 0
+        repeat while i < 21
+            Skiff skiff
+            skiff:SetName("Skiff " + i)
+            skiff:SetSpawnPosition(1640 + (i / 7) * 100, GetRowY(i mod 7))
+
+            MovePlan move1
+            move1:SetTarget(1200 + (i / 7) * 100, GetRowY(i mod 7))
+            move1:SetLeadOutTime(0)
+            skiff:AddPlan(move1)
+
+            RepeatPlan loop
+            RandomFirePlan random
+            random:SetLeadInTime(1)
+            random:SetLeadOutTime(3)
+            loop:AddPlan(random)
+            skiff:AddPlan(loop)
+
+            step:AddEnemy(skiff, 0)
+
+            i = i + 1
+        end
+//
+//        i = 0
+//        repeat while i < 6
+//            Skiff skiff
+//            skiff:SetName("Skiff " + (6 + i))
+//            skiff:SetSpawnPosition(1840, GetRowY(6 - i))
+//
+//            MovePlan move1
+//            move1:SetTarget(1400, GetRowY(6 - i))
+//            skiff:AddPlan(move1)
+//
+//            RepeatPlan loop
+//            FirePlan fire
+//            fire:SetLeadInTime(3.5 + i * 0.2)
+//            fire:SetLeadOutTime(3.5 - i * 0.2)
+//            loop:AddPlan(fire)
+//            skiff:AddPlan(loop)
+//
+//            step:AddEnemy(skiff, 0)
+//            i = i + 1
+//        end
+
+        return step
+    end
+
+end

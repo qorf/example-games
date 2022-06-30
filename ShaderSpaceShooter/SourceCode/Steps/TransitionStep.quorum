@@ -1,0 +1,22 @@
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+
+class TransitionStep is StageStep
+
+
+    GameStateManager manager
+
+    action OnStart(Main main)
+        main:TransitionToNextLevel()
+    end
+
+    action IsDone(Main main) returns boolean
+        return main:IsTransitioning() = false
+    end
+
+    action OnEnd(Main main)
+    end
+
+end

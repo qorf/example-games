@@ -1,0 +1,123 @@
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Model
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+
+class PairedItem2D is Drawable
+
+    Model pairedModel = undefined
+    number targetRoll = 0
+    number rollSpeed = 720
+
+    action SetPairedModel(Model model)
+        pairedModel = model
+        if model:GetLayer() = undefined
+            GameStateManager manager
+            manager:GetGame():Add(model)
+        end
+        UpdatePairedSize()
+        UpdatePairedPosition()
+    end
+
+    action UpdatePairedPosition
+        if pairedModel = undefined
+            return now
+        end
+
+        pairedModel:SetX(GetGlobalX() + GetWidth() / 2.0)
+        pairedModel:SetZ(GetGlobalY() + GetHeight() / 2.0)
+    end
+
+    action UpdatePairedSize
+        if pairedModel = undefined
+            return now
+        end
+
+        number x = GetWidth() / pairedModel:GetWidth()
+        number z = GetHeight() / pairedModel:GetDepth()
+        number y = (x + z) / 2.0
+        pairedModel:SetScale(x, y, z)
+    end
+
+    action Update(number seconds)
+        if pairedModel:GetRoll() < targetRoll
+            number newRoll = pairedModel:GetRoll() + rollSpeed * seconds
+            if newRoll > targetRoll
+                newRoll = targetRoll
+            end
+            pairedModel:SetYawPitchRoll(pairedModel:GetYaw(), pairedModel:GetPitch(), newRoll)
+        elseif pairedModel:GetRoll() > targetRoll
+            number newRoll = pairedModel:GetRoll() - rollSpeed * seconds
+            if newRoll < targetRoll
+                newRoll = targetRoll
+            end
+            pairedModel:SetYawPitchRoll(pairedModel:GetYaw(), pairedModel:GetPitch(), newRoll)
+        end
+    end
+
+    action SetX(number x)
+        parent:Item2D:SetX(x)
+        UpdatePairedPosition()
+    end
+
+    action SetY(number y)
+        parent:Item2D:SetY(y)
+        UpdatePairedPosition()
+    end
+
+    action SetPosition(number x, number y)
+        parent:Item2D:SetPosition(x, y)
+        UpdatePairedPosition()
+    end
+
+    action MoveX(number x)
+        parent:Item2D:MoveX(x)
+        UpdatePairedPosition()
+    end
+
+    action MoveY(number y)
+        parent:Item2D:MoveY(y)
+        UpdatePairedPosition()
+    end
+
+    action Move(number x, number y)
+        parent:Item2D:Move(x, y)
+        UpdatePairedPosition()
+    end
+    
+    action SetWidth(number width)
+        parent:Item2D:SetWidth(width)
+        UpdatePairedSize()
+    end
+
+    action SetHeight(number height)
+        parent:Item2D:SetHeight(height)
+        UpdatePairedSize()
+    end
+
+    action SetSize(number width, number height)
+        parent:Item2D:SetSize(width, height)
+        UpdatePairedSize()
+    end
+
+    action GetTargetRoll returns number
+        return targetRoll
+    end
+
+    action SetTargetRoll(number targetRoll)
+        me:targetRoll = targetRoll
+    end
+
+    action GetPairedModel returns Model
+        return pairedModel
+    end
+
+    action GetRollSpeed returns number
+        return rollSpeed
+    end
+
+    action SetRollSpeed(number rollSpeed)
+        me:rollSpeed = rollSpeed
+    end
+
+end

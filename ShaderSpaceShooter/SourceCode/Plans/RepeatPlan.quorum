@@ -1,0 +1,75 @@
+use Libraries.Compute.Vector2
+use Libraries.Containers.Array
+
+class RepeatPlan is EnemyPlan
+
+    Array<EnemyPlan> plans
+    integer planIndex = 0
+    number timer = 0
+
+    action OnStart(Main main)
+    end
+
+    action IsDone(Main main) returns boolean
+        return false
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+        if plans:IsEmpty()
+            return now
+        end
+
+        repeat while true
+            EnemyPlan currentPlan = plans:Get(planIndex)
+            currentPlan:SetEnemy(GetEnemy())
+            if currentPlan:phase = currentPlan:LEAD_IN
+                timer = timer + seconds
+                if timer >= currentPlan:GetLeadInTime()
+                    timer = 0
+                    currentPlan:phase = currentPlan:MAIN
+                else
+                    return now
+                end
+            end
+
+            if currentPlan:phase = currentPlan:MAIN
+                if currentPlan:HasStarted() = false
+                    currentPlan:Start(main)
+                end
+                if currentPlan:IsDone(main)
+                    currentPlan:OnEnd(main)
+                    currentPlan:phase = currentPlan:LEAD_OUT
+                else
+                    currentPlan:Update(main, seconds)
+                    if currentPlan:IsDone(main)
+                        currentPlan:OnEnd(main)
+                        currentPlan:phase = currentPlan:LEAD_OUT
+                    else
+                        return now
+                    end
+                end
+            end
+
+            if currentPlan:phase = currentPlan:LEAD_OUT
+                timer = timer + seconds
+                if timer >= currentPlan:GetLeadOutTime()
+                    timer = 0
+                    currentPlan:ResetPlan()
+                    planIndex = planIndex + 1
+                    if planIndex >= plans:GetSize()
+                        planIndex = 0
+                    end
+                else
+                    return now
+                end
+            end
+        end
+    end
+
+    action AddPlan(EnemyPlan plan)
+        plans:Add(plan)
+    end
+end

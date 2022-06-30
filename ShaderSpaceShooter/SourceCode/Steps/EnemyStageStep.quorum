@@ -1,0 +1,37 @@
+use Libraries.Containers.Array
+
+class EnemyStageStep is StageStep
+
+    Array<Enemy> enemies
+    Array<number> spawnDelays
+
+    number time = 0
+    integer spawnIndex = 0
+
+    action OnStart(Main main)
+    end
+
+    action IsDone(Main main) returns boolean
+        return spawnIndex = enemies:GetSize() and main:GetEnemies():IsEmpty()
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+        if main:IsPaused() = false
+            time = time + seconds
+        end
+        repeat while spawnIndex < enemies:GetSize() and time >= spawnDelays:Get(spawnIndex)
+            Enemy enemy = enemies:Get(spawnIndex)
+            enemy:Spawn(main)
+            time = time - spawnDelays:Get(spawnIndex)
+            spawnIndex = spawnIndex + 1
+        end
+    end
+
+    action AddEnemy(Enemy enemy, number spawnDelay)
+        enemies:Add(enemy)
+        spawnDelays:Add(spawnDelay)
+    end
+end

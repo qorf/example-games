@@ -1,0 +1,70 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Vector2
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+use Libraries.Compute.Math
+
+
+class Bullet is Drawable
+
+    Character owner = undefined
+    Vector2 velocity
+    Character impactTarget = undefined
+
+    GameStateManager manager
+    Math math
+
+    on create
+        SetName("Bullet")
+        SetCollidable(true)
+    end
+
+    action GetOwner returns Character
+        return owner
+    end
+
+    action SetOwner(Character owner)
+        me:owner = owner
+    end
+
+    action GetVelocity returns Vector2
+        return velocity
+    end
+
+    action SetVelocity(Vector2 velocity)
+        me:velocity:Set(velocity)
+    end
+
+    action SetVelocity(number x, number y)
+        velocity:Set(x, y)
+    end
+
+    action GetImpactTarget returns Character
+        return impactTarget
+    end
+
+    action SetImpactTarget(Character impactTarget)
+        me:impactTarget = impactTarget
+    end
+
+    action GetCurrentRow returns integer
+        Main main = cast(Main, manager:GetGame())
+        number y = GetY() + GetHeight() / 2.0
+        Array<number> rowPositions = main:GetRowPositions()
+
+        number minimumDistance = 2000
+        integer result = 0
+        integer i = 0
+        repeat while i < rowPositions:GetSize()
+            number distance = math:AbsoluteValue(y - rowPositions:Get(i))
+            if distance < minimumDistance
+                result = i
+                minimumDistance = distance
+            end 
+            i = i + 1
+        end
+
+        return result
+    end
+
+end

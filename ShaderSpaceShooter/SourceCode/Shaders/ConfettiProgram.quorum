@@ -1,0 +1,29 @@
+use Libraries.Game.Graphics.Shaders.ShaderProgram
+use Libraries.Game.Graphics.Shaders.ShaderManager
+use Libraries.Game.Graphics.Shaders.Shader
+use Libraries.Game.Graphics.Shaders.ControlFragmentShader
+
+class ConfettiProgram is ShaderProgram
+
+    public constant text DEFAULT_NAME = "Confetti Shader Program"
+    constant text FRAGMENT_NAME = "Confetti Shader"
+
+    on create
+        SetName(DEFAULT_NAME)
+        ShaderManager manager
+        Shader vertex = manager:GetDefaultVertexShader2D()
+        Add(vertex)
+
+        if manager:HasShader(FRAGMENT_NAME)
+            Shader fragment = manager:GetShader(FRAGMENT_NAME)
+            Add(fragment)
+        else
+            ConfettiShader fragment
+            Add(fragment)
+        end
+
+        ConfettiMapping mapping
+        SetShaderMapping(mapping)
+    end
+
+end

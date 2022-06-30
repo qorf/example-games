@@ -1,0 +1,29 @@
+use Libraries.Game.Graphics.Shaders.ShaderProgram
+use Libraries.Game.Graphics.Shaders.ShaderManager
+use Libraries.Game.Graphics.Shaders.Shader
+use Libraries.Game.Graphics.Shaders.ControlFragmentShader
+
+class LevelTransitionProgram is ShaderProgram
+
+    public constant text DEFAULT_NAME = "Level Transition Shader Program"
+    constant text FRAGMENT_NAME = "Level Transition Shader"
+
+    on create
+        SetName(DEFAULT_NAME)
+        ShaderManager manager
+        Shader vertex = manager:GetDefaultVertexShader2D()
+        Add(vertex)
+
+        if manager:HasShader(FRAGMENT_NAME)
+            Shader fragment = manager:GetShader(FRAGMENT_NAME)
+            Add(fragment)
+        else
+            LevelTransitionShader fragment
+            Add(fragment)
+        end
+
+        LevelTransitionMapping mapping
+        SetShaderMapping(mapping)
+    end
+
+end

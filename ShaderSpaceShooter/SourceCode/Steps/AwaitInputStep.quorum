@@ -1,0 +1,89 @@
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+
+class AwaitInputStep is StageStep
+
+    Label backLabel
+    Label frontLabel
+
+    text value = "PRESS ENTER TO CONTINUE"
+    number time = 0
+    boolean done = false
+
+    GameStateManager manager
+
+    on create
+        Color color
+        frontLabel:SetColor(color:White())
+        backLabel:SetColor(color:Black())
+    end
+
+    action OnStart(Main main)
+        backLabel:SetFontSize(80)
+        frontLabel:SetFontSize(80)
+        backLabel:SetMaximumWidth(600)
+        frontLabel:SetMaximumWidth(600)
+        backLabel:SetText(value)
+        frontLabel:SetText(value)
+
+        number screenWidth = manager:GetGame():GetScreenWidth()
+        number screenHeight = manager:GetGame():GetScreenHeight()
+
+        number lines = frontLabel:GetHeight() / frontLabel:GetLineHeight()
+
+        frontLabel:SetPosition(screenWidth / 2.0 - frontLabel:GetWidth() / 2.0, screenHeight / 2.0 - frontLabel:GetHeight() / 2.0 + (lines - 1) * frontLabel:GetLineHeight())
+        backLabel:SetPosition(frontLabel:GetX() + 4, frontLabel:GetY() - 4)
+
+        main:Add(backLabel)
+        main:Add(frontLabel)
+
+        main:GetAccessibilityNavigator():Report(value)
+    end
+
+    action IsDone(Main main) returns boolean
+        return done
+    end
+
+    action OnEnd(Main main)
+        main:Remove(backLabel)
+        main:Remove(frontLabel)
+    end
+
+    action Update(Main main, number seconds)
+        if main:IsPaused() = false
+            time = time + seconds
+        end
+        
+        if frontLabel:IsShowing()
+            if time > 1
+                frontLabel:Hide()
+                backLabel:Hide()
+                time = 0
+            end
+        else
+            if time > 0.5
+                frontLabel:Show()
+                backLabel:Show()
+                time = 0
+            end
+        end
+    end
+
+    action SetText(text value)
+        me:value = value
+    end
+
+    action GetText returns text
+        return value
+    end
+
+    action SetDone(boolean done)
+        me:done = done
+    end
+
+    action SetLabelColor(Color color)
+        frontLabel:SetColor(color)
+    end
+end

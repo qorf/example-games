@@ -1,0 +1,222 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Sound.Audio
+
+class Stage1 is Stage
+
+    on create
+        GetAmbientLight():SetColor(0.35, 0.3, 0.4, 1)
+        GetDirectionalLight():SetColor(0.5, 0.4, 0.6, 1)
+    end
+
+    action SetBackground(Drawable background)
+        NebulaSmokeProgram nebulaProgram
+        NebulaSmokeMapping nebulaMapping
+        background:SetShaderProgram(nebulaProgram)
+        background:SetShaderMapping(nebulaMapping)
+        nebulaProgram:Compile()
+    end
+
+    action GetMusic returns Audio
+        Audio audio
+        audio:Load("Resources/Audio/Screen Saver.ogg")
+        return audio
+    end
+
+    action GetStageSteps returns Array<StageStep>
+        Array<StageStep> steps
+
+        EnemyStageStep enemyStep1
+        enemyStep1:SetLeadInTime(2)
+        
+        Skiff skiff1 = Skiff1()
+        Skiff skiff2 = Skiff2()
+
+        enemyStep1:AddEnemy(skiff1, 0)
+        enemyStep1:AddEnemy(skiff2, 1)
+        steps:Add(enemyStep1)
+
+
+        EnemyStageStep enemyStep2
+        enemyStep2:SetLeadInTime(2)
+
+        Skiff skiff3 = Skiff3()
+        
+        enemyStep2:AddEnemy(skiff3, 0)
+        steps:Add(enemyStep2)
+
+        AwaitInputStep await
+        await:SetLeadInTime(2)
+        steps:Add(await)
+
+        steps:Add(EnemyStep3())
+
+        AwaitInputStep prepareTransition
+        prepareTransition:SetText("PRESS ENTER TO ADVANCE TO NEXT LEVEL")
+        prepareTransition:SetLeadInTime(2)
+        steps:Add(prepareTransition)
+        
+        TransitionStep transition
+        transition:SetLeadInTime(1)
+        steps:Add(transition)
+
+        return steps
+    end
+
+    private action Skiff1 returns Skiff
+        Skiff skiff
+        skiff:SetName("Skiff 1")
+        skiff:SetSpawnPosition(1640, 500)
+
+        MovePlan move1
+        move1:SetTarget(1000, GetRowY(3))
+        move1:SetLeadOutTime(0)
+        skiff:AddPlan(move1)
+
+        RotationPlan rotate1
+        rotate1:TargetUp()
+        skiff:AddPlan(rotate1)
+
+        MovePlan move2
+        move2:SetTarget(1000, GetRowY(5))
+        skiff:AddPlan(move2)
+
+        RotationPlan rotate2
+        rotate2:TargetLeft()
+        skiff:AddPlan(rotate2)
+
+        return skiff
+    end
+
+    private action Skiff2 returns Skiff
+        Skiff skiff
+        skiff:SetName("Skiff 2")
+        skiff:SetSpawnPosition(1640, 500)
+
+        MovePlan move1
+        move1:SetTarget(1000, GetRowY(3))
+        move1:SetLeadOutTime(0)
+        skiff:AddPlan(move1)
+
+        RotationPlan rotate1
+        rotate1:TargetDown()
+        skiff:AddPlan(rotate1)
+
+        MovePlan move2
+        move2:SetTarget(1000, GetRowY(1))
+        skiff:AddPlan(move2)
+
+        RotationPlan rotate2
+        rotate2:TargetLeft()
+        skiff:AddPlan(rotate2)
+
+        return skiff
+    end
+
+    private action Skiff3 returns Skiff
+        Skiff skiff
+        skiff:SetSpawnPosition(1640, 500)
+
+        MovePlan move1
+        move1:SetTarget(1000, GetRowY(3))
+        move1:SetLeadOutTime(0)
+        skiff:AddPlan(move1)
+
+        RepeatPlan loop
+        FirePlan fire
+        fire:SetLeadInTime(2.5)
+        loop:AddPlan(fire)
+        skiff:AddPlan(loop)
+
+        return skiff
+    end
+
+    private action EnemyStep3 returns EnemyStageStep
+        EnemyStageStep step
+        step:SetLeadInTime(1)
+
+        SynchronizePlan sync
+        integer i = 0
+        repeat while i < 3
+            Skiff skiff
+            skiff:SetName("Skiff " + i)
+            skiff:SetSpawnPosition(1640 + i * 160, GetRowY(6))
+
+            MovePlan move1
+            move1:SetTarget(1100, GetRowY(6))
+            move1:SetLeadOutTime(0)
+            skiff:AddPlan(move1)
+    
+            RotationPlan rotate1
+            rotate1:TargetDown()
+            skiff:AddPlan(rotate1)
+    
+            MovePlan move2
+            move2:SetTarget(1100, GetRowY(1 + i * 2))
+            skiff:AddPlan(move2)
+    
+            RotationPlan rotate2
+            rotate2:TargetLeft()
+            skiff:AddPlan(rotate2)
+
+            sync:AddEnemy(skiff)
+            skiff:AddPlan(sync)
+
+            RepeatPlan loop
+            FirePlan fire
+            fire:SetLeadInTime(2.3 + i * 0.2)
+            fire:SetLeadOutTime(1.7 - i * 0.2)
+            loop:AddPlan(fire)
+            skiff:AddPlan(loop)
+
+            step:AddEnemy(skiff, 0)
+
+            i = i + 1
+        end
+
+        i = 0
+        repeat while i < 4
+            Skiff skiff
+            skiff:SetName("Skiff " + (3 + i))
+            skiff:SetSpawnPosition(1640 + i * 160, GetRowY(0))
+
+            MovePlan move1
+            move1:SetTarget(1200, GetRowY(0))
+            skiff:AddPlan(move1)
+    
+            if i not= 3
+                RotationPlan rotate1
+                rotate1:TargetUp()
+                skiff:AddPlan(rotate1)
+        
+                MovePlan move2
+                move2:SetTarget(1200, GetRowY(6 - i * 2))
+                skiff:AddPlan(move2)
+        
+                RotationPlan rotate2
+                rotate2:TargetLeft()
+                skiff:AddPlan(rotate2)
+            end
+
+            sync:AddEnemy(skiff)
+            skiff:AddPlan(sync)
+
+            RepeatPlan loop
+            FirePlan fire
+            fire:SetLeadInTime(4 - i * 0.2)
+            fire:SetLeadOutTime(i * 0.2)
+            loop:AddPlan(fire)
+            skiff:AddPlan(loop)
+
+            if i = 0
+                step:AddEnemy(skiff, 1)
+            else
+                step:AddEnemy(skiff, 0)
+            end
+
+            i = i + 1
+        end
+
+        return step
+    end
+end

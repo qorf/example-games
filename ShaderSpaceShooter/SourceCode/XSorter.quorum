@@ -1,0 +1,30 @@
+use Libraries.Containers.Support.Comparison
+use Libraries.Interface.Item2D
+
+// Class used to sort arrays by the x-coordinates of Item2Ds.
+class XSorter is Comparison
+
+    action Compare(Object a, Object b) returns integer
+        if (a is Item2D) = false or (b is Item2D) = false
+            alert("Can't sort non-Item2D objects!")
+        end
+
+        Item2D itemA = cast(Item2D, a)
+        Item2D itemB = cast(Item2D, b)
+
+        if itemA:GetX() < itemB:GetX()
+            return parent:Comparison:SMALLER
+        elseif itemA:GetX() = itemB:GetX()
+            if itemA:GetY() < itemB:GetY()
+                return parent:Comparison:SMALLER
+            elseif itemA:GetY() = itemB:GetY()
+                return parent:Comparison:LARGER
+            else
+                return parent:Comparison:EQUAL
+            end
+        else
+            return parent:Comparison:LARGER
+        end
+    end
+
+end

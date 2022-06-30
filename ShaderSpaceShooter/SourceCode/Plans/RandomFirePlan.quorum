@@ -1,0 +1,36 @@
+use Libraries.Compute.Vector2
+use Libraries.Containers.Array
+use Libraries.Compute.Random
+
+class RandomFirePlan is EnemyPlan
+
+    Random random
+    number expectedVolley = 5
+
+    action OnStart(Main main)
+        number total = main:GetEnemies():GetSize()
+        number threshold = expectedVolley / total
+        if random:RandomNumber() < threshold
+            GetEnemy():Fire(main)
+        end
+    end
+
+    action IsDone(Main main) returns boolean
+        return true
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+    end
+
+    action SetExpectedVolley(number expectedVolley)
+        me:expectedVolley = expectedVolley
+    end
+
+    action GetExpectedVolley returns number
+        return expectedVolley
+    end
+
+end

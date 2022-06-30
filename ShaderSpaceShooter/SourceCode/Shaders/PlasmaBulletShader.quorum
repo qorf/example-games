@@ -1,0 +1,86 @@
+use Libraries.Game.Graphics.Shaders.Shader
+
+class PlasmaBulletShader is Shader
+
+    on create
+        SetType(parent:Shader:FRAGMENT_SHADER)
+        SetName("Plasma Bullet Shader")
+
+        /*
+        Adapted from a shader by diviaki on Shadertoy.
+        https://www.shadertoy.com/view/4ltSRS
+        Used under Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+        */
+        SetCode(GetOpenGLVersion() +
+"
+" +
+"#ifdef GL_ES
+    #define LOWP lowp
+    precision mediump float;
+#else
+    #define LOWP 
+#endif
+in LOWP vec4 v_color;
+in vec2 v_texCoords;
+uniform sampler2D u_texture;
+uniform float u_aspectRatio;
+uniform float iTime;
+layout (location = 0) out vec4 outputColor;
+
+vec3 hb(vec2 pos, float t, float time, vec2 rot, float size, sampler2D tex0)
+{
+    vec2 newUv = 0.2*(pos/(1.2-t)+0.5*time*rot);
+    float texSample = texture( tex0, newUv ).b;
+    float uOff = 0.2*(texSample + 0.3*time);     //lsf3RH
+    vec2 starUV = newUv + vec2( uOff, 0.0 );
+    return vec3(0.3,0.3,1.0)+1.3*texture( tex0, starUV ).b;
+}
+
+vec4 blob(vec2 uv, float size, float time, sampler2D tex0)
+{
+    vec2 center = vec2(0.,0.);
+
+    vec2 pos = center-uv;
+    float t = length(pos);
+    float st = size-t;
+
+       vec2 rot = 0.005*vec2(sin(time / 16.), sin(time / 12.)); //MslGWN
+
+    float alpha = smoothstep(0.0, 0.2*size, st);
+    
+    vec3 col = hb(pos,t,time,rot,size,tex0);
+    float a1 = smoothstep(-1.4, -1.0,-col.b);
+    col= mix( col, hb(pos,t,-time,-rot,size,tex0), a1);
+        
+    col+=0.8*exp(-12.*abs(t-0.8*size)/size); 
+    float a2 = smoothstep(-1.4, -1.0,-col.b);
+
+    alpha -= a2;
+
+    return vec4(col,alpha);
+}
+
+vec4 main_(vec2 uv, float size)
+{   
+    return blob(uv,size,iTime,u_texture);
+}
+
+
+void main()
+{
+    vec2 uv = v_texCoords.xy;
+    vec2 cr = uv*2.-1.;
+    cr.x*=u_aspectRatio;
+ 
+    //late addition to elaborate background motion, could be reused later on
+    vec2 rot = 0.5*vec2(sin(iTime / 16.), sin(iTime / 12.));
+
+    vec4 ball = clamp(main_(cr, 1.05),0.,1.);
+  
+    //simulated gl blend
+    outputColor = ball;
+}"
+)
+    end
+
+end

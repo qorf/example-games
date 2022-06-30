@@ -1,0 +1,131 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.DirectionalLight
+use Libraries.Game.Graphics.AmbientLight
+use Libraries.Sound.Audio
+
+class Stage
+
+    Array<StageStep> steps = undefined
+    number timer = 0
+
+    GameStateManager manager
+
+    Color ambientLight
+    Color directionalLight
+    DirectionalLight light
+    
+    Audio music = undefined
+
+    on create
+        light:SetDirection(0.1, -1, 0.5)
+    end
+
+    action Load(Main main)
+        SetBackground(main:GetBackground())
+        steps = GetStageSteps()
+
+        music = GetMusic()
+        music:SetVolume(0.3)
+        music:Play()
+
+        AmbientLight ambience
+        ambience:SetColor(ambientLight)
+        main:SetAmbientLight(ambience)
+        main:Add(light)
+    end
+
+    action Unload(Main main)
+        main:Remove(light)
+        music:Stop()
+    end
+
+    action Update(Main main, number seconds)
+        if steps:IsEmpty() or main:IsPaused()
+            return now
+        end
+
+        StageStep currentStep = steps:GetFromFront()
+        repeat until currentStep = undefined
+            if currentStep:phase = currentStep:LEAD_IN
+                timer = timer + seconds
+                if timer >= currentStep:GetLeadInTime()
+                    timer = 0
+                    currentStep:phase = currentStep:MAIN
+                else
+                    return now
+                end
+            end
+
+            if currentStep:phase = currentStep:MAIN
+                if currentStep:HasStarted() = false
+                    currentStep:Start(main)
+                end
+                if currentStep:IsDone(main)
+                    currentStep:OnEnd(main)
+                    currentStep:phase = currentStep:LEAD_OUT
+                else
+                    currentStep:Update(main, seconds)
+                    if currentStep:IsDone(main)
+                        currentStep:OnEnd(main)
+                        currentStep:phase = currentStep:LEAD_OUT
+                    else
+                        return now
+                    end
+                end
+            end
+
+            if currentStep:phase = currentStep:LEAD_OUT
+                timer = timer + seconds
+                if timer >= currentStep:GetLeadOutTime()
+                    timer = 0
+                    steps:RemoveFromFront()
+                    if steps:IsEmpty() = false
+                        currentStep = steps:GetFromFront()
+                    else
+                        currentStep = undefined
+                    end
+                else
+                    return now
+                end
+            end
+        end
+    end
+
+    action GetRowY(integer index) returns number
+        Main main = cast(Main, manager:GetGame())
+        return main:GetRowPositions():Get(index)
+    end
+
+    action ProcessAwaitInputStep
+        if steps:IsEmpty() = false and steps:Get(0) is AwaitInputStep
+            AwaitInputStep await = cast(AwaitInputStep, steps:Get(0))
+            await:SetDone(true)
+        end
+    end
+
+    blueprint action SetBackground(Drawable background)
+
+    blueprint action GetStageSteps returns Array<StageStep>
+
+    blueprint action GetMusic returns Audio
+
+    action GetAmbientLight returns Color
+        return ambientLight
+    end
+
+    action SetAmbientLight(Color ambientLight)
+        me:ambientLight = ambientLight
+    end
+
+    action GetDirectionalLight returns Color
+        return directionalLight
+    end
+
+    action SetDirectionalLight(Color directionalLight)
+        me:directionalLight = directionalLight
+    end
+
+end

@@ -1,0 +1,41 @@
+use Libraries.Game.Graphics.Shaders.all
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.GraphicsManager
+use Libraries.Game.Graphics.OpenGLConstants
+use Libraries.Game.GameStateManager
+
+class LevelTransitionMapping is ShaderMapping
+
+    ShaderProgram program = undefined
+    GameStateManager manager
+
+    action Begin(ShaderProgram program, Camera camera)
+        me:program = program
+
+        GraphicsManager graphics = manager:GetGameGraphics()
+        OpenGLConstants constants
+        graphics:SetDepthMask(true)
+        graphics:EnableProperty(constants:GL_DEPTH_TEST)
+        graphics:SetDepthFunction(constants:GL_LEQUAL)
+        graphics:DisableProperty(constants:GL_CULL_FACE)
+
+        // TO-DO: Replace hard-coded values with references to constants
+        program:SetShaderInputMatrix("u_projTrans", camera:GetCombinedMatrix())
+//        program:SetShaderInput("u_texture", 0)
+    end
+
+    action MapInputs(ShaderProgram program, Drawable drawable)
+        number width = drawable:GetWidth() * drawable:GetScaleX()
+        number height = drawable:GetHeight() * drawable:GetScaleY()
+        number aspectRatio = width / height
+
+        Main main = cast(Main, manager:GetGame())
+
+        program:SetShaderInput("iTime", main:GetTransitionTimer())
+    end
+
+    action End(ShaderProgram program)
+        me:program = undefined
+    end
+end

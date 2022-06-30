@@ -1,0 +1,47 @@
+"PlayerLaser.wav" ("Laser.wav") by Daleonfire (www.daleaudio.com) on Freesound. Used under Creative Commons 0 License.
+https://freesound.org/people/Daleonfire/sounds/376694/
+
+"EnemyLaser.wav" ("Laser Shot Silenced.wav") by bubaproducer on Freesound. Used under Attribution 3.0 License.
+https://freesound.org/people/bubaproducer/sounds/151022/
+
+"Danger Blip.wav" ("Quick Blip.wav") by se2001 on Freesound. Used under Creative Commons 0 License.
+https://freesound.org/people/se2001/sounds/518558/
+
+"Warning Blip.wav" ("Blip_C_08.wav") by cabled_mess on Freesound. Used under Creative Commons 0 License.
+https://freesound.org/people/cabled_mess/sounds/350861/
+
+"Move Error.wav" ("Error.wav") by Isaac200000 on Freesound. Used under Creative Commons 0 License.
+https://freesound.org/people/Isaac200000/sounds/188013/
+
+"Move Click.wav" ("Click") by complex_waveform on Freesound. Used under the Attribution License.
+https://freesound.org/people/complex_waveform/sounds/213148/
+
+"Small Explosion.wav" renamed from "Explosion 4" by fridobeck on Freesound. Used under Attribution Noncommercial License.
+
+"EnemyPresentBlip.wav" ("blip_2.wav") by soundnimja on Freesound. Used under Attribution 3.0 License.
+https://freesound.org/people/soundnimja/sounds/173327/
+
+"PauseSwoosh.ogg" ("A teleportation") by steaq on Freesound. Used under the Creative Commons 0 License.
+https://freesound.org/people/steaq/sounds/560124/
+
+"PlayerDamage.wav" ("Jump, Climb, or Damage Sound (F)") by Temp6754 on Freesound. Used under the Creative Commons 0 License.
+https://freesound.org/people/Temp6754/sounds/535905/
+
+"LevelTeleport.ogg" converted from "Strange teleport sound.wav" by GaryQ on Freesound. Used under the Creative Commons 0 License.
+https://freesound.org/people/GaryQ/sounds/135435/
+
+"Jet Fueled Vixen" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Hiding Your Reality" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Screen Saver" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Pleasant Porridge" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/

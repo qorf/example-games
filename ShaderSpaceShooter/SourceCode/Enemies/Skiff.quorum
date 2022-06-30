@@ -1,0 +1,28 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Vector2
+use Libraries.Game.Graphics.Color
+
+class Skiff is Enemy
+
+    on create
+        SetName("Skiff")
+    end
+
+    action Fire(Main main)
+//        Player player = main:GetPlayer()
+//        Vector2 direction = player:GetCenterPosition():Subtract(GetCenterPosition())
+//        direction:Normalize():Scale(GetBulletVelocity())
+//        main:CreateViralBullet(me, direction:GetX(), direction:GetY())
+        main:CreateViralBullet(me, -GetBulletVelocity(), 0)
+    end
+
+    action LoadVisuals(Main main)
+        Model model
+        model:Load("Resources/Tilesets3D/spacekit_2/Models/OBJ format/craft_miner.obj")
+        model:SetYawPitchRoll(270, -15, 0)
+        SetSize(80, 80)
+        SetPairedModel(model)
+        
+        main:Add(cast(PairedItem2D, me))
+    end
+end

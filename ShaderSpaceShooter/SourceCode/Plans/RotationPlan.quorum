@@ -1,0 +1,86 @@
+use Libraries.Compute.Vector2
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Math
+
+class RotationPlan is EnemyPlan
+
+    number targetYaw = 0
+    number travelGoal = 0
+    number yawTravelled = 0
+    number direction = 1
+    boolean done = false
+
+    number yawSpeed = 720
+
+    action OnStart(Main main)
+        Math math
+        Enemy enemy = GetEnemy()
+        Model model = enemy:GetPairedModel()
+        number currentYaw = model:GetYaw()
+        if currentYaw < 0
+            currentYaw = currentYaw + 360
+        end
+
+        number nearestYaw = targetYaw
+        number distance = math:AbsoluteValue(targetYaw - currentYaw)
+        if math:AbsoluteValue((targetYaw + 360) - currentYaw) < distance
+            nearestYaw = targetYaw + 360
+            distance = math:AbsoluteValue((targetYaw + 360) - currentYaw)
+        end
+        if math:AbsoluteValue((targetYaw - 360) - currentYaw) < distance
+            nearestYaw = targetYaw - 360
+            distance = math:AbsoluteValue((targetYaw - 360) - currentYaw)
+        end
+
+        travelGoal = distance
+        if nearestYaw > currentYaw
+            direction = 1
+        else
+            direction = -1
+        end
+    end
+
+    action IsDone(Main main) returns boolean
+        return done
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+        if main:IsPaused()
+            return now
+        end
+
+        Enemy enemy = GetEnemy()
+        Model model = enemy:GetPairedModel()
+        yawTravelled = yawTravelled + yawSpeed * seconds
+        if yawTravelled >= travelGoal
+            model:SetYawPitchRoll(targetYaw, model:GetPitch(), model:GetRoll())
+            done = true
+        else
+            number translation = yawSpeed * seconds * direction
+            model:SetYawPitchRoll(model:GetYaw() + translation, model:GetPitch(), model:GetRoll())
+        end
+    end
+
+    action SetTargetYaw(number yaw)
+        targetYaw = yaw
+    end
+
+    action TargetLeft
+        targetYaw = 270
+    end
+
+    action TargetRight
+        targetYaw = 90
+    end
+
+    action TargetUp
+        targetYaw = 180
+    end
+
+    action TargetDown
+        targetYaw = 0
+    end
+end

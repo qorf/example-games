@@ -1,0 +1,48 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Sound.Audio
+use Libraries.Game.Graphics.Color
+
+class Stage3 is Stage
+
+    on create
+        GetAmbientLight():SetColor(0.35, 0.4, 0.3, 1)
+        GetDirectionalLight():SetColor(0.5, 0.6, 0.4, 1)
+    end
+
+    action SetBackground(Drawable background)
+        ConfettiProgram program
+        ConfettiMapping mapping
+        background:SetShaderProgram(program)
+        background:SetShaderMapping(mapping)
+        program:Compile()
+    end
+
+    action GetMusic returns Audio
+        Audio audio
+        audio:Load("Resources/Audio/Pleasant Porridge.ogg")
+        return audio
+    end
+
+    action GetStageSteps returns Array<StageStep>
+        Array<StageStep> steps
+
+        Color color
+
+        AwaitInputStep await
+        await:SetLabelColor(color:Orange())
+        await:SetLeadInTime(5)
+        await:SetText("You WIN!")
+        steps:Add(await)
+
+//
+//        AwaitInputStep prepareTransition
+//        prepareTransition:SetText("PRESS ENTER TO ADVANCE TO NEXT LEVEL")
+//        prepareTransition:SetLeadInTime(2)
+//        steps:Add(prepareTransition)
+        
+
+        return steps
+    end
+
+end

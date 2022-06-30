@@ -1,0 +1,53 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+
+class Explosion is Drawable
+
+    constant number MAX_LIFE_TIME = 2
+    number lifeTime = 0
+
+    number startTime = 0
+    number animationSpeed = 1
+    GameStateManager manager
+
+    action Load(number width, number height)
+        Color color
+        LoadFilledRectangle(10, 10, color:White())
+        SetSize(200, 200)
+        ExplosionProgram explosionProgram
+        ExplosionMapping explosionMapping
+        SetShaderProgram(explosionProgram)
+        SetShaderMapping(explosionMapping)
+
+        // TO-DO: This is making a new program each time, so it will never be compiled.
+        // Check if the manager has this instead.
+        if explosionProgram:IsCompiled() = false
+            explosionProgram:Compile()
+        end
+    end
+
+    action Update(number seconds)
+        Main main = cast(Main, manager:GetGame())
+        if main:IsPaused() = false
+            lifeTime = lifeTime + seconds
+        end
+    end
+
+    action IsDone returns boolean
+        return lifeTime > MAX_LIFE_TIME / animationSpeed
+    end
+
+    action GetAnimationSpeed returns number
+        return animationSpeed
+    end
+
+    action SetAnimationSpeed(number animationSpeed)
+        me:animationSpeed = animationSpeed
+    end
+
+    action GetLifeTime returns number
+        return lifeTime
+    end
+
+end

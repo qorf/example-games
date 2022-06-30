@@ -1,0 +1,20 @@
+use Libraries.Compute.Vector2
+
+class FirePlan is EnemyPlan
+
+    action OnStart(Main main)
+        Enemy enemy = GetEnemy()
+        enemy:Fire(main)
+    end
+
+    action IsDone(Main main) returns boolean
+        return true
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+    end
+
+end

@@ -1,0 +1,49 @@
+
+class StageStep
+
+    public constant integer LEAD_IN = 0
+    public constant integer MAIN = 1
+    public constant integer LEAD_OUT = 2
+    public integer phase = LEAD_IN
+
+    number leadInTime = 0
+    number leadOutTime = 0
+    boolean hasStarted = false
+
+    action GetLeadInTime returns number
+        return leadInTime
+    end
+
+    action SetLeadInTime(number leadInTime)
+        me:leadInTime = leadInTime
+    end
+
+    action OnStart(Main main)
+    end
+
+    blueprint action IsDone(Main main) returns boolean
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+    end
+
+    action GetLeadOutTime returns number
+        return leadOutTime
+    end
+
+    action SetLeadOutTime(number leadOutTime)
+        me:leadOutTime = leadOutTime
+    end
+
+    action HasStarted returns boolean
+        return hasStarted
+    end
+
+    action Start(Main main)
+        hasStarted = true
+        OnStart(main)
+    end
+
+end

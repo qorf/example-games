@@ -1,0 +1,45 @@
+use Libraries.Compute.Vector2
+
+class MovePlan is EnemyPlan
+
+    Vector2 target
+    Vector2 direction
+    number distanceTravelled = 0
+    number distanceGoal = 0
+
+    action OnStart(Main main)
+        Enemy enemy = GetEnemy()
+        direction:Set(target):Subtract(enemy:GetCenterPosition())
+        direction:Normalize()
+        distanceGoal = target:Distance(enemy:GetCenterPosition())
+    end
+
+    action IsDone(Main main) returns boolean
+        return distanceTravelled >= distanceGoal
+    end
+
+    action OnEnd(Main main)
+        Enemy enemy = GetEnemy()
+        enemy:SetPosition(target:GetX() - enemy:GetWidth() / 2.0, target:GetY() - enemy:GetHeight() / 2.0)
+    end
+
+    action Update(Main main, number seconds)
+        if main:IsPaused()
+            return now
+        end
+
+        Enemy enemy = GetEnemy()
+        if distanceTravelled < distanceGoal
+            number travel = enemy:GetSpeed() * seconds
+            distanceTravelled = distanceTravelled + travel
+            
+            Vector2 translation
+            translation:Set(direction):Scale(travel)
+            enemy:Move(translation)
+        end
+    end
+
+    action SetTarget(number x, number y)
+        target:Set(x, y)
+    end
+end

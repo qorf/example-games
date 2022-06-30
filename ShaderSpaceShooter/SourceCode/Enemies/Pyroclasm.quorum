@@ -1,0 +1,30 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Vector2
+use Libraries.Game.Graphics.Color
+
+class Pyroclasm is Enemy
+
+    on create
+        SetName("Pyroclasm! DEVELOPER NOTE: Remember to come back and finish this")
+    end
+
+    action Fire(Main main)
+//        Player player = main:GetPlayer()
+//        Vector2 direction = player:GetCenterPosition():Subtract(GetCenterPosition())
+//        direction:Normalize():Scale(GetBulletVelocity())
+//        main:CreateViralBullet(me, direction:GetX(), direction:GetY())
+        main:CreateViralBullet(me, -GetBulletVelocity(), 0)
+    end
+
+    action LoadVisuals(Main main)
+        Color color
+        LoadFilledCircle(170, color:White())
+        SetSize(340, 340)
+        PyroclasmProgram program
+        PyroclasmMapping mapping
+        SetShaderProgram(program)
+        SetShaderMapping(mapping)
+        program:Compile()
+        main:Add(cast(PairedItem2D, me))
+    end
+end

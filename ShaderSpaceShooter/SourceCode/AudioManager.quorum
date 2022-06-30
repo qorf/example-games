@@ -1,0 +1,86 @@
+use Libraries.Containers.Array
+use Libraries.Sound.Audio
+
+class AudioManager
+
+    Array<Audio> audioArray
+
+    action Update(number seconds)
+        integer i = 0
+        repeat while i < audioArray:GetSize()
+            Audio audio = audioArray:Get(i)
+            if audio:IsPlaying() = false
+                audioArray:RemoveAt(i)
+                audio:Dispose()
+            else
+                i = i + 1
+            end
+        end
+    end
+
+    action PlayerLaser
+        Audio audio
+        audio:Load("Resources/Audio/PlayerLaser.wav")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action EnemyExplosion
+        Audio audio
+        audio:Load("Resources/Audio/Small Explosion.wav")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action EnemyLaser(integer row)
+        Audio audio
+        audio:Load("Resources/Audio/EnemyLaser.wav")
+        audio:SetVolume(0.25)
+        audio:SetPitch(0.55 + row * 0.15)
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action MoveClick(integer row)
+        Audio audio
+        audio:Load("Resources/Audio/Move Click.wav")
+        audio:SetPitch(0.55 + row * 0.15)
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action MoveError
+        Audio audio
+        audio:Load("Resources/Audio/Move Error.wav")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action EnemyPresentBlip
+        Audio audio
+        audio:Load("Resources/Audio/EnemyPresentBlip.wav")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action PauseSwoosh
+        Audio audio
+        audio:Load("Resources/Audio/PauseSwoosh.ogg")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action PlayerDamage
+        Audio audio
+        audio:Load("Resources/Audio/PlayerDamage.wav")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+
+    action LevelTeleport
+        Audio audio
+        audio:Load("Resources/Audio/LevelTeleport.ogg")
+        audio:Play()
+        audioArray:Add(audio)
+    end
+end

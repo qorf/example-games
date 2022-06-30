@@ -1,0 +1,384 @@
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Interface.Item
+use Libraries.Game.GameStateManager
+
+class PauseAccessibilityNavigator
+
+    Array<Item2D> playerNavigation
+    Array<RowDetails> rowNavigation
+    Array<Bullet> bulletNavigation
+    Array<Enemy> enemyNavigation
+
+    Drawable selectionBox = undefined
+    XSorter sorter
+    Main main = undefined
+
+    integer topLevelIndex = 0
+    integer inspectIndex = 0
+    integer rowInspectIndex = 0
+
+    integer selectionLevel = 0
+
+    Item2D oldDummy = undefined
+
+    action Activate(Main main)
+        me:main = main
+
+        playerNavigation:Add(main:GetPlayer())
+
+        Array<Bullet> bullets = main:GetBullets()
+        integer i = 0
+        repeat while i < bullets:GetSize()
+            Bullet bullet = bullets:Get(i)
+            if bullet:GetOwner() is Player
+                playerNavigation:Add(bullet)
+            end
+            i = i + 1
+        end
+        playerNavigation:Sort(sorter)        
+
+        rowNavigation = main:GetRowDetails()
+        i = 0
+        repeat while i < rowNavigation:GetSize()
+            rowNavigation:Get(i):LoadAccessibleItems(main)
+            i = i + 1
+        end
+
+        i = 0
+        repeat while i < bullets:GetSize()
+            Bullet bullet = bullets:Get(i)
+            if bullet:GetOwner() is Enemy
+                bulletNavigation:Add(bullet)
+            end
+            i = i + 1
+        end
+        bulletNavigation:Sort(sorter)
+
+        Array<Enemy> enemies = main:GetEnemies()
+        i = 0
+        repeat while i < enemies:GetSize()
+            enemyNavigation:Add(enemies:Get(i))
+            i = i + 1
+        end
+        enemyNavigation:Sort(sorter)
+
+        selectionBox = main:GetSelectionBox()
+        inspectIndex = 0
+        topLevelIndex = 0
+        rowInspectIndex = 0
+        selectionLevel = 0
+        SelectionBoxAround(main:GetPlayer())
+        Report("Game paused. Use the arrow keys or tab to navigate between categories, use Space or Enter to inspect elements in a category, and use Control to unpause. Player and player projectiles. Press enter to inspect", selectionBox)
+    end
+
+    action Deactivate(Main main)
+        playerNavigation:Empty()
+        rowNavigation = undefined
+        bulletNavigation:Empty()
+        enemyNavigation:Empty()
+    end
+
+    action GetTopLevelIndex returns integer
+        return topLevelIndex
+    end
+
+    action SetTopLevelIndex(integer index)
+        me:topLevelIndex = index
+        if index = 0
+            SelectionBoxAround(main:GetPlayer())
+            Report("Player and player projectiles. Press enter to inspect", selectionBox)
+        elseif index = 1
+            SelectionBoxAroundRow(0)
+            Report("Row inspection. Press enter to inspect", selectionBox)
+        elseif index = 2
+            if bulletNavigation:IsEmpty()
+                selectionBox:Hide()
+                Report("No enemy projectiles.")
+            else
+                SelectionBoxAround(bulletNavigation:Get(0))
+                Report("Enemy projectiles. Press enter to inspect", selectionBox)
+            end
+        elseif index = 3
+            if enemyNavigation:IsEmpty()
+                selectionBox:Hide()
+                Report("No hostile ships.")
+            else
+                SelectionBoxAround(enemyNavigation:Get(0))
+                Report("Hostile ships. Press enter to inspect", selectionBox)
+            end
+        end
+    end
+
+    action EnterElement
+        if (topLevelIndex not= 1 and selectionLevel > 0) or selectionLevel > 1
+            return now
+        end
+
+        if selectionLevel = 0
+            inspectIndex = 0
+        else
+            rowInspectIndex = 0
+        end
+
+        if topLevelIndex = 0
+            SelectionBoxAround(playerNavigation:Get(0))
+            ReportAccessibleItem(playerNavigation:Get(0), false)
+        elseif topLevelIndex = 1
+            if selectionLevel = 0
+                SelectionBoxAroundRow(0)
+                ReportRow(rowNavigation:Get(0))
+            else
+                SelectionBoxAround(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(0))
+                ReportAccessibleItem(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(0), true)
+            end
+        elseif topLevelIndex = 2
+            if bulletNavigation:IsEmpty()
+                main:GetAudioManager():MoveError()
+                return now
+            else
+                SelectionBoxAround(bulletNavigation:Get(0))
+                ReportAccessibleItem(bulletNavigation:Get(0), false)
+            end
+        elseif topLevelIndex = 3
+            if enemyNavigation:IsEmpty()
+                main:GetAudioManager():MoveError()
+                return now
+            else
+                SelectionBoxAround(enemyNavigation:Get(0))
+                ReportAccessibleItem(enemyNavigation:Get(0), false)
+            end
+        end
+
+        selectionLevel = selectionLevel + 1
+    end
+
+    action ExitElement
+        if selectionLevel = 0
+            return now
+        end
+
+        selectionLevel = selectionLevel - 1
+
+        if selectionLevel = 1 and topLevelIndex = 1
+            SelectionBoxAroundRow(inspectIndex)
+            ReportRow(rowNavigation:Get(inspectIndex))
+        else
+            SetTopLevelIndex(topLevelIndex)
+        end
+    end
+
+    action NextElement
+        if selectionLevel = 0
+            if topLevelIndex = 3
+                main:GetAudioManager():MoveError()
+            else
+                SetTopLevelIndex(topLevelIndex + 1)
+            end
+        elseif selectionLevel = 1
+            if topLevelIndex = 1
+                if inspectIndex < rowNavigation:GetSize() - 1
+                    inspectIndex = inspectIndex + 1
+                    SelectionBoxAroundRow(inspectIndex)
+                    ReportRow(rowNavigation:Get(inspectIndex))
+                else
+                    main:GetAudioManager():MoveError()
+                end
+            else
+                Item2D target = undefined
+                if topLevelIndex = 0
+                    if inspectIndex < playerNavigation:GetSize() - 1
+                        inspectIndex = inspectIndex + 1
+                        target = playerNavigation:Get(inspectIndex)
+                    end
+                elseif topLevelIndex = 2
+                    if inspectIndex < bulletNavigation:GetSize() - 1
+                        inspectIndex = inspectIndex + 1
+                        target = bulletNavigation:Get(inspectIndex)
+                    end
+                elseif topLevelIndex = 3
+                    if inspectIndex < enemyNavigation:GetSize() - 1
+                        inspectIndex = inspectIndex + 1
+                        target = enemyNavigation:Get(inspectIndex)
+                    end
+                end
+
+                if target not= undefined
+                    SelectionBoxAround(target)
+                    ReportAccessibleItem(target, false)
+                else
+                    main:GetAudioManager():MoveError()
+                end
+            end
+        elseif selectionLevel = 2
+            if rowInspectIndex < rowNavigation:Get(inspectIndex):GetAccessibleItems():GetSize() - 1
+                rowInspectIndex = rowInspectIndex + 1
+                SelectionBoxAround(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(rowInspectIndex))
+                ReportAccessibleItem(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(rowInspectIndex), true)
+            end
+        end
+    end
+
+    action PreviousElement
+        if selectionLevel = 0
+            if topLevelIndex = 0
+                main:GetAudioManager():MoveError()
+            else
+                SetTopLevelIndex(topLevelIndex - 1)
+            end
+        elseif selectionLevel = 1
+            if topLevelIndex = 1
+                if inspectIndex > 0
+                    inspectIndex = inspectIndex - 1
+                    SelectionBoxAroundRow(inspectIndex)
+                    ReportRow(rowNavigation:Get(inspectIndex))
+                else
+                    main:GetAudioManager():MoveError()
+                end
+            else
+                Item2D target = undefined
+                if topLevelIndex = 0
+                    if inspectIndex > 0 
+                        inspectIndex = inspectIndex - 1
+                        target = playerNavigation:Get(inspectIndex)
+                    end
+                elseif topLevelIndex = 2
+                    if inspectIndex > 0
+                        inspectIndex = inspectIndex - 1
+                        target = bulletNavigation:Get(inspectIndex)
+                    end
+                elseif topLevelIndex = 3
+                    if inspectIndex > 0
+                        inspectIndex = inspectIndex - 1
+                        target = enemyNavigation:Get(inspectIndex)
+                    end
+                end
+
+                if target not= undefined
+                    SelectionBoxAround(target)
+                    ReportAccessibleItem(target, false)
+                else
+                    main:GetAudioManager():MoveError()
+                end
+            end
+        elseif selectionLevel = 2
+            if rowInspectIndex > 0
+                rowInspectIndex = rowInspectIndex - 1
+                SelectionBoxAround(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(rowInspectIndex))
+                ReportAccessibleItem(rowNavigation:Get(inspectIndex):GetAccessibleItems():Get(rowInspectIndex), true)
+            end
+        end
+    end
+
+    private action SelectionBoxAround(Item2D item)
+        selectionBox:SetSize(item:GetWidth() + 20, item:GetHeight() + 20)
+        selectionBox:SetPosition(item:GetX() + item:GetWidth() / 2.0 - selectionBox:GetWidth() / 2.0, item:GetY() + item:GetHeight() / 2.0 - selectionBox:GetHeight() / 2.0)
+        selectionBox:Show()
+    end
+
+    private action SelectionBoxAroundRow(integer index)
+        selectionBox:SetSize(main:GetScreenWidth(), main:GetRowY(1) - main:GetRowY(2))
+        selectionBox:SetPosition(0, main:GetRowY(index) - selectionBox:GetHeight() / 2.0)
+        selectionBox:Show()
+    end
+
+    action Report(text value)
+        if main = undefined
+            GameStateManager manager
+            main = cast(Main, manager:GetGame())
+        end
+        Report(value, 0, 0, main:GetScreenWidth(), main:GetScreenHeight())
+    end
+
+    action Report(text value, Item2D item)
+        Report(value, item:GetX(), item:GetY(), item:GetWidth(), item:GetHeight())
+    end
+
+    action Report(text value, number x, number y, number width, number height)
+        
+
+        if main = undefined
+            GameStateManager manager
+            main = cast(Main, manager:GetGame())
+        end
+
+        Item2D new
+        new:SetName(value)
+        new:SetDescription("")
+        new:SetSize(width, height)
+        new:SetPosition(x, y)
+        new:SetFocusable(true)
+        new:SetAccessibilityCode(new:parent:Item:ITEM)      
+
+        if oldDummy not= undefined
+            main:Remove(oldDummy)
+        end
+
+        main:Add(new)
+
+        new:Focus()
+    end
+
+    action ReportAccessibleItem(Item2D item, boolean isRowNavigation)
+        if item is Player
+            Player player = cast(Player, item)
+            Report(item:GetName() + ", row " + player:GetCurrentRow(), item) 
+        elseif item is Enemy
+            Enemy enemy = cast(Enemy, item)
+            integer x = TranslateToMiles(enemy:GetX())
+            if isRowNavigation
+                Report(item:GetName() + ", " + x + " miles, row " + enemy:GetCurrentRow(), item)
+            else
+                Report("Row " + enemy:GetCurrentRow() + ", " + x + " miles, " + enemy:GetName(), item)
+            end
+        elseif item is Bullet
+            Bullet bullet = cast(Bullet, item)
+            integer x = TranslateToMiles(bullet:GetX())
+            if isRowNavigation
+                Report(item:GetName() + ", " + x + " miles, row " + bullet:GetCurrentRow(), item)
+            else
+                Report("Row " + bullet:GetCurrentRow() + ", " + x + " miles, " + bullet:GetName(), item)
+            end
+        end
+    end
+
+    action ReportRow(RowDetails row)
+        text result = "Row " + row:GetRowIndex() + " contains "
+        boolean added = false
+        if row:GetRowIndex() = main:GetPlayer():GetTargetRow()
+            result = result + "player, "
+            added = true
+        end
+        integer enemyCount = row:GetAccessibleEnemyCount()
+        integer bulletCount = row:GetAccessibleEnemyBulletCount()
+        integer friendlyBulletCount = row:GetAccessibleFriendlyBulletCount()
+        if enemyCount > 0
+            result = result + enemyCount + " enemies,"
+            added = true
+        end
+        if bulletCount > 0
+            result = result + bulletCount + " enemy bullets,"
+            added = true
+        end
+        if friendlyBulletCount > 0
+            result = result + friendlyBulletCount + " friendly bullets"
+            added = true
+        end
+
+        if added = false
+            result = result + "nothing."
+        end
+    
+        Report(result, selectionBox)
+    end
+
+    // Translate text from in-game unit to "miles" as a shorthand
+    action TranslateToMiles(number x) returns integer
+        number result = ((x - 130) / (main:GetScreenWidth() - 130)) * 100
+        if result < 0
+            result = 0
+        end
+        return cast(integer, result)
+    end
+end

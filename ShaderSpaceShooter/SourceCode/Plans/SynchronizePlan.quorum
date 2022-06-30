@@ -1,0 +1,33 @@
+use Libraries.Compute.Vector2
+use Libraries.Containers.Array
+
+class SynchronizePlan is EnemyPlan
+
+    Array<Enemy> enemies
+
+    action OnStart(Main main)
+    end
+
+    action IsDone(Main main) returns boolean
+        integer i = 0
+        repeat while i < enemies:GetSize()
+            Enemy enemy = enemies:Get(i)            
+            if enemy:IsAlive() and enemy:IsSynchronizing() = false
+                return false
+            end
+            i = i + 1
+        end
+        return true
+    end
+
+    action OnEnd(Main main)
+    end
+
+    action Update(Main main, number seconds)
+    end
+
+    action AddEnemy(Enemy enemy)
+        enemies:Add(enemy)
+    end
+
+end

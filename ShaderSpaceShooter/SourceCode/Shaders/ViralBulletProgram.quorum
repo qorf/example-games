@@ -1,0 +1,29 @@
+use Libraries.Game.Graphics.Shaders.ShaderProgram
+use Libraries.Game.Graphics.Shaders.ShaderManager
+use Libraries.Game.Graphics.Shaders.Shader
+use Libraries.Game.Graphics.Shaders.ControlFragmentShader
+
+class ViralBulletProgram is ShaderProgram
+
+    public constant text DEFAULT_NAME = "Viral Bullet Shader Program"
+    constant text FRAGMENT_NAME = "Viral Bullet Shader"
+
+    on create
+        SetName(DEFAULT_NAME)
+        ShaderManager manager
+        Shader vertex = manager:GetDefaultVertexShader2D()
+        Add(vertex)
+
+        if manager:HasShader(FRAGMENT_NAME)
+            Shader fragment = manager:GetShader(FRAGMENT_NAME)
+            Add(fragment)
+        else
+            ViralBulletShader fragment
+            Add(fragment)
+        end
+
+        ViralBulletMapping mapping
+        SetShaderMapping(mapping)
+    end
+
+end

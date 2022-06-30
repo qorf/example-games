@@ -1,0 +1,576 @@
+use Libraries.Game.Game
+use Libraries.Game.Scenes.Scene
+use Libraries.System.File
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.AmbientLight
+use Libraries.Game.Graphics.DirectionalLight
+use Libraries.Game.Graphics.PerspectiveCamera
+use Libraries.Containers.Array
+use Libraries.Compute.Vector3
+use Libraries.Game.Graphics.OrthographicCamera
+use Libraries.Game.Layer2D
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Game.InputMonitor
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Texture
+use Libraries.Game.Graphics.TextureWrap
+use Libraries.Interface.Item2D
+use Libraries.Interface.Events.CollisionListener2D
+use Libraries.Interface.Events.CollisionEvent2D
+use Libraries.Game.GameDisplay
+use Libraries.Game.GameStateManager
+use Libraries.Sound.Audio
+use Libraries.Game.Graphics.FramesPerSecondLabel
+use Libraries.Game.DesktopConfiguration
+use Libraries.Interface.Item
+use Libraries.Compute.Math
+
+/*
+    This is a default class for creating a game in Quorum. Note that the Main 
+    action begins by calling StartGame(), which loads a window a game can 
+    be displayed in. The action CreateGame is where the game should load any 
+    assets, like images to be displayed, frames of animation, or sounds to be
+    played. 
+*/
+class Main is Game, KeyboardListener, CollisionListener2D
+
+    Layer2D backLayer = undefined
+
+    Player player
+    boolean playerControlEnabled = true
+    boolean paused = false
+
+    Array<Bullet> bullets
+    Array<Explosion> explosions
+    Array<Enemy> enemies
+    Array<number> rowPositions
+    Array<RowDetails> rowDetails
+
+    Drawable selectionBox
+    Drawable background
+    Drawable pauseEffect
+
+    Array<Stage> stages
+    Stage currentStage = undefined
+    integer currentStageIndex = 0
+
+    InputMonitor monitor
+    PauseAccessibilityNavigator accessibility
+    AudioManager audio
+
+    Math math
+    number gameTime = 0
+    number pauseEffectTimer = 0
+    number pauseTimer = 0
+    boolean pauseLaunching = true
+
+    Drawable levelTransition
+    number transitionTimer = 0
+    boolean transitioning = false
+    boolean exitingTransition = false
+
+    /*
+        This action, Main, starts our computer program. In Quorum, programs always
+        begin from Main.
+    */
+    action Main
+        SetScreenSize(1600, 1000)
+        StartGame()
+    end
+
+    /*
+        Inside of this template, we load up a scene from on disk. The game automatically knows and can read these files.
+    */
+    action CreateGame
+        Layer2D layer
+        backLayer = layer
+        backLayer:AddCollisionListener(me)
+        AddLayer(0, backLayer)
+
+        // Initial background
+        Color color
+        background:LoadFilledRectangle(10, 10, color:White())
+        background:SetSize(GetScreenWidth(), GetScreenHeight())
+        backLayer:Add(background)
+
+        // Pause effect
+        pauseEffect:LoadFilledRectangle(10, 10, color:White())
+        pauseEffect:SetSize(GetScreenWidth(), GetScreenHeight())
+        PauseEffectProgram pauseProgram
+        PauseEffectMapping pauseMapping
+        pauseEffect:SetShaderProgram(pauseProgram)
+        pauseEffect:SetShaderMapping(pauseMapping)
+        pauseProgram:Compile()
+        pauseEffect:Hide()
+        backLayer:Add(pauseEffect)
+
+        // Level transition effect
+        levelTransition:LoadFilledRectangle(10, 10, color:White())
+        levelTransition:SetSize(GetScreenWidth(), GetScreenHeight())
+        LevelTransitionProgram transitionProgram
+        LevelTransitionMapping transitionMapping
+        levelTransition:SetShaderProgram(transitionProgram)
+        levelTransition:SetShaderMapping(transitionMapping)
+        transitionProgram:Compile()
+        levelTransition:Hide()
+        levelTransition:SetZ(-1)
+        Add(levelTransition)
+
+        InitializeLighting()
+        InitializeCamera3D()
+        InitializeRows()
+        InitializePlayer()
+        InitializeRowDetails()
+        InitializeSelectionBox()
+
+        AddKeyboardListener(me)
+
+
+        Stage1 stage
+        stages:Add(stage)
+
+        Stage2 stage2
+        stages:Add(stage2)
+
+        Stage3 stage3
+        stages:Add(stage3)
+
+        LoadStage(stage)
+
+    end
+
+    action LoadStage(Stage stage)
+        if currentStage not= undefined
+            currentStage:Unload(me)
+        end
+
+        currentStage = stage
+        
+        if currentStage not= undefined
+            currentStage:Load(me)
+        end
+    end
+
+    action Add(PairedItem2D item)
+        if item is Enemy
+            enemies:Add(cast(Enemy, item))
+        end
+
+        backLayer:Add(item)
+    end
+
+    action Remove(Character character)
+        Remove(cast(PairedItem2D, character))
+    end
+
+    action Remove(PairedItem2D item)
+        backLayer:Remove(item)
+        Model model = item:GetPairedModel()
+        if model not= undefined
+            model:GetLayer():Remove(model)
+        end
+
+        if item is Enemy
+            enemies:Remove(cast(Enemy, item))
+        end
+    end
+
+    private action InitializeCamera3D
+        OrthographicCamera camera
+        camera:Initialize(GetScreenWidth(), GetScreenHeight())
+        camera:SetPosition(GetScreenWidth() / 2.0, 150, GetScreenHeight() / 2.0)
+        camera:SetYawPitchRoll(0, -90, 0)
+        SetCamera3D(camera)
+    end
+
+    private action InitializeLighting
+        AmbientLight ambience
+        ambience:SetColor(0.35, 0.3, 0.4, 1)
+        SetAmbientLight(ambience)
+
+        DirectionalLight light
+        light:SetColor(0.5, 0.4, 0.6, 1)
+        light:SetDirection(0.1, -1, 0.5)
+        Add(light)
+    end
+
+    private action InitializeRows
+        integer i = 0
+        yPosition = 10
+        repeat while i < 7
+            yPosition = yPosition + 20
+            rowPositions:Add(yPosition + 50)
+            yPosition = yPosition + 120
+            i = i + 1
+        end
+    end
+
+    private action InitializePlayer
+        Model playerModel
+        playerModel:Load("Resources/Tilesets3D/spacekit_2/Models/OBJ format/craft_speederA.obj")
+        playerModel:SetYawPitchRoll(90, -15, 0)
+        
+        player:SetSize(100, 100)
+        player:SetPosition(30, GetScreenHeight() / 2.0 - player:GetHeight() / 2.0)
+        player:SetPairedModel(playerModel)
+        player:SetNextFocus(background)
+        player:SetPreviousFocus(background)
+        background:SetNextFocus(player)
+        background:SetPreviousFocus(player)
+        Add(cast(PairedItem2D, player))
+        SetFocus(player)
+    end
+
+    private action InitializeRowDetails
+        integer i = 0
+        repeat while i < 7
+            RowDetails details
+            details:InitializeAudio()
+            details:SetRowIndex(i)
+            rowDetails:Add(details)
+            i = i + 1
+        end
+    end
+
+    private action InitializeSelectionBox
+        Color color
+        selectionBox:LoadFilledRectangle(100, 100, color:White())
+        BlazingSelectionProgram program
+        BlazingSelectionMapping mapping
+        program:Compile()
+        selectionBox:SetShaderProgram(program)
+        selectionBox:SetShaderMapping(mapping)
+    end
+
+    /*
+        The update action is called on every "frame" of animation in a game. This
+        action should be used to do operations on items. So, for example, we 
+        might use this action to change frames of animation, to rotate items, 
+        or to make creatures jump.
+    */
+    action Update(number seconds)
+        // Process stage steps.
+        if currentStage not= undefined
+            currentStage:Update(me, seconds)
+        end
+
+        if paused = false
+            // Increment the un-paused game time.
+            gameTime = gameTime + seconds
+
+            // Accelerate bullets and remove any bullets that are off the screen.
+            integer counter = 0
+            repeat while counter < bullets:GetSize()
+                Bullet bullet = bullets:Get(counter)
+                bullet:Move(bullet:GetVelocity():GetX() * seconds, bullet:GetVelocity():GetY() * seconds)
+                if bullet:GetX() < -bullet:GetWidth() or bullet:GetX() > GetScreenWidth() or bullet:GetY() < -bullet:GetHeight() or bullet:GetY() > GetScreenHeight()
+                    bullets:RemoveAt(counter)
+                    backLayer:Remove(bullet)
+                elseif bullet:GetImpactTarget() not= undefined
+                    Character character = bullet:GetImpactTarget()
+                    character:Damage(bullet)
+                    if character:IsAlive() = false
+                        CreateExplosion(character:GetCenterPosition():GetX(), character:GetCenterPosition():GetY(), character:GetWidth() * 2.5, character:GetHeight() * 2.5)
+                        character:SetCollidable(false)
+                        Remove(character)
+                    end
+                    bullets:RemoveAt(counter)
+                    backLayer:Remove(bullet)
+                else
+                    counter = counter + 1
+                end
+            end
+    
+            counter = 0
+            repeat while counter < explosions:GetSize()
+                Explosion explosion = explosions:Get(counter)
+                if explosion:IsDone()
+                    explosions:RemoveAt(counter)
+                    Remove(explosion)
+                else
+                    counter = counter + 1
+                end
+            end
+
+            if transitioning = true or exitingTransition = true
+                transitionTimer = transitionTimer + seconds
+
+                if transitioning = true and exitingTransition = false
+                    if transitionTimer > 1
+                        currentStage:Unload(me)
+                        currentStageIndex = currentStageIndex + 1
+                        if currentStageIndex < stages:GetSize()
+                            LoadStage(stages:Get(currentStageIndex))
+                        end
+                        transitioning = false
+                        exitingTransition = true
+                    end
+                else
+                    if transitionTimer > 3
+                        exitingTransition = false
+                        levelTransition:Hide()
+                        transitionTimer = 0
+                    end
+                end
+            end
+        else
+            pauseTimer = pauseTimer + seconds
+            if pauseLaunching
+                pauseEffectTimer = pauseEffectTimer + seconds
+                if pauseEffectTimer > 1
+                    pauseLaunching = false
+                end
+            end
+            if not pauseLaunching
+                pauseEffectTimer = 1 + math:Sine(pauseTimer - 1) * 0.1
+            end
+        end
+
+        counter = 0
+        integer playerRow = player:GetTargetRow()
+        repeat while counter < rowDetails:GetSize()
+            rowDetails:Get(counter):Update(me, playerRow, seconds)
+            counter = counter + 1
+        end
+    end
+
+    action PressedKey(KeyboardEvent event)
+        if paused = false
+            if event:keyCode = event:UP
+                player:IncrementTargetRow()
+            elseif event:keyCode = event:DOWN
+                player:DecrementTargetRow()
+            elseif event:keyCode = event:SPACE
+                player:Fire(me)
+            elseif event:keyCode = event:ENTER or event:keyCode = event:NUMPAD_ENTER
+                if currentStage not= undefined
+                    currentStage:ProcessAwaitInputStep()
+                end
+            elseif event:keyCode = event:CONTROL_LEFT or event:keyCode = event:CONTROL_RIGHT
+                Pause()
+            end
+        else
+            if event:keyCode = event:CONTROL_LEFT or event:keyCode = event:CONTROL_RIGHT
+                Resume()
+            elseif event:keyCode = event:RIGHT or event:keyCode = event:UP
+                accessibility:NextElement()
+            elseif event:keyCode = event:LEFT or event:keyCode = event:DOWN
+                accessibility:PreviousElement()
+            elseif event:keyCode = event:ENTER or event:keyCode = event:NUMPAD_ENTER or event:keyCode = event:SPACE
+                if monitor:IsKeyPressed(event:SHIFT_LEFT) or monitor:IsKeyPressed(event:SHIFT_RIGHT)
+                    accessibility:ExitElement()
+                else
+                    accessibility:EnterElement()
+                end
+            elseif event:keyCode = event:TAB
+                if monitor:IsKeyPressed(event:SHIFT_LEFT) or monitor:IsKeyPressed(event:SHIFT_RIGHT)
+                    accessibility:PreviousElement()
+                else
+                    accessibility:NextElement()
+                end
+            elseif event:keyCode = event:ESCAPE
+                accessibility:ExitElement()
+            end
+        end
+    end
+
+    action ReleasedKey(KeyboardEvent event)
+        
+    end
+
+    action CreatePlasmaBullet(Character source, number velocityX, number velocityY)
+        Bullet bullet
+        bullet:Load("Resources/Stars.jpg")
+        bullet:SetSize(40, 40)
+
+        // The texture needs to repeat for the shader to work correctly.
+        Texture bulletTexture = bullet:GetTexture()
+        TextureWrap repeatWrap
+        repeatWrap:ConstructTextureWrap(repeatWrap:REPEAT)
+        bulletTexture:SetWrap(repeatWrap, repeatWrap)
+
+        PlasmaBulletProgram plasmaProgram
+        PlasmaBulletMapping plasmaMapping
+        bullet:SetShaderProgram(plasmaProgram)
+        bullet:SetShaderData(plasmaMapping)
+        if plasmaProgram:IsCompiled() = false
+            plasmaProgram:Compile()
+        end
+
+        bullet:SetPosition(source:GetX() + source:GetWidth() / 2.0 - bullet:GetWidth() / 2.0, source:GetY() + source:GetHeight() / 2.0 - bullet:GetHeight() / 2.0)
+        bullet:SetVelocity(velocityX, velocityY)
+        bullet:SetOwner(source)
+
+        bullets:Add(bullet)
+        backLayer:Add(bullet)
+
+        audio:PlayerLaser()
+    end
+
+    action CreateViralBullet(Character source, number velocityX, number velocityY)
+        Bullet bullet
+        bullet:Load("Resources/Noise.png")
+        bullet:SetSize(40, 40)
+
+        // The texture needs to repeat for the shader to work correctly.
+        Texture bulletTexture = bullet:GetTexture()
+        TextureWrap repeatWrap
+        repeatWrap:ConstructTextureWrap(repeatWrap:REPEAT)
+        bulletTexture:SetWrap(repeatWrap, repeatWrap)
+
+        ViralBulletProgram viralProgram
+        ViralBulletMapping viralMapping
+        bullet:SetShaderProgram(viralProgram)
+        bullet:SetShaderData(viralMapping)
+        if viralProgram:IsCompiled() = false
+            viralProgram:Compile()
+        end
+
+        bullet:SetPosition(source:GetX() + source:GetWidth() / 2.0 - bullet:GetWidth() / 2.0, source:GetY() + source:GetHeight() / 2.0 - bullet:GetHeight() / 2.0)
+        bullet:SetVelocity(velocityX, velocityY)
+        bullet:SetOwner(source)
+
+        bullets:Add(bullet)
+        backLayer:Add(bullet)
+
+        audio:EnemyLaser(source:GetCurrentRow())
+    end
+
+    action CreateExplosion(number x, number y, number width, number height)
+        Explosion explosion
+        explosion:Load(width, height)
+        explosion:SetPosition(x - width / 2.0, y - height / 2.0)
+        Add(explosion)
+        explosions:Add(explosion)
+
+        audio:EnemyExplosion()
+    end
+
+    action GetPlayer returns Player
+        return player
+    end
+
+    action BeginCollision(CollisionEvent2D collision)
+        Item2D itemA = collision:GetItemA()
+        Item2D itemB = collision:GetItemB()
+
+        Character character = undefined
+        if itemA is Character
+            character = cast(Character, itemA)
+        elseif itemB is Character
+            character = cast(Character, itemB)
+        end
+
+        Bullet bullet = undefined
+        if itemA is Bullet
+            bullet = cast(Bullet, itemA)
+        elseif itemB is Bullet
+            bullet = cast(Bullet, itemB)
+        end
+
+        if character not= undefined and bullet not= undefined
+            if (character is Player and bullet:GetOwner() is Enemy) or (character is Enemy and bullet:GetOwner() is Player)
+                bullet:SetImpactTarget(character)
+            end
+        end
+    end
+
+    action FinishCollision(CollisionEvent2D collision)
+
+    end
+
+    action GetRowPositions returns Array<number>
+        return rowPositions
+    end
+
+    action GetRowY(integer index) returns number
+        return rowPositions:Get(index)
+    end
+
+    action GetEnemies returns Array<Enemy>
+        return enemies
+    end
+
+    action GetBullets returns Array<Bullet>
+        return bullets
+    end
+
+    action Pause
+        paused = true
+        pauseLaunching = true
+        pauseEffectTimer = 0
+        pauseTimer = 0
+
+        Add(selectionBox)
+        pauseEffect:Show()
+
+        Color color
+        background:SetColor(color:CustomColor(0.5, 0.5, 0.5, 1))
+
+        audio:PauseSwoosh()
+        accessibility:Activate(me)
+    end
+
+    action Resume
+        paused = false
+
+        Remove(selectionBox)
+        pauseEffect:Hide()
+
+        Color color
+        background:SetColor(color:White())
+
+        accessibility:Deactivate(me)
+    end
+
+    
+
+    action IsPaused returns boolean
+        return paused
+    end
+
+    action GetBackground returns Drawable
+        return background
+    end
+
+    action GetAudioManager returns AudioManager
+        return audio
+    end
+
+    // Returns how much time has passed since the game has started, NOT including time spent while paused.
+    action GetGameTime returns number
+        return gameTime
+    end
+    action GetRowDetails returns Array<RowDetails>
+        return rowDetails
+    end
+
+    action GetSelectionBox returns Drawable
+        return selectionBox
+    end
+
+    action GetPauseEffectTimer returns number
+        return pauseEffectTimer
+    end
+
+    action GetTransitionTimer returns number
+        return transitionTimer
+    end
+
+    action IsTransitioning returns boolean
+        return transitioning
+    end
+
+    action TransitionToNextLevel
+        audio:LevelTeleport()
+        transitioning = true
+        levelTransition:Show()
+    end
+
+    action GetAccessibilityNavigator returns PauseAccessibilityNavigator
+        return accessibility
+    end
+end
