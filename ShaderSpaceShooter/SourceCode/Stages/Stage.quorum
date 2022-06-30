@@ -29,6 +29,7 @@ class Stage
 
         music = GetMusic()
         music:SetVolume(0.3)
+        music:EnableLooping()
         music:Play()
 
         AmbientLight ambience
@@ -39,7 +40,15 @@ class Stage
 
     action Unload(Main main)
         main:Remove(light)
-        music:Stop()
+        if music:IsPlaying()
+            music:Stop()
+        end
+    end
+
+    action StopMusic
+        if music:IsPlaying()
+            music:Stop()
+        end
     end
 
     action Update(Main main, number seconds)

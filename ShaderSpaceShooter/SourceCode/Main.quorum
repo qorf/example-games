@@ -276,6 +276,10 @@ class Main is Game, KeyboardListener, CollisionListener2D
                         CreateExplosion(character:GetCenterPosition():GetX(), character:GetCenterPosition():GetY(), character:GetWidth() * 2.5, character:GetHeight() * 2.5)
                         character:SetCollidable(false)
                         Remove(character)
+
+                        if character is Pyroclasm
+                            currentStage:StopMusic()
+                        end
                     end
                     bullets:RemoveAt(counter)
                     backLayer:Remove(bullet)
