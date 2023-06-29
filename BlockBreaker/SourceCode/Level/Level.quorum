@@ -220,7 +220,7 @@ main:GetStatDisplay():StopDisplaying()
         direction:Rotate(-debugger:GetRotation())
         
         Ball ball
-        ball:InitializeBasic(direction, values:BALL_VELOCITY)
+        ball:InitializeBasic(direction, values:GetBallVelocity())
         ball:SetPosition(debugger:GetX() + debugger:GetWidth() / 2.0 - ball:GetWidth() / 2.0, debugger:GetY() + debugger:GetHeight() / 2.0 - ball:GetHeight() / 2.0)
         Add(ball)
         balls:Add(ball)

@@ -1,5 +1,6 @@
 use Libraries.Game.Graphics.Drawable
-use Libraries.Game.Graphics.Labeluse Libraries.Interface.Controls.Buttonuse Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Labeluse Libraries.Interface.Controls.Buttonuse Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Coloruse Libraries.Containers.Array
+
 
 
 
@@ -17,9 +18,14 @@ class DisplayTopBar is Drawable
     
     boolean initialized = false
     
+on create
+        SetInputGroup("DisplayBar")
+    end
+    
     action Initialize
         initialized = true
 levelLabel:SetToLargeFont()
+        levelLabel:SetName("Stage")
         
         Color color
         LoadFilledRectangle(100, 100, color:CustomColor(0, 0, 0, 0.2))
@@ -29,12 +35,13 @@ levelLabel:SetToLargeFont()
         coinCounter:SetFontSize(levelLabel:GetFontSize() - 4)
         coinCounter:SetText("0 / 0")
         coinCounter:SetPositionOnBaseLine(false)
+        coinCounter:SetName("Coins Collected")
         Add(coinIcon)
         Add(coinCounter)
         PositionLeftElements()
         
         
-        returnButton:SetName("Return to Menu")
+        returnButton:SetName("Return to Level Select")
         returnButton:SetLabelText("")
         Drawable returnIcon
         returnIcon:Load("Resources/Return Button.png")
@@ -53,6 +60,11 @@ levelLabel:SetToLargeFont()
         levelLabel:SetPositionOnBaseLine(false)
         Add(levelLabel)
         PositionCenterElements()
+        
+        coinCounter:SetFocusable(true)
+        coinCounter:SetAccessibilityCode(parent:Item:CUSTOM)
+        levelLabel:SetFocusable(true)
+        levelLabel:SetAccessibilityCode(parent:Item:CUSTOM)
     end
     
     action CalculateHeight returns number
@@ -82,4 +94,11 @@ levelLabel:SetToLargeFont()
         levelLabel:SetText("Level " + level:GetStageNumber() + ": " + level:GetStageName())
         PositionCenterElements()
     end
+    
+action GetFocusableElements(Array<Item2D> result)
+        result:Add(coinCounter)
+        result:Add(levelLabel)
+        result:Add(returnButton)
+    end
+    
 end

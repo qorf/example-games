@@ -8,6 +8,7 @@ use Libraries.Game.GameStateManager
 
 class NavigationMenu is Dialog
     Button inspectCells = undefined
+    Button infoButton = undefined
     Button returnToGame = undefined
     Button returnToSelect = undefined
     
@@ -32,6 +33,11 @@ class NavigationMenu is Dialog
         StartBlockNavigationBehavior startNavigation
         inspectCells:SetBehavior(startNavigation)
         
+        infoButton = page:AddButton("Inspect Stage Info")
+        infoButton:SetDescription("Control I")
+        GoToStageInfoBehavior stageInfo
+        infoButton:SetBehavior(stageInfo)
+        
         Grouping bottomGroup = page:AddGrouping("Return Buttons")
         returnToGame = bottomGroup:AddButton("Resume Game")
         EscapeBehavior escapeBehavior
@@ -42,10 +48,10 @@ class NavigationMenu is Dialog
         returnToSelect:SetBehavior(backToSelect)
         backToSelect:SetScreen(main:GetLevelSelect())
         
-bottomGroup:PositionFromBottom()
+        bottomGroup:PositionFromBottom()
         
         Add(page)
-end
+    end
 
     action OnShow
         inspectCells:Focus()

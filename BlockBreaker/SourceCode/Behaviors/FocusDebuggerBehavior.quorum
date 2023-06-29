@@ -1,0 +1,13 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class FocusDebuggerBehavior is GameBehavior
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            level:GetDebugger():Focus()
+        end
+    end
+    
+end

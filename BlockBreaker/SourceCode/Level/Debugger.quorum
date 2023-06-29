@@ -1,19 +1,84 @@
 use Libraries.Interface.Item2D
 use Libraries.Game.Graphics.Drawable
 use Libraries.Interface.Events.FocusEvent
+use Libraries.Compute.Math
 
 
 class Debugger is Drawable, LevelItem
+    
+    Item2D dummy1
+    Item2D dummy2
+    Item2D activeDummy = dummy1
+    
+    boolean firstTimeMessage = true
+    Math math
+    
     on create
         SetName("Debugger")
-SetAccessibilityCode(parent:Item:CUSTOM)
+        SetFocusable(true)
+        SetAccessibilityCode(parent:Item:CUSTOM)
         SetInputGroup("Debugger")
         SetCollidable(true)
+        
+        dummy1:SetFocusable(true)
+        dummy1:SetAccessibilityCode(parent:Item:CUSTOM)
+        Add(dummy1)
+        dummy2:SetFocusable(true)
+        dummy2:SetAccessibilityCode(parent:Item:CUSTOM)
+        Add(dummy2)
     end
     
     action Initialize
         Load("Resources/Debugger.png")
         SetZ(-1)
+    end
+    
+    action SetFirstTimeMessage(boolean flag)
+        firstTimeMessage = flag
+    end
+    
+    action GainedFocus(FocusEvent event)
+        Level level = GetLevel()
+        integer stage = level:GetStageNumber()
+        text stageName = level:GetStageName()
+        integer shots = level:GetShotsLeft()
+        
+        text angleText = ""
+        number angle = math:Round(GetRotation(), 1)
+        if angle > 0
+            angleText = " right"
+        elseif angle < 0
+            angle = -angle
+            angleText = " left"
+        end
+        
+        integer bugs = level:GetBugCount()
+        if firstTimeMessage
+            firstTimeMessage = false
+            SetName("Level " + stage + ": " + stageName + ", " + shots + " shots, " + bugs + " bugs")
+        else
+            SetName(angle + " degrees" + angleText + ", " + shots + " shots, " + bugs + " bugs left")
+        end
+    end
+    
+    action AnnounceAngle
+        Item2D dummy = dummy1
+        if activeDummy = dummy
+            dummy = dummy2
+        end
+        number angle = math:Round(GetRotation(), 1)
+        text angleText = ""
+        if angle < 0
+            angle = -angle
+            angleText = " left"
+        elseif angle > 0
+            angleText = " right"
+        end
+        
+        activeDummy = dummy
+dummy:SetName(angle + " degrees" + angleText)
+        
+        dummy:Focus()
     end
     
 end

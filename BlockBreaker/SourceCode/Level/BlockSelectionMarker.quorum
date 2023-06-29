@@ -96,7 +96,6 @@ if rowBugs > 0
     
     action GainedFocus(FocusEvent event)
         Show()
-        output GetName()
     end
     
     action LostFocus(FocusEvent event)

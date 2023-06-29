@@ -1,0 +1,16 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class AdjustSpeedBehavior is GameBehavior
+    number amount = 0
+
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        SharedPlayerValues values
+        values:SetBallVelocity(values:GetBallVelocity() + amount)
+        main:GetSpeedLabel():SetText(cast(integer, values:GetBallVelocity()) + "")
+    end
+
+    action SetAmount(number value)
+        amount = value
+    end
+end

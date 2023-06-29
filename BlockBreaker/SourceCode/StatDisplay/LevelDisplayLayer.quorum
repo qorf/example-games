@@ -1,5 +1,7 @@
 use Libraries.Game.Layer2D
-use Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Labeluse Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Labeluse Libraries.Game.Graphics.Coloruse Libraries.Containers.Arrayuse Libraries.Interface.Item2D
+
+
 
     
 class LevelDisplayLayer is Layer2D
@@ -8,11 +10,9 @@ class LevelDisplayLayer is Layer2D
     DisplayBottomBar bottomBar
     Label loseLabel
     Label winLabel
+    Item2D firstFocus = undefined
     
     on create
-        //Add(topBar)
-        //Add(bottomBar)
-        
         Color color
         loseLabel:SetFontSize(100)
         loseLabel:SetFontOutlineThickness(4)
@@ -51,6 +51,24 @@ winLabel:Hide()
         if bottomBar:IsInitialized() = false
             bottomBar:Initialize()
             bottomBar:SetPosition(0, 0)
+            
+            Array<Item2D> focusItems
+            bottomBar:GetFocusableElements(focusItems)
+            topBar:GetFocusableElements(focusItems)
+            
+            Item2D lastItem = undefined
+            integer i = 0
+            repeat while i < focusItems:GetSize()
+                Item2D item = focusItems:Get(i)
+                if lastItem not= undefined
+                    lastItem:SetNextFocus(item)
+                    item:SetPreviousFocus(item)
+                else
+                    firstFocus = item
+                end
+                lastItem = item
+                i = i + 1
+            end
         end
         bottomBar:UpdateToLevel(level)
     end
@@ -90,5 +108,9 @@ UpdateResultLabelPosition()
         number height = main:GetScreenHeight()
 winLabel:SetPosition((width - winLabel:GetWidth()) / 2.0, (height - winLabel:GetHeight()) / 2.0)
 loseLabel:SetPosition((width - loseLabel:GetWidth()) / 2.0, (height - loseLabel:GetHeight()) / 2.0)
+    end
+    
+    action GetFirstFocus returns Item2D
+        return firstFocus
     end
 end

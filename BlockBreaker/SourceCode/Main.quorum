@@ -1,5 +1,18 @@
 use Libraries.Game.Game
-use Libraries.Game.Graphics.Coloruse Libraries.Game.Graphics.GraphicsManageruse Libraries.Game.GameStateManageruse Libraries.Interface.Forms.Groupinguse Libraries.Interface.Controls.Buttonuse Libraries.Interface.Layouts.ManualLayoutuse Libraries.Containers.Arrayuse Libraries.System.Fileuse Libraries.Game.InputTableuse Libraries.Interface.Events.KeyboardEventuse Libraries.Game.InputSetuse Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.GraphicsManager
+use Libraries.Game.GameStateManager
+use Libraries.Interface.Forms.Grouping
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Layouts.ManualLayout
+use Libraries.Containers.Array
+use Libraries.System.File
+use Libraries.Game.InputTable
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Game.InputSet
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Label
+
 
 
 class Main is Game
@@ -16,6 +29,11 @@ class Main is Game
     Array<Item2D> toBeRemoved
     
     LevelDisplayLayer statDisplay = undefined
+    
+    SharedPlayerValues values
+    Label speedLabel = undefined
+    Label soundLabel = undefined
+    Label musicLabel = undefined
     
     action Main
         SetScreenSize(1600, 1000)
@@ -90,6 +108,63 @@ Button exitButton = startOptions:AddButton("Exit")
         optionsPage:SetTitleSizeHuge()
         optionsPage:SetTitle("Game Options")
         optionsPage:SetBackgroundColor(0.9, 0.925, 0.9, 1)
+        
+        Grouping speedGroup = optionsPage:AddGrouping("Speed Options")
+        speedGroup:SetTitle("Ball Speed")
+        speedGroup:SetTitleSizeLarge()
+        Button speedDown = speedGroup:AddButton("Ball Speed Down")
+        speedDown:SetLabelText("-")
+        speedDown:SetToHugeFont()
+        speedLabel = speedGroup:AddLabel("Ball Speed", "" + cast(integer, values:GetBallVelocity()))
+        speedLabel:SetToLargeFont()
+        Button speedUp = speedGroup:AddButton("Ball Speed Up")
+        speedUp:SetLabelText("+")
+        speedUp:SetToHugeFont()
+
+        AdjustSpeedBehavior doSpeedDown
+        doSpeedDown:SetAmount(-50)
+        AdjustSpeedBehavior doSpeedUp
+        doSpeedUp:SetAmount(50)
+        speedDown:SetBehavior(doSpeedDown)
+        speedUp:SetBehavior(doSpeedUp)
+
+        Grouping soundGroup = optionsPage:AddGrouping("Sound Options")
+        soundGroup:SetTitle("Sound Volume")
+        soundGroup:SetTitleSizeLarge()
+        Button soundDown = soundGroup:AddButton("Sound Volume Down")
+        soundDown:SetLabelText("-")
+        soundDown:SetToHugeFont()
+        soundLabel = soundGroup:AddLabel("Sound Volume", cast(integer, values:GetSoundVolume() * 100) + "%")
+        soundLabel:SetToLargeFont()
+        Button soundUp = soundGroup:AddButton("Sound Volume Up")
+        soundUp:SetLabelText("+")
+        soundUp:SetToHugeFont()
+
+        AdjustSoundBehavior doSoundDown
+        doSoundDown:SetAmount(-0.1)
+        AdjustSoundBehavior doSoundUp
+        doSoundUp:SetAmount(0.1)
+        soundDown:SetBehavior(doSoundDown)
+        soundUp:SetBehavior(doSoundUp)
+
+        Grouping musicGroup = optionsPage:AddGrouping("Music Options")
+        musicGroup:SetTitle("Music Volume")
+        musicGroup:SetTitleSizeLarge()
+        Button musicDown = musicGroup:AddButton("Music Volume Down")
+        musicDown:SetLabelText("-")
+        musicDown:SetToHugeFont()
+        musicLabel = musicGroup:AddLabel("Music Volume", cast(integer, values:GetMusicVolume() * 100) + "%")
+        musicLabel:SetToLargeFont()
+        Button musicUp = musicGroup:AddButton("Music Volume Up")
+        musicUp:SetLabelText("+")
+        musicUp:SetToHugeFont()
+
+        AdjustMusicBehavior doMusicDown
+        doMusicDown:SetAmount(-0.1)
+        AdjustMusicBehavior doMusicUp
+        doMusicUp:SetAmount(0.1)
+        musicDown:SetBehavior(doMusicDown)
+        musicUp:SetBehavior(doMusicUp)
         
         Grouping optionsConfirmGroup = optionsPage:AddGrouping("Confirm Row")
         optionsConfirmGroup:PositionFromBottom()
@@ -172,28 +247,55 @@ if activeScreen not= undefined
         DebuggerFireBehavior fireBehavior
         debuggerTable:Add(spaceSet, fireBehavior)
         
-        InputSet qSet
-        qSet:SetKeyboardInput(keys:Q)
-        qSet:SetInputTrigger(qSet:CONTINUE)
-        DebuggerRotateBehavior qRotate
-        qRotate:SetRotationSpeed(-90)
-        debuggerTable:Add(qSet, qRotate)
+InputSet leftSet
+InputSet rightSet
+InputSet upSet
+InputSet downSet
+        leftSet:SetKeyboardInput(keys:LEFT)
+        rightSet:SetKeyboardInput(keys:RIGHT)
+        upSet:SetKeyboardInput(keys:UP)
+        downSet:SetKeyboardInput(keys:DOWN)
         
-        InputSet eSet
-        eSet:SetKeyboardInput(keys:E)
-        eSet:SetInputTrigger(eSet:CONTINUE)
-        DebuggerRotateBehavior eRotate
-        eRotate:SetRotationSpeed(90)
-        debuggerTable:Add(eSet,eRotate)
+        InputSet leftContinueSet = leftSet:Copy()
+        leftContinueSet:SetInputTrigger(leftContinueSet:CONTINUE)
+        DebuggerRotateBehavior leftRotate
+        leftRotate:SetRotationSpeed(-90)
+        debuggerTable:Add(leftContinueSet, leftRotate)
+        
+        InputSet rightContinueSet = rightSet:Copy()
+        rightContinueSet:SetInputTrigger(rightContinueSet:CONTINUE)
+        DebuggerRotateBehavior rightRotate
+        rightRotate:SetRotationSpeed(90)
+        debuggerTable:Add(rightContinueSet,rightRotate)
 
         AddInputTable(debuggerTable)
         
         InputTable defaultTable = GetDefaultInputTable()
+        InputSet releaseLeft = leftSet:Copy()
+        releaseLeft:SetInputTrigger(releaseLeft:FINISH)
+        InputSet releaseRight = rightSet:Copy()
+        releaseRight:SetInputTrigger(releaseRight:FINISH)
+        AnnounceAngleBehavior announceAngle
+        debuggerTable:Add(releaseLeft, announceAngle)
+        debuggerTable:Add(releaseRight, announceAngle)
+        
+        
         EscapeBehavior escapeBehavior
         InputSet escapeSet
         escapeSet:SetKeyboardInput(keys:ESCAPE)
         defaultTable:Add(escapeSet, escapeBehavior)
         
+        InputSet ctrlF
+ctrlF:SetKeyboardInput(keys:F)
+        ctrlF:AddModifier(ctrlF:CONTROL)
+        StartBlockNavigationBehavior startNavigationBehavior
+        defaultTable:Add(ctrlF, startNavigationBehavior)
+        
+InputSet ctrlI
+ctrlI:SetKeyboardInput(keys:I)
+        ctrlI:AddModifier(ctrlI:CONTROL)
+        GoToStageInfoBehavior goToStageInfo
+        defaultTable:Add(ctrlI, goToStageInfo)
         
         InputTable blockSelectTable
         blockSelectTable:SetIdentifier("BlockSelectionMarker")
@@ -207,21 +309,31 @@ MoveBlockSelectionBehavior moveUpBehavior
 MoveBlockSelectionBehavior moveDownBehavior
         moveDownBehavior:SetDirection(0, -1)
         
-        InputSet leftSet
-InputSet rightSet
-InputSet upSet
-InputSet downSet
-        leftSet:SetKeyboardInput(keys:LEFT)
-        rightSet:SetKeyboardInput(keys:RIGHT)
-        upSet:SetKeyboardInput(keys:UP)
-        downSet:SetKeyboardInput(keys:DOWN)
-        
         blockSelectTable:Add(leftSet, moveLeftBehavior)
 blockSelectTable:Add(rightSet, moveRightBehavior)
 blockSelectTable:Add(upSet, moveUpBehavior)
 blockSelectTable:Add(downSet, moveDownBehavior)
         
+        InputSet tabSet
+        tabSet:SetKeyboardInput(keys:TAB)
+        SelectNextPriorityBehavior nextPriority
+        SelectPreviousPriorityBehavior previousPriority
+        
+        InputSet shiftTabSet = tabSet:Copy()
+        shiftTabSet:AddModifier(shiftTabSet:SHIFT)
+        
+blockSelectTable:Add(tabSet, nextPriority)
+        blockSelectTable:Add(shiftTabSet, previousPriority)
+        
+        FocusDebuggerBehavior focusDebugBehavior
+        blockSelectTable:Add(escapeSet,focusDebugBehavior)
+        
         AddInputTable(blockSelectTable)
+        
+        InputTable displayBarTable
+        displayBarTable:SetIdentifier("DisplayBar")
+        displayBarTable:Add(escapeSet,focusDebugBehavior)
+        AddInputTable(displayBarTable)
     end
     
     action Update(number seconds)
@@ -263,4 +375,17 @@ item:GetParent():Remove(item)
     action GetLevelMenu returns NavigationMenu
         return levelMenu
     end
+
+    action GetSpeedLabel returns Label
+        return speedLabel
+    end
+
+    action GetSoundLabel returns Label
+        return soundLabel
+    end
+
+    action GetMusicLabel returns Label
+        return musicLabel
+    end
+
 end

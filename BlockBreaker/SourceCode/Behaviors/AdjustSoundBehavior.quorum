@@ -1,0 +1,16 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class AdjustSoundBehavior is GameBehavior
+    number amount = 0
+
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        SharedPlayerValues values
+        values:SetSoundVolume(values:GetSoundVolume() + amount)
+        main:GetSoundLabel():SetText(cast(integer, values:GetSoundVolume() * 100) + "%")
+    end
+
+    action SetAmount(number value)
+        amount = value
+    end
+end

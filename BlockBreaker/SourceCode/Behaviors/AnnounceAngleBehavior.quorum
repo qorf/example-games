@@ -1,0 +1,12 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class AnnounceAngleBehavior is GameBehavior
+action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            level:GetDebugger():AnnounceAngle()
+        end
+    end
+end

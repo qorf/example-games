@@ -2,6 +2,7 @@ use Libraries.Game.Graphics.Drawable
 use Libraries.Game.GameStateManager
 use Libraries.Game.Graphics.Label
 use Libraries.Game.Graphics.Color
+use Libraries.Containers.Array
 
 
 
@@ -20,6 +21,10 @@ number sidePadding = 8
     
     boolean initialized = false
     
+    on create
+        SetInputGroup("DisplayBar")
+    end
+    
     action Initialize
         initialized = true
 Color color
@@ -36,6 +41,7 @@ Color color
         ballCounter:SetFontSize(shotTypeLabel:GetFontSize() - 4)
         ballCounter:SetText("0 / 0")
         ballCounter:SetPositionOnBaseLine(false)
+        ballCounter:SetName("Shots Left")
         Add(ballIcon)
         Add(ballCounter)
         PositionLeftElements()
@@ -45,6 +51,7 @@ bugIcon:Load("Resources/Sleepy Bug.png")
         bugCounter:SetFontSize(shotTypeLabel:GetFontSize() - 4)
         bugCounter:SetText("0")
         bugCounter:SetPositionOnBaseLine(false)
+        bugCounter:SetName("Bugs Left")
         Add(bugIcon)
         Add(bugCounter)
         PositionRightElements()
@@ -52,6 +59,10 @@ bugIcon:Load("Resources/Sleepy Bug.png")
         shotTypeLabel:SetText("Basic Shot")
         shotTypeLabel:SetPositionOnBaseLine(false)
         Add(shotTypeLabel)
+        ballCounter:SetFocusable(true)
+        ballCounter:SetAccessibilityCode(parent:Item:CUSTOM)
+        bugCounter:SetFocusable(true)
+        bugCounter:SetAccessibilityCode(parent:Item:CUSTOM)
         PositionCenterElements()
         
     end
@@ -95,5 +106,10 @@ action CalculateHeight returns number
         
         bugCounter:SetText("" + level:GetBugCount())
         PositionCenterElements()
+    end
+    
+    action GetFocusableElements(Array<Item2D> result)
+        result:Add(ballCounter)
+        result:Add(bugCounter)
     end
 end

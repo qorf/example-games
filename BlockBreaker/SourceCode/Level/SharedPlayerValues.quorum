@@ -1,9 +1,13 @@
 use Libraries.Game.Graphics.Texture
 
 shared class SharedPlayerValues
-    public constant integer BALL_VELOCITY = 400
+    public constant integer MIN_BALL_VELOCITY = 100
+    public constant integer MAX_BALL_VELOCITY = 700
     public constant number MINIMUM_DEBUGGER_ANGLE = -80
     public constant number MAXIMUM_DEBUGGER_ANGLE = 80
+    number ballVelocity = 400
+    number soundVolume = 0.5
+    number musicVolume = 0.5
     
     
     Texture ballTexture = undefined
@@ -35,6 +39,51 @@ shared class SharedPlayerValues
     
     action GetBonusShots returns integer
         return bonusShots
+    end
+    
+    action GetBallVelocity returns number
+        return ballVelocity
+    end
+    
+    action SetBallVelocity(number speed)
+        if speed > MAX_BALL_VELOCITY
+            speed = MAX_BALL_VELOCITY
+        end
+        if speed < MIN_BALL_VELOCITY
+            speed = MIN_BALL_VELOCITY
+        end
+
+        ballVelocity = speed
+    end
+
+    action GetSoundVolume returns number
+        return soundVolume
+    end
+
+    action SetSoundVolume(number volume)
+        if volume > 1.0
+            volume = 1.0
+        end
+        if volume < 0.0
+            volume = 0.0
+        end
+
+        soundVolume = volume
+    end
+    
+    action GetMusicVolume returns number
+        return musicVolume
+    end
+
+    action SetMusicVolume(number volume)
+        if volume > 1.0
+            volume = 1.0
+        end
+        if volume < 0.0
+            volume = 0.0
+        end
+
+        musicVolume = volume
     end
 
 end
