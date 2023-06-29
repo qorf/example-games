@@ -1,0 +1,524 @@
+use Libraries.Interface.Item2D
+use Libraries.System.File
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Vector2
+use Libraries.Interface.Events.CollisionEvent2D
+use Libraries.Interface.Events.CollisionListener2D
+use Libraries.Compute.Math
+
+
+class Level is GameScreen, CollisionListener2D
+    LevelConstants constants
+    SharedPlayerValues values
+    GameStateManager manager
+    Math math
+    
+    integer rows = 0
+    integer columns = 0
+    Array<Array<Block>> blocks
+    
+    text stageName = "The Unknown"
+    integer stage = 0
+    integer coinsCollected = 0
+    integer totalCoinCount = 0
+    integer baseShots = 0
+    integer bugCount = 0
+    integer shotsLeft = 0
+    
+    Drawable background
+    Drawable leftWall
+    Drawable rightWall
+    Drawable topWall
+    Drawable bottomWall
+    Debugger debugger
+    
+    Array<Ball> balls
+    Array<Block> priorityBlocks
+    
+    boolean exitingLevel = false
+    number exitTimerMax = 3
+    number exitTimer = 0
+    
+    BlockSelectionMarker marker1
+    BlockSelectionMarker marker2
+    BlockSelectionMarker activeMarker = marker1
+    
+    on create
+        Color color
+        color:SetColor(0.95, 0.95, 1, 1)
+        background:LoadFilledRectangle(100, 100, color)
+        background:SetName("Background")
+        Add(background)
+        
+        leftWall:LoadFilledRectangle(10, 10, color:Black())
+        rightWall:LoadFilledRectangle(10, 10, color:Black())
+        topWall:LoadFilledRectangle(10, 10, color:Black())
+        bottomWall:LoadFilledRectangle(10, 10, color:Black())
+        leftWall:SetName("Left Wall")
+        rightWall:SetName("Right Wall")
+        topWall:SetName("Top Wall")
+        bottomWall:SetName("Bottom Wall")
+        
+        
+        Add(leftWall)
+        Add(rightWall)
+        Add(topWall)
+        Add(bottomWall)
+        
+        Add(marker1)
+        Add(marker2)
+    end
+    
+    action Load(File file)
+        JavaScriptObjectNotation json
+        json:Read(file)
+        
+        columns = json:GetInteger("Width")
+        rows = json:GetInteger("Height")
+        baseShots = json:GetInteger("Shots")
+        totalCoinCount = json:GetInteger("Coin Count")
+        stage = json:GetInteger("Stage")
+        stageName = json:GetValue("Name")
+        shotsLeft = GetTotalShots()
+        
+        SetSize(constants:COLUMN_WIDTH * columns, constants:ROW_HEIGHT * rows)
+        background:SetSize(GetWidth(), GetHeight())
+        
+        blocks:SetSize(rows)
+        priorityBlocks:Empty()
+        
+        Array<text> keys = json:GetKeys()
+        integer i = 0
+        repeat while i < keys:GetSize()
+            text key = keys:Get(i)
+            integer currentRow = ParseTextToInteger(key)
+            
+            if currentRow >= 0
+                JavaScriptObjectNotation row = json:GetObject(keys:Get(i)):GetArray()
+                integer j = 0
+                Array<Block> array
+                repeat while j < columns
+                    JavaScriptObjectNotation value = row:Get(j)
+                    integer blockValue = cast(integer, value:GetNumber())
+                    Block block = CreateBlockFromCode(blockValue, j, currentRow)
+                    array:Add(block)
+                    j = j + 1
+                end
+                blocks:Set(currentRow, array)
+            end
+            
+            i = i + 1
+        end
+        
+        marker1:Initialize()
+        marker2:Initialize()
+        LoadWalls()
+        LoadDebugger()
+    end
+    
+    private action ParseTextToInteger(text value) returns integer
+        integer result = -1
+    check
+            result = cast(integer, value)
+        detect error
+        end
+        return result
+    end
+    
+    private action CreateBlockFromCode(integer code, integer x, integer y) returns Block
+        Block result = undefined
+        // Use integer division to set the last digit to 0
+        integer bugType = code mod 10
+        integer blockType = (code / 10) * 10        
+        
+        boolean priority = false
+
+        if blockType = constants:NO_BLOCK
+            NoBlock no
+            result = no
+        elseif blockType = constants:BASIC
+            Block block
+            result = block
+        elseif blockType = constants:GOLD
+            Block block
+            block:SetToGold()
+            result = block
+            
+            priorityBlocks:Add(result)
+            priority = true
+        elseif blockType = constants:EXPLOSIVE
+            Block block
+            result = block
+        end
+        
+        result:Initialize(x, y)
+        if not (result is NoBlock)
+            Add(result)
+            
+if bugType not= constants:NO_BUG
+            if bugType = constants:SLEEPY_BUG
+                SleepyBug bug
+                bug:Initialize(result)
+            end
+bugCount = bugCount + 1
+                
+                if priority = false
+                    priorityBlocks:Add(result)
+                end
+        end
+        end
+        
+
+        return result
+    end
+    
+    action OnSwapTo
+        SetPosition((manager:GetGame():GetScreenWidth() - GetWidth()) / 2.0, (manager:GetGame():GetScreenHeight() - GetHeight()) / 2.0)
+        Main main = cast(Main, manager:GetGame())
+        main:AddCollisionListener(me)
+        main:GetStatDisplay():Display(me)
+    end
+    
+    action OnSwapFrom
+        manager:GetGame():RemoveCollisionListener(me)
+        
+Main main = cast(Main, manager:GetGame())
+main:GetStatDisplay():StopDisplaying()
+    end
+    
+    action LoadDebugger returns Debugger
+        debugger:Initialize()
+        debugger:SetPosition((GetWidth() - debugger:GetWidth()) / 2.0, 10)
+        Add(debugger)
+        return debugger
+    end
+    
+    action LoadWalls
+        number thickness = constants:OUTER_WALL_THICKNESS
+        leftWall:SetSize(thickness, thickness * 2 + GetHeight())
+        rightWall:SetSize(thickness, thickness * 2 + GetHeight())
+        bottomWall:SetSize(GetWidth(), thickness)
+        topWall:SetSize(GetWidth(), thickness)
+        
+        leftWall:SetPosition(-thickness, -thickness)
+        rightWall:SetPosition(GetWidth(), -thickness)
+        bottomWall:SetPosition(0, -thickness)
+        topWall:SetPosition(0, GetHeight())
+    end
+    
+    action FireBall
+        if IsReadyToFire() = false
+            return now
+        end
+        
+        Vector2 direction
+        direction:Set(0, 1)
+        direction:Rotate(-debugger:GetRotation())
+        
+        Ball ball
+        ball:InitializeBasic(direction, values:BALL_VELOCITY)
+        ball:SetPosition(debugger:GetX() + debugger:GetWidth() / 2.0 - ball:GetWidth() / 2.0, debugger:GetY() + debugger:GetHeight() / 2.0 - ball:GetHeight() / 2.0)
+        Add(ball)
+        balls:Add(ball)
+        
+        shotsLeft = shotsLeft - 1
+        UpdateBottomBar()
+    end
+    
+    private action UpdateTopBar
+        Main main = cast(Main, manager:GetGame())
+        LevelDisplayLayer stats = main:GetStatDisplay()
+        stats:UpdateTopBar(me)
+    end
+    
+    private action UpdateBottomBar
+Main main = cast(Main, manager:GetGame())
+        LevelDisplayLayer stats = main:GetStatDisplay()
+        stats:UpdateBottomBar(me)
+    end
+    
+    action BeginCollision(CollisionEvent2D event)
+        Ball ball = undefined
+        Block block = undefined
+
+        Item2D itemA = event:GetItemA()
+        Item2D itemB = event:GetItemB()
+
+        if itemA is Ball
+            ball = cast(Ball, itemA)
+        elseif itemB is Ball
+            ball = cast(Ball, itemB)
+        end
+
+        if itemA is Block
+            block = cast(Block, itemA)
+        elseif itemB is Block
+            block = cast(Block, itemB)
+        end
+
+        if ball = undefined or block = undefined
+            return now
+        end
+
+        Vector2 resultAngle
+        resultAngle:Set(block:GetX() + block:GetWidth() / 2.0, block:GetY() + block:GetHeight() / 2.0)
+        resultAngle:Subtract(ball:GetLastX() + ball:GetWidth() / 2.0, ball:GetLastY() + ball:GetWidth() / 2.0)
+        number angle = resultAngle:Angle()
+        if angle < 0
+            angle = angle + 360
+        end
+
+        if angle >= 35 and angle <= 145
+            ball:SetDirection(ball:GetDirection():GetX(), -math:AbsoluteValue(ball:GetDirection():GetY()))
+        elseif angle >= 215 and angle <= 325
+            ball:SetDirection(ball:GetDirection():GetX(), math:AbsoluteValue(ball:GetDirection():GetY()))
+        end
+
+        if angle >= 145 and angle <= 215
+            ball:SetDirection(math:AbsoluteValue(ball:GetDirection():GetX()), ball:GetDirection():GetY())
+        elseif (angle >= 325) or (angle <= 35)
+            ball:SetDirection(-math:AbsoluteValue(ball:GetDirection():GetX()), ball:GetDirection():GetY())
+        end
+        
+        ball:Damage()
+        block:Damage()
+    end
+    
+    action Update(number seconds)
+        Vector2 workVector
+        Vector2 position
+        integer i = 0
+        repeat while i < balls:GetSize()
+            Ball ball = balls:Get(i)
+            Vector2 direction = ball:GetDirection()
+            
+            number speed = ball:GetVelocity() * seconds
+            workVector:Set(direction):Scale(speed)
+            position:Set(ball:GetX(), ball:GetY())
+            position:Add(workVector)
+            boolean hit = false
+            
+            if position:GetX() < 0
+                ball:SetDirection(math:AbsoluteValue(ball:GetDirection():GetX()), ball:GetDirection():GetY())
+                hit = true
+            elseif position:GetX() + ball:GetWidth() > GetWidth()
+                ball:SetDirection(-math:AbsoluteValue(ball:GetDirection():GetX()), ball:GetDirection():GetY())
+hit = true
+            end
+
+            if position:GetY() < 0
+                ball:SetDirection(ball:GetDirection():GetX(), math:AbsoluteValue(ball:GetDirection():GetY()))
+hit = true
+            elseif position:GetY() + ball:GetHeight() > GetHeight()
+                ball:SetDirection(ball:GetDirection():GetX(), -math:AbsoluteValue(ball:GetDirection():GetY()))
+hit = true
+            end
+            
+            if hit
+                ball:Damage()
+            end
+
+            ball:SetLastPosition(ball:GetX(), ball:GetY())
+            ball:SetPosition(position:GetX(), position:GetY())
+            i = i + 1
+        end
+        
+        if exitingLevel
+            exitTimer = exitTimer - seconds
+            if exitTimer <= 0
+                exitingLevel = false
+                Main main = cast(Main, manager:GetGame())
+                main:SwapScreen(main:GetLevelSelect())
+            end
+        end
+    end
+    
+    action GetFirstFocus returns Item2D
+        return debugger
+    end
+    
+    action GetDebugger returns Debugger
+        return debugger
+    end
+    
+    action OnBallDestroy(Ball ball)
+        balls:Remove(ball)
+        if balls:IsEmpty()
+            CheckEndConditions()
+        end
+    end
+    
+    action GetBugCount returns integer
+        return bugCount
+    end
+    
+    action GetCoinsCollected returns integer
+        return coinsCollected
+    end
+    
+    action GetTotalShots returns integer
+        return baseShots + values:GetBonusShots()
+    end
+    
+    action GetShotsLeft returns integer
+        return shotsLeft
+    end
+    
+    action OnBugDestroy(Bug bug)
+        bugCount = bugCount - 1
+        UpdateBottomBar()
+        output "Bugs left = " + bugCount
+    end
+    
+    action IsReadyToFire returns boolean
+        return balls:IsEmpty() and exitingLevel = false
+    end
+    
+    action GetStageNumber returns integer
+        return stage
+    end
+    
+    action GetStageName returns text
+        return stageName
+    end
+    
+    action GetTotalCoinCount returns integer
+        return totalCoinCount
+    end
+    
+    action CheckEndConditions
+        if bugCount = 0
+            exitingLevel = true
+            exitTimer = exitTimerMax
+            Main main = cast(Main, manager:GetGame())
+            main:GetStatDisplay():ShowWinLabel()
+        elseif shotsLeft = 0
+exitingLevel = true
+            exitTimer = exitTimerMax
+Main main = cast(Main, manager:GetGame())
+main:GetStatDisplay():ShowLoseLabel()
+        end
+    end
+    
+    action OnBlockDestruction(Block block)
+        if priorityBlocks:Has(block)
+            priorityBlocks:Remove(block)
+        end
+        
+        integer x = block:GetGridX()
+        integer y = block:GetGridY()
+        NoBlock replacement
+        replacement:Initialize(x, y)
+        blocks:Get(y):Set(x, replacement)
+    end
+    
+    action CountBlocksInRow(integer row) returns Array<integer>
+        Array<Block> rowBlocks = blocks:Get(row)
+        integer i = 0
+        integer result = 0
+        integer bugs = 0
+        integer gold = 0
+        repeat while i < rowBlocks:GetSize()
+            Block block = rowBlocks:Get(i)
+            if block not= undefined and not (block is NoBlock)
+                result = result + 1
+                if block:HasBug()
+                    bugs = bugs + 1
+                end
+                if block:IsGold()
+                    gold = gold + 1
+                end
+            end
+            
+            i = i + 1
+        end
+        
+        Array<integer> returnArray
+        returnArray:Add(result)
+        returnArray:Add(bugs)
+        returnArray:Add(gold)
+        return returnArray
+    end
+    
+    action CountBlocksInColumn(integer column) returns Array<integer>
+        integer i = 0
+        integer result = 0
+integer bugs = 0
+        integer gold = 0
+        repeat while i < blocks:GetSize()
+            Array<Block> row = blocks:Get(i)
+            Block block = row:Get(column)
+if block not= undefined and not (block is NoBlock)
+                result = result + 1
+if block:HasBug()
+                    bugs = bugs + 1
+                end
+                if block:IsGold()
+                    gold = gold + 1
+                end
+            end
+            
+            i = i + 1
+        end
+        Array<integer> returnArray
+        returnArray:Add(result)
+        returnArray:Add(bugs)
+        returnArray:Add(gold)
+        return returnArray
+    end
+    
+    action GetColumnCount returns integer
+        return columns
+    end
+    
+    action GetRowCount returns integer
+        return rows
+    end
+    
+    action SelectBlockAt(integer x, integer y)
+        BlockSelectionMarker targetMarker = marker1
+        if marker1 = activeMarker
+            targetMarker = marker2
+        end
+        
+        if x < 0 or x >= columns or y < 0 or y >= rows
+            return now
+        end
+        
+        Block block = blocks:Get(y):Get(x)
+        targetMarker:SetToBlock(block)
+        activeMarker = targetMarker
+        targetMarker:Focus()
+    end
+    
+    action GetActiveBlockMarker returns BlockSelectionMarker
+        return activeMarker
+    end
+    
+    action GetNextPriorityBlock(Block block) returns Block
+        if priorityBlocks:IsEmpty() = false
+            integer index = (priorityBlocks:GetFirstLocation(block) + 1) mod priorityBlocks:GetSize()
+            return priorityBlocks:Get(index)
+        end
+        
+return undefined
+    end
+    
+    action GetPreviousPriorityBlock(Block block) returns Block
+        if priorityBlocks:IsEmpty() = false
+            integer index = priorityBlocks:GetFirstLocation(block) - 1
+            if index < 0
+                index = priorityBlocks:GetSize() - 1
+            end
+            
+            return priorityBlocks:Get(index)
+        end
+        
+        return undefined
+    end
+    
+end

@@ -1,0 +1,24 @@
+use Libraries.Game.Graphics.Color
+
+class SleepyBug is Bug
+    
+    on create
+        SetName("Sleepy Bug")
+    end
+    
+    action Initialize(Block block)
+        Load("Resources/Sleepy Bug.png")
+        block:SetBug(me)
+        SetPosition((block:GetWidth() - GetWidth()) / 2.0, (block:GetHeight() - GetHeight()) / 2.0)
+        Color minColor
+Color maxColor
+        maxColor:SetColor(0, 64/255.0, 128/255.0, 1)
+        minColor:SetColor(0, 0, 255/255.0, 1)
+        SetCycleColors(minColor, maxColor)
+    end
+    
+    action OnBlockDestroy(Block block)
+        OnDestroy()
+    end
+
+end

@@ -1,0 +1,19 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class EscapeBehavior is GameBehavior
+    
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            NavigationMenu menu = main:GetLevelMenu()
+            if menu:IsShowing()
+                menu:Hide()
+            else
+                menu:Show()
+            end
+        end
+    end
+
+end

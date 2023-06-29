@@ -1,0 +1,63 @@
+use Libraries.Interface.Item2D
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+
+class GameScreen is Item2D
+    Color backgroundColor
+    GameStateManager manager
+    
+    on create
+        backgroundColor:SetColor(1, 1, 1, 1)
+    end
+    
+    action SwapTo
+        SetClearColor()
+        OnSwapTo()
+        Item2D focus = GetFirstFocus()
+        if focus not= undefined
+            focus:Focus()
+        end
+    end
+    
+    action OnSwapTo
+        
+    end
+    
+    action OnSwapFrom
+        
+    end
+    
+    action GetFirstFocus returns Item2D
+        return SearchForFocus(me)
+    end
+    
+    private action SearchForFocus(Item2D item) returns Item2D
+        if item:IsFocusable()
+            return item
+        end
+        
+        Item2D candidate = undefined
+        Array<Item2D> items = item:GetChildren()
+        integer i = 0
+        repeat while i < items:GetSize() and candidate = undefined
+            candidate = SearchForFocus(items:Get(i))
+            i = i + 1
+        end
+        
+        return candidate
+    end
+    
+    action SetBackgroundColor(Color color)
+        SetBackgroundColor(color:GetRed(), color:GetGreen(), color:GetBlue(), color:GetAlpha())
+    end
+    
+    action SetBackgroundColor(number red, number green, number blue, number alpha)
+        backgroundColor:SetColor(red, green, blue, alpha)
+    end
+    
+    private action SetClearColor
+    Main main = cast(Main, manager:GetGame())
+        main:SetBackgroundColor(backgroundColor)
+    end
+end

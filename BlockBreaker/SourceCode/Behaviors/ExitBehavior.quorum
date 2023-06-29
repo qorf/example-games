@@ -1,0 +1,9 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class ExitBehavior is GameBehavior
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        main:Exit()
+    end
+end

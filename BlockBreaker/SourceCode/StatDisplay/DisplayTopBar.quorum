@@ -1,0 +1,85 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Labeluse Libraries.Interface.Controls.Buttonuse Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Color
+
+
+
+class DisplayTopBar is Drawable
+    GameStateManager manager
+    
+    number sidePadding = 8
+    number verticalPadding = 8
+    number elementPadding = 8
+    
+    Drawable coinIcon
+    Label coinCounter
+    Label levelLabel
+    Button returnButton
+    
+    boolean initialized = false
+    
+    action Initialize
+        initialized = true
+levelLabel:SetToLargeFont()
+        
+        Color color
+        LoadFilledRectangle(100, 100, color:CustomColor(0, 0, 0, 0.2))
+        SetSize(manager:GetGame():GetScreenWidth(), CalculateHeight())
+        
+        coinIcon:Load("Resources/Coin.png")
+        coinCounter:SetFontSize(levelLabel:GetFontSize() - 4)
+        coinCounter:SetText("0 / 0")
+        coinCounter:SetPositionOnBaseLine(false)
+        Add(coinIcon)
+        Add(coinCounter)
+        PositionLeftElements()
+        
+        
+        returnButton:SetName("Return to Menu")
+        returnButton:SetLabelText("")
+        Drawable returnIcon
+        returnIcon:Load("Resources/Return Button.png")
+        returnButton:SetIcon(returnIcon)
+        returnButton:LoadGraphics(returnButton:GetDefaultLayoutProperties())
+        returnButton:SetSize(returnIcon:GetWidth(), returnIcon:GetHeight())
+        Add(returnButton)
+        PositionRightElements()
+        
+        ScreenNavigationBehavior backToLevels
+        Main main = cast(Main, manager:GetGame())
+        backToLevels:SetScreen(main:GetLevelSelect())
+        returnButton:SetBehavior(backToLevels)
+        
+        levelLabel:SetText("Level 0: Prologue")
+        levelLabel:SetPositionOnBaseLine(false)
+        Add(levelLabel)
+        PositionCenterElements()
+    end
+    
+    action CalculateHeight returns number
+        return levelLabel:GetLineHeight() + 2 * verticalPadding
+    end
+    
+    action PositionLeftElements
+        coinIcon:SetPosition(sidePadding, (GetHeight() - coinIcon:GetHeight()) / 2.0)
+        coinCounter:SetPosition(coinIcon:GetX() + coinIcon:GetWidth() + elementPadding, (GetHeight() - coinCounter:GetHeight()) / 2.0)
+    end
+    
+    action PositionCenterElements
+        levelLabel:SetPosition((GetWidth() - levelLabel:GetWidth()) / 2.0, (GetHeight() - levelLabel:GetHeight()) / 2.0)
+    end
+    
+    action PositionRightElements
+        returnButton:Resize()
+        returnButton:SetPosition(GetWidth() - returnButton:GetWidth() - sidePadding, (GetHeight() - returnButton:GetHeight()) / 2.0)
+    end
+    
+    action IsInitialized returns boolean
+        return initialized
+    end
+    
+    action UpdateToLevel(Level level)
+        coinCounter:SetText(level:GetCoinsCollected() + " / " + level:GetTotalCoinCount())
+        levelLabel:SetText("Level " + level:GetStageNumber() + ": " + level:GetStageName())
+        PositionCenterElements()
+    end
+end

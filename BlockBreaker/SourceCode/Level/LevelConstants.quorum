@@ -1,0 +1,20 @@
+shared class LevelConstants
+    public constant number ROW_HEIGHT = 35
+    public constant number COLUMN_WIDTH = 50
+    public constant number OUTER_WALL_THICKNESS = 5
+    public constant number BLOCK_SELECT_THICKNESS = 4
+    
+    // Blocks are identified in JSON by a number. The number follows these rules:
+    // Block Type + Bug Type
+    
+    // Block types
+    public constant integer NO_BLOCK = 0
+    public constant integer BASIC = 10
+    public constant integer GOLD = 20
+    public constant integer EXPLOSIVE = 30
+    
+    
+    // Bug types
+    public constant integer NO_BUG = 0
+    public constant integer SLEEPY_BUG = 1
+end

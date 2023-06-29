@@ -1,0 +1,99 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Color
+
+
+
+class DisplayBottomBar is Drawable
+    GameStateManager manager
+    
+number sidePadding = 8
+    number verticalPadding = 8
+    number elementPadding = 8
+    
+    Drawable ballIcon
+    Label ballCounter
+    Label shotTypeLabel
+    Drawable bugIcon
+    Label bugCounter
+    
+    boolean initialized = false
+    
+    action Initialize
+        initialized = true
+Color color
+        
+        shotTypeLabel:SetToLargeFont()
+        shotTypeLabel:SetFontColor(color:White())
+        shotTypeLabel:SetFontOutlineColor(color:Black())
+        shotTypeLabel:SetFontOutlineThickness(2)
+        
+        LoadFilledRectangle(100, 100, color:CustomColor(0, 0, 0, 0.2))
+        SetSize(manager:GetGame():GetScreenWidth(), CalculateHeight())
+        
+        ballIcon:Load("Resources/Ball.png")
+        ballCounter:SetFontSize(shotTypeLabel:GetFontSize() - 4)
+        ballCounter:SetText("0 / 0")
+        ballCounter:SetPositionOnBaseLine(false)
+        Add(ballIcon)
+        Add(ballCounter)
+        PositionLeftElements()
+        
+bugIcon:Load("Resources/Sleepy Bug.png")
+        bugIcon:SetColor(color:Purple())
+        bugCounter:SetFontSize(shotTypeLabel:GetFontSize() - 4)
+        bugCounter:SetText("0")
+        bugCounter:SetPositionOnBaseLine(false)
+        Add(bugIcon)
+        Add(bugCounter)
+        PositionRightElements()
+        
+        shotTypeLabel:SetText("Basic Shot")
+        shotTypeLabel:SetPositionOnBaseLine(false)
+        Add(shotTypeLabel)
+        PositionCenterElements()
+        
+    end
+    
+action CalculateHeight returns number
+        return shotTypeLabel:GetLineHeight() + 2 * verticalPadding
+    end
+    
+    action PositionLeftElements
+        ballIcon:SetPosition(sidePadding, (GetHeight() - ballIcon:GetHeight()) / 2.0)
+        ballCounter:SetPosition(ballIcon:GetX() + ballIcon:GetWidth() + elementPadding, (GetHeight() - ballCounter:GetHeight()) / 2.0)
+    end
+    
+    action PositionCenterElements
+        shotTypeLabel:SetPosition((GetWidth() - shotTypeLabel:GetWidth()) / 2.0, (GetHeight() - shotTypeLabel:GetHeight()) / 2.0)
+    end
+    
+    action PositionRightElements
+        bugCounter:SetPosition(GetWidth() - bugCounter:GetWidth() - sidePadding, (GetHeight() - bugCounter:GetHeight()) / 2.0)
+        bugIcon:SetPosition(bugCounter:GetX() - elementPadding - bugIcon:GetWidth(), (GetHeight() - bugIcon:GetHeight()) / 2.0)
+    end
+    
+    action IsInitialized returns boolean
+        return initialized
+    end
+    
+    action UpdateToLevel(Level level)
+        integer shotsLeft = level:GetShotsLeft()
+        ballCounter:SetText(shotsLeft + " / " + level:GetTotalShots())
+
+        Color color
+        if shotsLeft <= 1
+            ballIcon:SetColor(color:Red())
+        elseif shotsLeft = 2
+            ballIcon:SetColor(color:Orange())
+        elseif shotsLeft = 3
+            ballIcon:SetColor(color:Yellow())
+        else
+            ballIcon:SetColor(color:White())
+        end
+        
+        bugCounter:SetText("" + level:GetBugCount())
+        PositionCenterElements()
+    end
+end

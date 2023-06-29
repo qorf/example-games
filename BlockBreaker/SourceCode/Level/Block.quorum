@@ -1,0 +1,121 @@
+use Libraries.Interface.Controls.Control
+use Libraries.Interface.Views.ControlShaderView
+use Libraries.Interface.Views.View2D
+use Libraries.Game.Graphics.Coloruse Libraries.Game.GameStateManager
+
+class Block is Control, LevelItem
+    GameStateManager manager
+LevelConstants constants
+    SharedPlayerValues values
+    integer gridX = 0
+    integer gridY = 0
+    hitPoints = 1
+    
+    integer blockType = 0
+    
+    Bug bug = undefined
+    
+    on create
+        blockType = constants:BASIC
+        SetCornerRounding(0.2, 0.2, 0.2, 0.2)
+        SetBorderThickness(1.5)
+        SetCollidable(true)
+        
+        Color color
+        color:SetColor(0.8, 0.8, 1, 1)
+        SetBackgroundColor(color)
+    end
+    
+    action Initialize(integer x, integer y)
+        SetName("Block " + x + ", " + y)
+        
+        View2D view = GetDefaultView2D()
+        if view not= undefined
+SetView2D(view)
+        end
+        
+        SetSize(constants:COLUMN_WIDTH, constants:ROW_HEIGHT)
+        gridX = x
+        gridY = y
+        
+        SetPosition(GetWidth() * x, GetHeight() * y)
+    end
+    
+    action SetToGold
+        blockType = constants:GOLD
+        Color color
+        color:SetColor(255/255.0, 216/255.0, 79/255.0, 1)
+        SetBackgroundColor(color)
+    end
+    
+    action GetDefaultView2D returns View2D
+ControlShaderView view
+        view:Initialize()
+        return view
+    end
+    
+    action Damage
+        hitPoints = hitPoints - 1
+        if hitPoints <= 0
+Main main = cast(Main, manager:GetGame())
+main:MarkForRemoval(me)
+        end
+    end
+    
+    action OnDestroy
+        if blockType = constants:GOLD
+            values:SetCoins(values:GetCoins() + 1)
+            output "Set coins to " + values:GetCoins()
+        end
+        
+        if HasBug()
+            bug:OnBlockDestroy(me)
+        end
+        
+        GetLevel():OnBlockDestruction(me)
+    end
+    
+    action SetBug(Bug bug)
+        if me:bug not= undefined
+            Remove(bug)
+        end
+        
+        me:bug = bug
+        
+        if bug not= undefined
+            Add(bug)
+        end
+    end
+    
+    action GetBug returns Bug
+        return bug
+    end
+    
+    action HasBug returns boolean
+        return bug not= undefined
+    end
+    
+    action GetGridX returns integer
+        return gridX
+    end
+    
+    action GetGridY returns integer
+        return gridY
+    end
+    
+    action GetName returns text
+        if blockType = constants:BASIC
+            return "Block"
+        elseif blockType = constants:GOLD
+            return "Gold Block"
+        elseif blockType = constants:NO_BLOCK
+            return "Empty"
+        end
+        
+        return parent:Item:GetName()
+    end
+    
+    action IsGold returns boolean
+        return blockType = constants:GOLD
+    end
+end

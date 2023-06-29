@@ -1,0 +1,24 @@
+use Libraries.Interface.Pages.StackedRowPage
+use Libraries.Game.Graphics.Coloruse Libraries.Game.GameStateManager
+
+class GamePage is GameScreen, StackedRowPage
+    GameStateManager manager
+    
+    on create
+        Color color
+        color:SetColor(0, 0, 0, 0)
+        parent:StackedRowPage:SetBackgroundColor(color)
+    end
+    
+action GetFirstFocus returns Item2D
+        return GetFirstFocusableItem()
+    end
+    
+    action OnSwapTo
+        Main main = cast(Main, manager:GetGame())
+        NavigationMenu value = main:GetLevelMenu()
+        if value:IsShowing()
+            value:Hide()
+        end
+    end
+end

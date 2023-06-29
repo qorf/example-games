@@ -1,0 +1,118 @@
+use Libraries.Interface.Controls.Controluse Libraries.Interface.Views.ControlShaderViewuse Libraries.Interface.Events.FocusEventuse Libraries.Containers.Arrayuse Libraries.Game.Graphics.Color
+
+
+class BlockSelectionMarker is Control, LevelItem
+    integer currentX = 0
+    integer currentY = 0
+    Block targetBlock = undefined
+    
+    LevelConstants constants
+    
+    on create
+        SetFocusable(true)
+        SetAccessibilityCode(parent:Item:CUSTOM)
+        Hide()
+        SetBorderThickness(constants:BLOCK_SELECT_THICKNESS)
+        
+        SetInputGroup("BlockSelectionMarker")
+        SetZ(-2)
+        
+        Color color
+        SetBackgroundColor(color:CustomColor(1, 1, 1, 0))
+        SetBorderColor(color:Green())
+    end
+    
+    action Initialize
+        ControlShaderView view
+        view:Initialize()
+        SetView2D(view)
+        
+        SetSize(constants:BLOCK_SELECT_THICKNESS * 2 + constants:COLUMN_WIDTH, constants:BLOCK_SELECT_THICKNESS * 2 + constants:ROW_HEIGHT)
+    end
+    
+    action SetToBlock(Block block)
+        Level level = GetLevel()
+        currentX = block:GetGridX()
+        currentY = block:GetGridY()
+        targetBlock = block
+        
+        SetPosition(block:GetX() - constants:BLOCK_SELECT_THICKNESS, block:GetY() - constants:BLOCK_SELECT_THICKNESS)
+        
+        text result = ""
+        if block:HasBug()
+            result = block:GetBug():GetName() + " "
+        end
+        result = result + block:GetName()
+        result = result + " " + currentX + " " + currentY
+        
+        Array<integer> columnInfo = level:CountBlocksInColumn(currentX)
+        Array<integer> rowInfo = level:CountBlocksInRow(currentY)
+        
+        integer colBlocks = columnInfo:Get(0)
+        integer colBugs = columnInfo:Get(1)
+        integer colGold = columnInfo:Get(2)
+        
+        result = result + ", column has "
+        if colBugs > 0
+            result = result + colBugs + " bugs "
+        end
+        if colGold > 0
+            if colGold = 1
+                result = result + "1 gold block "
+            else
+                result = result + colGold + " gold blocks "
+            end
+        end
+        if colBlocks = 1
+            result = result + " 1 block, "
+        else
+            result = result + colBlocks + " blocks, "
+        end
+        
+        result = result + "row has "
+integer rowBlocks = rowInfo:Get(0)
+        integer rowBugs = rowInfo:Get(1)
+        integer rowGold = rowInfo:Get(2)
+        
+if rowBugs > 0
+            result = result + rowBugs + " bugs "
+        end
+        if rowGold > 0
+            if rowGold = 1
+                result = result + "1 gold block "
+            else
+                result = result + rowGold + " gold blocks "
+            end
+        end
+        if rowBlocks = 1
+            result = result + " 1 block. "
+        else
+            result = result + rowBlocks + " blocks. "
+        end
+        
+        result = result + "Use the arrows to move around the grid, tab to jump to priority blocks, or escape to resume gameplay."
+        SetName(result)
+    end
+    
+    action GainedFocus(FocusEvent event)
+        Show()
+        output GetName()
+    end
+    
+    action LostFocus(FocusEvent event)
+        Hide()
+end
+
+    action GetCurrentX returns integer
+        return currentX
+    end
+    
+    action GetCurrentY returns integer
+        return currentY
+    end
+    
+    action GetTargetBlock returns Block
+        return targetBlock
+    end
+
+end

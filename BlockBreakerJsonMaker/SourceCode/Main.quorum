@@ -1,0 +1,164 @@
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+
+class Main
+
+    action Main
+        JavaScriptObjectNotation json
+
+        File level1
+        level1:SetPath("Level 1.json")
+        
+        json:Add("Name", "Humble Beginnings")
+        json:Add("Stage", 1)
+        json:Add("Coin Count", 2)
+        json:Add("Width", 11)
+        json:Add("Height", 13)
+        json:Add("Shots", 12)
+        
+        json:Add("12", ToRow(10, 10, 10, 10, 10, 11, 10, 10, 10, 10, 10))
+        json:Add("11", ToRow(10, 20, 10, 11, 11, 10, 11, 11, 10, 20, 10))
+        json:Add("10", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("9", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("8", ToRow(0, 0, 10, 10, 10, 10, 10, 10, 10, 0, 0))
+        json:Add("7", ToRow(0, 0, 10, 10, 10, 10, 10, 10, 10, 0, 0))
+        json:Add("6", ToRow(0, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0))
+        json:Add("5", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("4", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("3", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("2", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("1", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        json:Add("0", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+                        
+        level1:Write(json:ToText())
+
+        File level2
+        level2:SetPath("Level 2.json")
+
+        JavaScriptObjectNotation map2
+        
+map2:Add("Name", "Two Hallways")
+        map2:Add("Stage", 2)
+        map2:Add("Coin Count", 3)
+        map2:Add("Width", 17)
+        map2:Add("Height", 15)
+        map2:Add("Shots", 10)
+        
+        map2:Add("14", ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10))
+map2:Add("13", ToRow(10, 10, 10, 10, 11, 10, 10, 10, 10, 10, 10, 10, 11, 10, 10, 10, 10))
+map2:Add("12", ToRow(10, 10, 10, 0, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 10, 10, 10))
+map2:Add("11", ToRow(10, 10, 11, 0, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 11, 10, 10))
+map2:Add("10", ToRow(10, 10, 10, 0, 0, 0, 11, 10, 10, 10, 11, 0, 0, 0, 10, 10, 10))
+map2:Add("9", ToRow(10, 10, 11, 0, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 11, 10, 10))
+map2:Add("8", ToRow(10, 10, 10, 0, 0, 0, 11, 10, 10, 10, 11, 0, 0, 0, 10, 10, 10))
+map2:Add("7", ToRow(10, 10, 11, 0, 0, 0, 10, 10, 10, 10, 10, 0, 0, 0, 11, 10, 10))
+map2:Add("6", ToRow(10, 20, 10, 0, 0, 0, 10, 10, 20, 10, 10, 0, 0, 0, 10, 20, 10))
+map2:Add("5", ToRow(10, 10, 10, 0, 0, 0, 0, 10, 10, 10, 0, 0, 0, 0, 10, 10, 10))
+map2:Add("4", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+map2:Add("3", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+map2:Add("2", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+map2:Add("1", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+map2:Add("0", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        
+
+        level2:Write(map2:ToText())
+
+        File level3
+        level3:SetPath("Level 3.json")
+
+        JavaScriptObjectNotation map3
+        map3:Add("1", ToRow(40, 40, 40, 40, 40, 40, 40, 02, 42, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40))
+        map3:Add("2", ToRow(40, 40, 40, 40, 40, 40, 40, 02, 02, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 01, 01, 01, 01, 01, 40, 40, 40))
+        map3:Add("3", ToRow(40, 40, 40, 40, 40, 40, 40, 02, 21, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 01, 01, 00, 00, 00, 01, 40, 40, 40))
+        map3:Add("4", ToRow(40, 40, 40, 40, 40, 02, 02, 02, 02, 02, 02, 02, 40, 40, 40, 40, 40, 40, 40, 01, 01, 01, 01, 01, 00, 00, 00, 01, 40, 40, 40))
+        map3:Add("5", ToRow(02, 02, 02, 02, 40, 21, 02, 02, 02, 02, 02, 02, 40, 40, 40, 40, 01, 01, 01, 01, 01, 44, 01, 01, 00, 00, 00, 01, 40, 40, 40))
+        map3:Add("6", ToRow(02, 21, 40, 02, 40, 02, 02, 45, 43, 45, 02, 02, 43, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 44, 01, 01, 01, 01, 40))
+        map3:Add("7", ToRow(02, 02, 40, 02, 02, 02, 02, 43, 43, 43, 02, 02, 02, 01, 01, 20, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 02, 02))
+        map3:Add("8", ToRow(02, 02, 40, 40, 40, 21, 02, 45, 43, 45, 02, 02, 43, 46, 46, 46, 46, 46, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 41, 02))
+        map3:Add("9", ToRow(21, 02, 40, 40, 40, 02, 02, 02, 02, 02, 02, 02, 40, 40, 40, 40, 40, 40, 40, 01, 01, 45, 01, 44, 40, 40, 01, 01, 01, 02, 02))
+        map3:Add("10", ToRow(02, 02, 40, 40, 40, 02, 02, 02, 02, 02, 02, 43, 40, 40, 40, 40, 40, 40, 40, 40, 21, 43, 43, 40, 40, 40, 40, 43, 21, 01, 40))
+        map3:Add("11", ToRow(02, 21, 40, 40, 40, 40, 40, 02, 02, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40))
+        map3:Add("12", ToRow(02, 02, 21, 02, 02, 02, 40, 02, 02, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40))
+        map3:Add("13", ToRow(21, 02, 02, 02, 21, 02, 40, 02, 42, 02, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40))
+
+        level3:Write(map3:ToText())
+    end
+
+    action ToRow(number x1, number x2, number x3, number x4, number x5, number x6, number x7, number x8, number x9, number x10, number x11) returns JavaScriptObjectNotation
+        JavaScriptObjectNotation row
+        row:SetArray()
+        row:Add(x1)
+        row:Add(x2)
+        row:Add(x3)
+        row:Add(x4)
+        row:Add(x5)
+        row:Add(x6)
+        row:Add(x7)
+        row:Add(x8)
+        row:Add(x9)
+        row:Add(x10)
+        row:Add(x11)
+        return row
+    end
+
+    action ToRow(number x1, number x2, number x3, number x4, number x5, number x6, number x7, number x8, number x9, number x10, number x11, number x12, number x13, number x14, number x15, number x16, number x17) returns JavaScriptObjectNotation
+        JavaScriptObjectNotation row
+        row:SetArray()
+        row:Add(x1)
+        row:Add(x2)
+        row:Add(x3)
+        row:Add(x4)
+        row:Add(x5)
+        row:Add(x6)
+        row:Add(x7)
+        row:Add(x8)
+        row:Add(x9)
+        row:Add(x10)
+        row:Add(x11)
+        row:Add(x12)
+        row:Add(x13)
+        row:Add(x14)
+row:Add(x15)
+row:Add(x16)
+row:Add(x17)
+        return row
+    end
+
+    action ToRow(number x1, number x2, number x3, number x4, number x5, number x6, number x7, number x8, number x9, number x10, number x11, number x12, number x13, number x14, number x15, number x16, 
+                 number x17, number x18, number x19, number x20, number x21, number x22, number x23, number x24, number x25, number x26, number x27, number x28, number x29, number x30, number x31) returns JavaScriptObjectNotation
+        JavaScriptObjectNotation row
+        row:SetArray()
+        row:Add(x1)
+        row:Add(x2)
+        row:Add(x3)
+        row:Add(x4)
+        row:Add(x5)
+        row:Add(x6)
+        row:Add(x7)
+        row:Add(x8)
+        row:Add(x9)
+        row:Add(x10)
+        row:Add(x11)
+        row:Add(x12)
+        row:Add(x13)
+        row:Add(x14)
+        row:Add(x15)
+        row:Add(x16)
+        row:Add(x17)
+        row:Add(x18)
+        row:Add(x19)
+        row:Add(x20)
+        row:Add(x21)
+        row:Add(x22)
+        row:Add(x23)
+        row:Add(x24)
+        row:Add(x25)
+        row:Add(x26)
+        row:Add(x27)
+        row:Add(x28)
+        row:Add(x29)
+        row:Add(x30)
+        row:Add(x31)
+        return row
+    end
+end

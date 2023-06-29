@@ -1,0 +1,14 @@
+use Libraries.Interface.Views.View2D
+
+class NoBlock is Block
+    LevelConstants constants
+    
+    on create
+parent:Block:blockType = constants:NO_BLOCK
+    end
+    
+action GetDefaultView2D returns View2D
+        return undefined
+end
+    
+end

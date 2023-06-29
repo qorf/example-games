@@ -1,0 +1,19 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class SelectNextPriorityBehavior is GameBehavior
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            BlockSelectionMarker marker = level:GetActiveBlockMarker()
+            Block block = marker:GetTargetBlock()
+            Block result = level:GetNextPriorityBlock(block)
+            if result = undefined
+                return now
+            end
+            
+            level:SelectBlockAt(result:GetGridX(), result:GetGridY())
+        end
+    end
+end

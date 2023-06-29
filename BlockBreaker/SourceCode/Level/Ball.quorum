@@ -1,0 +1,84 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Vector2
+use Libraries.Interface.Events.CollisionListener2D
+use Libraries.Interface.Events.CollisionEvent2D
+use Libraries.Game.GameStateManager
+use Libraries.Game.Collision.Shapes.Circle
+
+class Ball is LevelItem
+SharedPlayerValues values
+GameStateManager manager
+    
+    Vector2 direction
+    Vector2 lastPosition
+    number velocity = 0
+    integer hitPoints = values:GetBaseBallHP()
+    
+    Color baseColor
+    
+    on create
+        baseColor:SetColor(1, 1, 1, 1)
+        SetCollidable(true)
+        SetName("Ball")
+    end
+    
+    action InitializeBasic(Vector2 direction, number velocity)
+        Load(values:GetBallTexture())
+        Circle circle
+        circle:SetRadius(GetWidth() / 2.0)
+        SetShape(circle)
+        me:direction:Set(direction)
+        me:velocity = velocity
+    end
+    
+    action GetDirection returns Vector2
+        return direction
+    end
+    
+    action SetDirection(number x, number y)
+        direction:Set(x, y)
+    end
+    
+    action GetVelocity returns number
+        return velocity
+    end
+    
+    action GetLastX returns number
+        return lastPosition:GetX()
+    end
+    
+    action GetLastY returns number
+        return lastPosition:GetY()
+    end
+    
+    action SetLastPosition(number x, number y)
+        lastPosition:Set(x, y)
+    end
+    
+    action Damage
+        hitPoints = hitPoints - 1
+if hitPoints <= 0
+Main main = cast(Main, manager:GetGame())
+main:MarkForRemoval(me)
+        end
+        number ratio = cast(number, hitPoints) / values:GetBaseBallHP()
+        Color color = baseColor:CustomColor(baseColor:GetRed(), baseColor:GetGreen() * ratio, baseColor:GetBlue() * ratio, 1)
+        SetColor(color)
+    end
+    
+    action OnDestroy
+        Level level = GetLevel()
+        if level not= undefined
+            level:OnBallDestroy(me)
+        end
+    end
+    
+action GetLevel returns Level
+        Item2D candidate = GetParent()
+        repeat until candidate is Level or candidate = undefined
+            candidate = candidate:GetParent()
+        end
+        return cast(Level, candidate)
+    end
+end

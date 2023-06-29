@@ -1,0 +1,24 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class MoveBlockSelectionBehavior is GameBehavior
+    integer xDirection = 0
+    integer yDirection = 0
+    
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            BlockSelectionMarker marker = level:GetActiveBlockMarker()
+            
+            integer x = marker:GetCurrentX() + xDirection
+            integer y = marker:GetCurrentY() + yDirection
+            level:SelectBlockAt(x, y)
+        end
+    end
+    
+    action SetDirection(integer x, integer y)
+        xDirection = x
+        yDirection = y
+    end
+end

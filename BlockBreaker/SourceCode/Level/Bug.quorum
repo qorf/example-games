@@ -1,0 +1,37 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Math
+
+class Bug is LevelItem
+    Color minimumColor
+    Color maximumColor
+    Color currentColor
+    
+    Math math
+    blueprint action Initialize(Block block)
+    
+    number animationTimer = 0
+    
+    action Update(number seconds)
+        animationTimer = animationTimer + seconds
+        number animationRatio = math:AbsoluteValue(math:Sine(animationTimer))
+        SetScaleFromCenter(1.0 - 0.2 * animationRatio)
+        number mix1 = animationRatio
+        number mix2 = 1.0 - animationRatio
+        currentColor:SetColor(mix1 * maximumColor:GetRed() + mix2 * minimumColor:GetRed(), mix1 * maximumColor:GetGreen() + mix2 * minimumColor:GetGreen(), mix1 * maximumColor:GetBlue() + mix2 * minimumColor:GetBlue(), mix1 * maximumColor:GetAlpha() + mix2 * minimumColor:GetAlpha())
+        SetColor(currentColor)
+    end
+    
+    action SetCycleColors(Color minColor, Color maxColor)
+        minimumColor:SetColor(minColor:GetRed(), minColor:GetGreen(), minColor:GetBlue(), minColor:GetAlpha())
+maximumColor:SetColor(maxColor:GetRed(), maxColor:GetGreen(), maxColor:GetBlue(), maxColor:GetAlpha())
+    end
+    
+    blueprint action OnBlockDestroy(Block block)
+    
+    action OnDestroy
+        Level level = GetLevel()
+        level:OnBugDestroy(me)
+    end
+    
+end

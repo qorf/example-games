@@ -1,0 +1,11 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Game.GameStateManager
+
+class GameBehavior is Behavior
+    GameStateManager manager
+    
+    action GetMain returns Main
+        return cast(Main, manager:GetGame())
+    end
+    
+end

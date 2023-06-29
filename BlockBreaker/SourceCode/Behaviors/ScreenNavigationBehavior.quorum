@@ -1,0 +1,20 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class ScreenNavigationBehavior is GameBehavior
+    GameScreen screen = undefined
+    
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        main:SwapScreen(screen)
+    end
+    
+    action GetScreen returns GameScreen
+        return screen
+    end
+
+    action SetScreen(GameScreen screen)
+        me:screen = screen
+    end
+
+end

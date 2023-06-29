@@ -1,0 +1,266 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Coloruse Libraries.Game.Graphics.GraphicsManageruse Libraries.Game.GameStateManageruse Libraries.Interface.Forms.Groupinguse Libraries.Interface.Controls.Buttonuse Libraries.Interface.Layouts.ManualLayoutuse Libraries.Containers.Arrayuse Libraries.System.Fileuse Libraries.Game.InputTableuse Libraries.Interface.Events.KeyboardEventuse Libraries.Game.InputSetuse Libraries.Interface.Item2D
+
+
+class Main is Game
+    GameStateManager manager
+    GameScreen activeScreen = undefined
+    
+    GamePage startPage
+    GamePage optionsPage
+    GamePage levelSelect1
+    
+    NavigationMenu levelMenu
+    
+    Array<Level> levels
+    Array<Item2D> toBeRemoved
+    
+    LevelDisplayLayer statDisplay = undefined
+    
+    action Main
+        SetScreenSize(1600, 1000)
+        StartGame()
+    end
+    
+    action CreateGame
+        ManualLayout layout
+        SetLayout(layout)
+        
+        levelMenu:Initialize()
+        
+        SetupInputSets()
+        InitializeLevels()
+        InitializePages()
+        
+        LevelDisplayLayer layer
+        AddLayer(layer)
+        statDisplay = layer
+        statDisplay:Hide()
+        
+        SwapScreen(startPage)
+    end
+    
+    action InitializeLevels
+        Level level1
+        levels:Add(level1)
+        
+        File file
+        file:SetPath("Levels/Level 1.json")
+        level1:Load(file)
+        
+        Level level2
+        levels:Add(level2)
+        
+        File file2
+        file2:SetPath("Levels/Level 2.json")
+        level2:Load(file2)
+    end
+    
+    action InitializePages
+        Color color
+        
+        // Initialize the start page
+        startPage:SetTitleSizeHuge()
+        startPage:SetTitle("Block BREAKER")
+        
+        Grouping startOptions = startPage:AddGrouping("Start Menu Buttons")
+        startOptions:PositionFromBottom()
+        
+Button optionsButton = startOptions:AddButton("Options")
+        Button startGameButton = startOptions:AddButton("START!")
+Button exitButton = startOptions:AddButton("Exit")
+        
+        startGameButton:SetToLargeFont()
+        startGameButton:SetBackgroundColor(color:CustomColor(0.8, 1, 0.85, 1))
+        optionsButton:SetBackgroundColor(color:CustomColor(0.8, 0.85, 1, 1))
+        exitButton:SetBackgroundColor(color:CustomColor(1, 0.8, 0.75, 1))
+        
+        ScreenNavigationBehavior goToOptions
+        goToOptions:SetScreen(optionsPage)
+        ScreenNavigationBehavior goToSelect1
+        goToSelect1:SetScreen(levelSelect1)
+        startGameButton:SetBehavior(goToSelect1)
+        
+        ExitBehavior exitBehavior
+        exitButton:SetBehavior(exitBehavior)
+        
+        optionsButton:SetBehavior(goToOptions)
+        
+        // Initialize the options page.
+        optionsPage:SetTitleSizeHuge()
+        optionsPage:SetTitle("Game Options")
+        optionsPage:SetBackgroundColor(0.9, 0.925, 0.9, 1)
+        
+        Grouping optionsConfirmGroup = optionsPage:AddGrouping("Confirm Row")
+        optionsConfirmGroup:PositionFromBottom()
+        Button optionsConfirm = optionsConfirmGroup:AddButton("Confirm")
+        
+        ScreenNavigationBehavior goToStart
+        goToStart:SetScreen(startPage)
+        optionsConfirm:SetBehavior(goToStart)
+        
+        
+        // Initialize the first level select page.
+        levelSelect1:SetTitle("Levels 1 - 6")
+        levelSelect1:SetTitleSizeLarge()
+        
+        Grouping levelsGrouping1 = levelSelect1:AddGrouping("Levels")
+levelsGrouping1:SetColumns(3)
+        Button level1 = levelsGrouping1:AddButton("Level 1")
+        Button level2 = levelsGrouping1:AddButton("Level 2")
+        Button level3 = levelsGrouping1:AddButton("Level 3")
+        levelsGrouping1:AddLabel("0/2 Coins")
+levelsGrouping1:AddLabel("0/2 Coins")
+levelsGrouping1:AddLabel("0/2 Coins")
+        level1:SetToLargeFont()
+level2:SetToLargeFont()
+level3:SetToLargeFont()
+Button level4 = levelsGrouping1:AddButton("Level 4")
+        Button level5 = levelsGrouping1:AddButton("Level 5")
+        Button level6 = levelsGrouping1:AddButton("Level 6")
+        levelsGrouping1:AddLabel("0/2 Coins")
+levelsGrouping1:AddLabel("0/2 Coins")
+levelsGrouping1:AddLabel("0/2 Coins")
+        level4:SetToLargeFont()
+        level5:SetToLargeFont()
+        level6:SetToLargeFont()
+        
+        Grouping levelReturnGroup = levelSelect1:AddGrouping("Return Row")
+        levelReturnGroup:PositionFromBottom()
+        Button level1Upgrades = levelReturnGroup:AddButton("Upgrades")
+        Button level1Return = levelReturnGroup:AddButton("Return")
+        level1Return:SetBehavior(goToStart)
+        
+        ScreenNavigationBehavior goToLevel1
+        goToLevel1:SetScreen(levels:Get(0))
+        level1:SetBehavior(goToLevel1)
+        
+        ScreenNavigationBehavior goToLevel2
+        goToLevel2:SetScreen(levels:Get(1))
+        level2:SetBehavior(goToLevel2)
+    end
+    
+    action SwapScreen(GameScreen screen)
+if activeScreen not= undefined
+            activeScreen:OnSwapFrom()
+            Remove(activeScreen)
+        end
+        activeScreen = screen
+        if activeScreen not= undefined
+            Add(activeScreen)
+            activeScreen:SwapTo()
+        end
+    end
+    
+    action GetActiveScreen returns GameScreen
+        return activeScreen
+    end
+    
+    action SetBackgroundColor(Color color)
+        GraphicsManager graphics = manager:GetGameGraphics()
+        graphics:ClearScreenColor(color:GetRed(), color:GetGreen(), color:GetBlue(), color:GetAlpha())
+    end
+    
+    action SetupInputSets
+        KeyboardEvent keys
+        
+        InputTable debuggerTable
+        debuggerTable:SetIdentifier("Debugger")
+        
+        InputSet spaceSet
+        spaceSet:SetKeyboardInput(keys:SPACE)
+        DebuggerFireBehavior fireBehavior
+        debuggerTable:Add(spaceSet, fireBehavior)
+        
+        InputSet qSet
+        qSet:SetKeyboardInput(keys:Q)
+        qSet:SetInputTrigger(qSet:CONTINUE)
+        DebuggerRotateBehavior qRotate
+        qRotate:SetRotationSpeed(-90)
+        debuggerTable:Add(qSet, qRotate)
+        
+        InputSet eSet
+        eSet:SetKeyboardInput(keys:E)
+        eSet:SetInputTrigger(eSet:CONTINUE)
+        DebuggerRotateBehavior eRotate
+        eRotate:SetRotationSpeed(90)
+        debuggerTable:Add(eSet,eRotate)
+
+        AddInputTable(debuggerTable)
+        
+        InputTable defaultTable = GetDefaultInputTable()
+        EscapeBehavior escapeBehavior
+        InputSet escapeSet
+        escapeSet:SetKeyboardInput(keys:ESCAPE)
+        defaultTable:Add(escapeSet, escapeBehavior)
+        
+        
+        InputTable blockSelectTable
+        blockSelectTable:SetIdentifier("BlockSelectionMarker")
+        
+        MoveBlockSelectionBehavior moveLeftBehavior
+        moveLeftBehavior:SetDirection(-1, 0)
+MoveBlockSelectionBehavior moveRightBehavior
+        moveRightBehavior:SetDirection(1, 0)
+MoveBlockSelectionBehavior moveUpBehavior
+        moveUpBehavior:SetDirection(0, 1)
+MoveBlockSelectionBehavior moveDownBehavior
+        moveDownBehavior:SetDirection(0, -1)
+        
+        InputSet leftSet
+InputSet rightSet
+InputSet upSet
+InputSet downSet
+        leftSet:SetKeyboardInput(keys:LEFT)
+        rightSet:SetKeyboardInput(keys:RIGHT)
+        upSet:SetKeyboardInput(keys:UP)
+        downSet:SetKeyboardInput(keys:DOWN)
+        
+        blockSelectTable:Add(leftSet, moveLeftBehavior)
+blockSelectTable:Add(rightSet, moveRightBehavior)
+blockSelectTable:Add(upSet, moveUpBehavior)
+blockSelectTable:Add(downSet, moveDownBehavior)
+        
+        AddInputTable(blockSelectTable)
+    end
+    
+    action Update(number seconds)
+        RemoveMarkedItems()
+    end
+    
+    action MarkForRemoval(Item2D item)
+        toBeRemoved:Add(item)
+    end
+    
+    action RemoveMarkedItems
+repeat until toBeRemoved:IsEmpty()        
+            Item2D item = toBeRemoved:RemoveFromFront()
+            if item:GetParent() not= undefined
+if item is Ball
+            Ball ball = cast(Ball, item)
+                ball:OnDestroy()
+            elseif item is Block
+            Block block = cast(Block, item)
+                block:OnDestroy()
+            end
+                check
+item:GetParent():Remove(item)
+                detect error
+                    output "WARNING: Error while attempting to remove " + item:GetName() + " with parent " + item:GetParent():GetName()
+                end
+            end
+        end
+    end
+    
+    action GetStatDisplay returns LevelDisplayLayer
+        return statDisplay
+    end
+    
+    action GetLevelSelect returns GamePage
+        return levelSelect1
+    end
+    
+    action GetLevelMenu returns NavigationMenu
+        return levelMenu
+    end
+end

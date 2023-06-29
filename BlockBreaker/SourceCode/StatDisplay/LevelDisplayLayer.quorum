@@ -1,0 +1,94 @@
+use Libraries.Game.Layer2D
+use Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Labeluse Libraries.Game.Graphics.Color
+
+    
+class LevelDisplayLayer is Layer2D
+    GameStateManager manager
+    DisplayTopBar topBar
+    DisplayBottomBar bottomBar
+    Label loseLabel
+    Label winLabel
+    
+    on create
+        //Add(topBar)
+        //Add(bottomBar)
+        
+        Color color
+        loseLabel:SetFontSize(100)
+        loseLabel:SetFontOutlineThickness(4)
+        loseLabel:SetFontOutlineColor(color:Black())
+        loseLabel:SetPositionOnBaseLine(false)
+        loseLabel:SetText("Failure...")
+        loseLabel:SetFontColor(color:CustomColor(1, 0.8, 0.8, 1))
+        loseLabel:GetWidth()
+        Add(loseLabel)
+        
+winLabel:SetFontSize(100)
+        winLabel:SetFontOutlineThickness(4)
+        winLabel:SetFontOutlineColor(color:Black())
+        winLabel:SetPositionOnBaseLine(false)
+        winLabel:SetText("SUCCESS!!")
+        winLabel:SetFontColor(color:CustomColor(0.8, 1, 0.8, 1))
+winLabel:GetWidth()
+        Add(winLabel)
+        
+    end
+    
+    action Display(Level level)
+        Add(topBar)
+        Add(bottomBar)
+        
+        loseLabel:Hide()
+winLabel:Hide()
+        
+        Show()
+        if topBar:IsInitialized() = false
+            topBar:Initialize()
+            topBar:SetPosition(0, manager:GetGame():GetScreenHeight() - topBar:GetHeight())
+        end
+        topBar:UpdateToLevel(level)
+        
+        if bottomBar:IsInitialized() = false
+            bottomBar:Initialize()
+            bottomBar:SetPosition(0, 0)
+        end
+        bottomBar:UpdateToLevel(level)
+    end
+    
+    action StopDisplaying
+        Remove(topBar)
+        Remove(bottomBar)
+        winLabel:Hide()
+        loseLabel:Hide()
+    end
+    
+    action UpdateTopBar(Level level)
+        if topBar:IsInitialized()
+            topBar:UpdateToLevel(level)
+        end
+    end
+    
+    action UpdateBottomBar(Level level)
+if bottomBar:IsInitialized()
+            bottomBar:UpdateToLevel(level)
+        end
+    end
+    
+    action ShowWinLabel
+UpdateResultLabelPosition()
+        winLabel:Show()
+    end
+    
+    action ShowLoseLabel
+        UpdateResultLabelPosition()
+        loseLabel:Show()
+    end
+    
+    action UpdateResultLabelPosition
+        Main main = cast(Main, manager:GetGame())
+        number width = main:GetScreenWidth()
+        number height = main:GetScreenHeight()
+winLabel:SetPosition((width - winLabel:GetWidth()) / 2.0, (height - winLabel:GetHeight()) / 2.0)
+loseLabel:SetPosition((width - loseLabel:GetWidth()) / 2.0, (height - loseLabel:GetHeight()) / 2.0)
+    end
+end

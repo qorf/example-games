@@ -1,0 +1,12 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class DebuggerFireBehavior is GameBehavior
+    action Run(BehaviorEvent event)
+        GameScreen screen = GetMain():GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            level:FireBall()
+        end
+    end
+
+end

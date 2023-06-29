@@ -1,0 +1,53 @@
+use Libraries.Interface.Pages.StackedRowPage
+use Libraries.Interface.Controls.Dialog
+use Libraries.Game.Graphics.Color
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Forms.Grouping
+use Libraries.Game.GameStateManager
+
+
+class NavigationMenu is Dialog
+    Button inspectCells = undefined
+    Button returnToGame = undefined
+    Button returnToSelect = undefined
+    
+    GameStateManager manager
+    
+    action Initialize
+        SetName("Level Menu")
+        Color color
+        Main main = cast(Main, manager:GetGame())
+        
+        SetTopBarVisible(false)
+        SetPercentageWidth(0.4)
+        SetPercentageHeight(0.65)
+        SetVerticalLayoutMode(parent:Control:FILL)
+        
+        StackedRowPage page
+        page:SetBackgroundColor(color:CustomColor(0.25, 0.25, 0.25, 0.5))
+        page:AddBanner("Level Menu")
+        
+        inspectCells = page:AddButton("Inspect Blocks")
+        inspectCells:SetDescription("Control F")
+        StartBlockNavigationBehavior startNavigation
+        inspectCells:SetBehavior(startNavigation)
+        
+        Grouping bottomGroup = page:AddGrouping("Return Buttons")
+        returnToGame = bottomGroup:AddButton("Resume Game")
+        EscapeBehavior escapeBehavior
+        returnToGame:SetBehavior(escapeBehavior)
+        
+        returnToSelect = bottomGroup:AddButton("Return to Level Select")
+        ScreenNavigationBehavior backToSelect
+        returnToSelect:SetBehavior(backToSelect)
+        backToSelect:SetScreen(main:GetLevelSelect())
+        
+bottomGroup:PositionFromBottom()
+        
+        Add(page)
+end
+
+    action OnShow
+        inspectCells:Focus()
+    end
+end

@@ -1,0 +1,42 @@
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+
+class DebuggerRotateBehavior is GameBehavior
+    number rotationSpeed = 0
+    SharedPlayerValues values
+    InputMonitor monitor
+    KeyboardEvent keys
+    
+    action Run(BehaviorEvent event)
+        GameScreen screen = GetMain():GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            Debugger debugger = level:GetDebugger()
+            number angle = debugger:GetRotation()
+            number speed = rotationSpeed
+            
+            if monitor:IsKeyPressed(keys:SHIFT_LEFT) or monitor:IsKeyPressed(keys:SHIFT_RIGHT)
+                speed = speed / 5.0
+            end
+            
+            angle = angle + speed * event:GetSecondsSinceLastFrame()
+            if angle < values:MINIMUM_DEBUGGER_ANGLE
+                angle = values:MINIMUM_DEBUGGER_ANGLE
+            end
+            if angle > values:MAXIMUM_DEBUGGER_ANGLE
+                angle = values:MAXIMUM_DEBUGGER_ANGLE
+            end
+            debugger:SetRotation(angle)
+        end
+    end
+
+    action SetRotationSpeed(number speed)
+        rotationSpeed = speed
+    end
+    
+    action GetRotationSpeed returns number
+        return rotationSpeed
+    end
+    
+end

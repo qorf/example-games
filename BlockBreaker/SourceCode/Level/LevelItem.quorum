@@ -1,0 +1,11 @@
+use Libraries.Interface.Item2Duse Libraries.Game.Graphics.Drawable
+
+class LevelItem is Drawable
+action GetLevel returns Level
+        Item2D candidate = GetParent()
+repeat until candidate is Level or candidate = undefined
+            candidate = candidate:GetParent()
+        end
+        return cast(Level, candidate)
+    end
+end

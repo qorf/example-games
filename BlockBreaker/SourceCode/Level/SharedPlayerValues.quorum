@@ -1,0 +1,40 @@
+use Libraries.Game.Graphics.Texture
+
+shared class SharedPlayerValues
+    public constant integer BALL_VELOCITY = 400
+    public constant number MINIMUM_DEBUGGER_ANGLE = -80
+    public constant number MAXIMUM_DEBUGGER_ANGLE = 80
+    
+    
+    Texture ballTexture = undefined
+    integer baseBallHP = 5
+    integer coins = 0
+    integer bonusShots = 0
+    
+    action GetBallTexture returns Texture
+        if ballTexture = undefined
+            Texture texture
+            ballTexture = texture
+            texture:LoadFromFile("Resources/Ball.png")
+        end
+        
+        return ballTexture
+    end
+    
+    action GetBaseBallHP returns integer
+        return baseBallHP
+    end
+    
+    action GetCoins returns integer
+        return coins
+    end
+    
+    action SetCoins(integer coins)
+        me:coins = coins
+    end
+    
+    action GetBonusShots returns integer
+        return bonusShots
+    end
+
+end

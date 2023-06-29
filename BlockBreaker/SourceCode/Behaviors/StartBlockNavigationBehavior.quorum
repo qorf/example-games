@@ -1,0 +1,18 @@
+use Libraries.Interface.Events.BehaviorEvent
+
+class StartBlockNavigationBehavior is GameBehavior
+    action Run(BehaviorEvent event)
+        Main main = GetMain()
+        GameScreen screen = main:GetActiveScreen()
+        if screen is Level
+            Level level = cast(Level, screen)
+            NavigationMenu menu = main:GetLevelMenu()
+            if menu:IsShowing()
+                menu:Hide()
+            end
+            
+            level:SelectBlockAt(0, 0)
+        end
+    end
+
+end
