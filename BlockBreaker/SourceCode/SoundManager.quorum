@@ -1,0 +1,130 @@
+use Libraries.Sound.Audio
+use Libraries.Containers.HashTable
+
+shared class SoundManager
+    public constant text SOUND_PREFIX = "Resources/Sounds/"
+    public constant text MUSIC_PREFIX = SOUND_PREFIX + "Music/"
+    
+    public constant text MENU_MUSIC = "Sincerely.ogg"
+    public constant text LEVEL_1_MUSIC = "Past Sadness.ogg"
+    public constant text LEVEL_2_MUSIC = "Smooth Lovin.ogg"
+    public constant text LEVEL_3_MUSIC = "Late Night Radio.ogg"
+    
+    public constant text BLOCK_POP = "Block Pop.wav"
+    public constant text BALL_POP = "Ball Pop.wav"
+    public constant text BUG_DESTROY = "Bug Destroy.wav"
+    public constant text BALL_SHOOT = "Ball Shoot.wav"
+    public constant text SHOTGUN_SHOOT = "Shotgun Shoot.wav"
+    public constant text WALL_BOUNCE = "Clack.wav"
+    public constant text GOLD_GET = "Gold Get.wav"
+    public constant text LEVEL_WIN = "Success.wav"
+    public constant text LEVEL_LOSE = "Aw Shucks.wav"
+    public constant text MOVE_ERROR = "Move Error.wav"
+    public constant text WEAPON_SHIFT = "Weapon Shift.wav"
+    
+    SharedPlayerValues values
+        
+    HashTable<text, Audio> music
+    Audio activeMusic = undefined
+    
+    HashTable<text, Audio> sounds
+    
+    action PreloadMusic
+        Audio menu
+        menu:Load(MUSIC_PREFIX + MENU_MUSIC)
+        menu:EnableLooping()
+        music:Add(MENU_MUSIC, menu)
+        
+        Audio level1
+        level1:Load(MUSIC_PREFIX + LEVEL_1_MUSIC)
+        level1:EnableLooping()
+        music:Add(LEVEL_1_MUSIC, level1)
+        
+Audio level2
+        level2:Load(MUSIC_PREFIX + LEVEL_2_MUSIC)
+        level2:EnableLooping()
+        music:Add(LEVEL_2_MUSIC, level2)
+        
+        Audio level3
+        level3:Load(MUSIC_PREFIX + LEVEL_3_MUSIC)
+        level3:EnableLooping()
+        music:Add(LEVEL_3_MUSIC, level3)
+    end
+    
+    action PreloadSounds
+        Audio wallBounce
+        wallBounce:Load(SOUND_PREFIX + WALL_BOUNCE)
+        sounds:Add(WALL_BOUNCE, wallBounce)
+        
+Audio blockPop
+        blockPop:Load(SOUND_PREFIX + BLOCK_POP)
+        sounds:Add(BLOCK_POP, blockPop)
+        
+Audio ballPop
+        ballPop:Load(SOUND_PREFIX + BALL_POP)
+        sounds:Add(BALL_POP, ballPop)
+        
+Audio bugDestroy
+        bugDestroy:Load(SOUND_PREFIX + BUG_DESTROY)
+        sounds:Add(BUG_DESTROY, bugDestroy)
+        
+Audio ballShoot
+        ballShoot:Load(SOUND_PREFIX + BALL_SHOOT)
+        sounds:Add(BALL_SHOOT, ballShoot)
+        
+Audio shotgunShoot
+        shotgunShoot:Load(SOUND_PREFIX + SHOTGUN_SHOOT)
+        sounds:Add(SHOTGUN_SHOOT, shotgunShoot)
+        
+Audio goldGet
+        goldGet:Load(SOUND_PREFIX + GOLD_GET)
+        sounds:Add(GOLD_GET, goldGet)
+        
+        Audio winSound
+        winSound:Load(SOUND_PREFIX + LEVEL_WIN)
+        sounds:Add(LEVEL_WIN, winSound)
+        
+        Audio loseSound
+        loseSound:Load(SOUND_PREFIX + LEVEL_LOSE)
+        sounds:Add(LEVEL_LOSE, loseSound)
+        
+Audio moveError
+        moveError:Load(SOUND_PREFIX + MOVE_ERROR)
+        sounds:Add(MOVE_ERROR, moveError)
+        
+        Audio weaponShift
+        weaponShift:Load(SOUND_PREFIX + WEAPON_SHIFT)
+        sounds:Add(WEAPON_SHIFT, weaponShift)
+    end
+    
+    action PlayMusic(text key)
+        Audio current = music:GetValue(key)
+        if current = undefined or current = activeMusic
+            return now
+        end
+        
+        if activeMusic not= undefined
+            activeMusic:Stop()
+        end
+        
+        current:SetVolume(values:GetMusicVolume())
+current:Play()
+        activeMusic = current
+    end
+    
+    action UpdateMusicVolume
+        if activeMusic not= undefined
+            activeMusic:SetVolume(values:GetMusicVolume())
+        end
+    end
+    
+    action PlaySound(text key)
+        Audio current = sounds:GetValue(key)
+        if current = undefined
+            return now
+        end
+        
+        current:SetVolume(values:GetSoundVolume())
+        current:Play()
+    end
+end

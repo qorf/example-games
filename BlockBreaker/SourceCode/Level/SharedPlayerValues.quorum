@@ -9,11 +9,18 @@ shared class SharedPlayerValues
     number soundVolume = 0.5
     number musicVolume = 0.5
     
-    
     Texture ballTexture = undefined
     integer baseBallHP = 5
-    integer coins = 0
+    integer coins = 10
+    
     integer bonusShots = 0
+    integer bonusHP = 0
+    
+    boolean bonusShots1Purchased = false
+    boolean bonusShots2Purchased = false
+    boolean bonusHP1Purchased = false
+    boolean bonusHP2Purchased = false
+    boolean shotgunPurchased = false
     
     action GetBallTexture returns Texture
         if ballTexture = undefined
@@ -55,6 +62,10 @@ shared class SharedPlayerValues
 
         ballVelocity = speed
     end
+    
+    action GetBonusHP returns integer
+        return bonusHP
+    end
 
     action GetSoundVolume returns number
         return soundVolume
@@ -84,6 +95,58 @@ shared class SharedPlayerValues
         end
 
         musicVolume = volume
+    end
+
+    action GetBonusShots1Purchased returns boolean
+        return bonusShots1Purchased
+    end
+
+    action SetBonusShots1Purchased(boolean bonusShots1Purchased)
+        if bonusShots1Purchased = true
+            bonusShots = bonusShots + 2
+        end
+        me:bonusShots1Purchased = bonusShots1Purchased
+    end
+
+    action GetBonusShots2Purchased returns boolean
+        return bonusShots2Purchased
+    end
+
+    action SetBonusShots2Purchased(boolean bonusShots2Purchased)
+if bonusShots2Purchased = true
+            bonusShots = bonusShots + 4
+        end
+        me:bonusShots2Purchased = bonusShots2Purchased
+    end
+
+    action GetBonusHP1Purchased returns boolean
+        return bonusHP1Purchased
+    end
+
+    action SetBonusHP1Purchased(boolean bonusHP1Purchased)
+if bonusHP1Purchased = true
+            bonusHP = bonusHP + 1
+        end
+        me:bonusHP1Purchased = bonusHP1Purchased
+    end
+
+    action GetBonusHP2Purchased returns boolean
+        return bonusHP2Purchased
+    end
+
+    action SetBonusHP2Purchased(boolean bonusHP2Purchased)
+if bonusHP2Purchased = true
+            bonusHP = bonusHP + 2
+        end
+        me:bonusHP2Purchased = bonusHP2Purchased
+    end
+
+    action GetShotgunPurchased returns boolean
+        return shotgunPurchased
+    end
+
+    action SetShotgunPurchased(boolean shotgunPurchased)
+        me:shotgunPurchased = shotgunPurchased
     end
 
 end

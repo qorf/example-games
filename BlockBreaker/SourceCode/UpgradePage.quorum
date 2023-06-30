@@ -1,0 +1,126 @@
+use Libraries.Game.Graphics.Label
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Forms.Banner
+use Libraries.Interface.Forms.Grouping
+use Libraries.Interface.Controls.Icon
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+
+class UpgradePage is GamePage
+SharedPlayerValues values
+    GameStateManager manager
+    SoundManager sounds
+    
+    Label coinLabel = undefined
+    Button ballHP1 = undefined
+    Button ballHP2 = undefined
+    Button shotPlus1 = undefined
+    Button shotPlus2 = undefined
+    Button unlockShotgun = undefined
+    
+    action Initialize
+        Banner banner = AddBanner("Upgrades")
+        
+        Grouping coinGroup = AddGrouping("Coins")
+        Icon coin1 = coinGroup:AddIcon("Coin Icon", "Resources/Coin.png")
+        coin1:SetFocusable(false)
+        
+        coinLabel = coinGroup:AddLabel("Coins", "0")
+        coinLabel:SetToHugeFont()
+        coinLabel:SetPositionOnBaseLine(false)
+        
+        Icon coin2 = coinGroup:AddIcon("Coin Icon 2", "Resources/Coin.png")
+        coin2:SetFocusable(false)
+        
+Grouping middleGroup = AddGrouping("Unlocks")
+        middleGroup:SetColumns(1)
+        middleGroup:PositionFromCenter()
+        ballHP1 = middleGroup:AddButton("(1) Ball HP+")
+        shotPlus1 = middleGroup:AddButton("(1) Extra Shots+")
+ballHP2 = middleGroup:AddButton("(3) Ball HP++")
+        shotPlus2 = middleGroup:AddButton("(3) Extra Shots++")
+        unlockShotgun = middleGroup:AddButton("(5) Unlock Shotgun")
+        
+        ballHP1:SetToLargeFont()
+        ballHP2:SetToLargeFont()
+        shotPlus1:SetToLargeFont()
+        shotPlus2:SetToLargeFont()
+        unlockShotgun:SetToLargeFont()
+        
+        BuyUpgradeBehavior upgradeBehavior
+        ballHP1:SetBehavior(upgradeBehavior)
+        ballHP2:SetBehavior(upgradeBehavior)
+        shotPlus1:SetBehavior(upgradeBehavior)
+        shotPlus2:SetBehavior(upgradeBehavior)
+        unlockShotgun:SetBehavior(upgradeBehavior)
+        
+        Grouping returnGroup = AddGrouping("Return Group")
+        returnGroup:PositionFromBottom()
+        Button returnButton = returnGroup:AddButton("Return to Level Select")
+        ScreenNavigationBehavior goToSelect
+        Main main = cast(Main, manager:GetGame())
+        goToSelect:SetScreen(main:GetLevelSelect())
+        returnButton:SetBehavior(goToSelect)
+        returnButton:SetToLargeFont()
+    end
+    
+    action UpdateCoins
+        coinLabel:SetText("" + values:GetCoins())
+    end
+    
+    action OnSwapTo
+        UpdateCoins()
+        parent:GamePage:OnSwapTo()
+    end
+    
+    action BuyUpgrade(Button button)
+        integer cost = 0
+        integer coins = values:GetCoins()
+        
+        if button = ballHP1 or button = shotPlus1
+        if button = ballHP1
+            
+        end
+            cost = 1
+        elseif button = unlockShotgun
+            cost = 5
+        else
+            cost = 3
+        end
+        
+        if cost > coins
+            sounds:PlaySound(sounds:MOVE_ERROR)
+            return now
+        end
+        
+        values:SetCoins(coins - cost)
+        UpdateCoins()
+
+        button:SetBehavior(undefined)
+
+        if button = ballHP1
+            values:SetBonusHP1Purchased(true)
+            button:SetName("(UNLOCKED) Ball HP+")
+        elseif button = ballHP2
+            values:SetBonusHP2Purchased(true)
+            button:SetName("(UNLOCKED) Ball HP++")
+        elseif button = shotPlus1
+            values:SetBonusShots1Purchased(true)
+            button:SetName("(UNLOCKED) Extra Shots+")
+        elseif button = shotPlus2
+            button:SetName("(UNLOCKED) Extra Shots++")
+            values:SetBonusShots2Purchased(true)
+        elseif button = unlockShotgun
+            button:SetName("(UNLOCKED) Unlock Shotgun")
+            values:SetShotgunPurchased(true)
+        end
+        button:SetLabelText(button:GetName())
+        button:LoadGraphics(button:GetDefaultLayoutProperties())
+
+        sounds:PlaySound(sounds:GOLD_GET)
+
+        Color color
+        button:SetBackgroundColor(color:Orange())
+    end
+end

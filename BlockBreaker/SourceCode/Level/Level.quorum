@@ -15,6 +15,7 @@ class Level is GameScreen, CollisionListener2D
     LevelConstants constants
     SharedPlayerValues values
     GameStateManager manager
+    SoundManager sounds
     Math math
     
     integer rows = 0
@@ -28,6 +29,10 @@ class Level is GameScreen, CollisionListener2D
     integer baseShots = 0
     integer bugCount = 0
     integer shotsLeft = 0
+    
+    public constant integer BASIC_SHOT = 0
+    public constant integer SHOTGUN_SHOT = 1
+    integer shotType = BASIC_SHOT
     
     Drawable background
     Drawable leftWall
@@ -177,6 +182,7 @@ bugCount = bugCount + 1
     end
     
     action OnSwapTo
+        shotsLeft = baseShots + values:GetBonusShots()
         SetPosition((manager:GetGame():GetScreenWidth() - GetWidth()) / 2.0, (manager:GetGame():GetScreenHeight() - GetHeight()) / 2.0)
         Main main = cast(Main, manager:GetGame())
         main:AddCollisionListener(me)
@@ -212,7 +218,14 @@ main:GetStatDisplay():StopDisplaying()
     
     action FireBall
         if IsReadyToFire() = false
+            sounds:PlaySound(sounds:MOVE_ERROR)
             return now
+        end
+        
+        if shotType = BASIC_SHOT
+            sounds:PlaySound(sounds:BALL_SHOOT)
+        elseif shotType = SHOTGUN_SHOT
+            sounds:PlaySound(sounds:SHOTGUN_SHOOT)
         end
         
         Vector2 direction
@@ -224,6 +237,25 @@ main:GetStatDisplay():StopDisplaying()
         ball:SetPosition(debugger:GetX() + debugger:GetWidth() / 2.0 - ball:GetWidth() / 2.0, debugger:GetY() + debugger:GetHeight() / 2.0 - ball:GetHeight() / 2.0)
         Add(ball)
         balls:Add(ball)
+        
+        if shotType = SHOTGUN_SHOT
+            Vector2 left = direction:Copy()
+            left:Rotate(-30)
+            Vector2 right = direction:Copy()
+            right:Rotate(30)
+            
+            Ball leftBall
+            leftBall:InitializeBasic(left, values:GetBallVelocity())
+            leftBall:SetPosition(ball:GetX(), ball:GetY())
+            Add(leftBall)
+            balls:Add(leftBall)
+            
+Ball rightBall
+            rightBall:InitializeBasic(right, values:GetBallVelocity())
+            rightBall:SetPosition(ball:GetX(), ball:GetY())
+            Add(rightBall)
+            balls:Add(rightBall)
+        end
         
         shotsLeft = shotsLeft - 1
         UpdateBottomBar()
@@ -248,6 +280,10 @@ Main main = cast(Main, manager:GetGame())
         Item2D itemA = event:GetItemA()
         Item2D itemB = event:GetItemB()
 
+        if itemA:GetLayer() = undefined or itemB:GetLayer() = undefined
+            return now
+        end
+        
         if itemA is Ball
             ball = cast(Ball, itemA)
         elseif itemB is Ball
@@ -286,6 +322,7 @@ Main main = cast(Main, manager:GetGame())
         
         ball:Damage()
         block:Damage()
+        sounds:PlaySound(sounds:BLOCK_POP)
     end
     
     action Update(number seconds)
@@ -319,6 +356,7 @@ hit = true
             end
             
             if hit
+                sounds:PlaySound(sounds:WALL_BOUNCE)
                 ball:Damage()
             end
 
@@ -347,6 +385,7 @@ hit = true
     
     action OnBallDestroy(Ball ball)
         balls:Remove(ball)
+        sounds:PlaySound(sounds:BALL_POP)
         if balls:IsEmpty()
             CheckEndConditions()
         end
@@ -371,7 +410,7 @@ hit = true
     action OnBugDestroy(Bug bug)
         bugCount = bugCount - 1
         UpdateBottomBar()
-        output "Bugs left = " + bugCount
+        sounds:PlaySound(sounds:BUG_DESTROY)
     end
     
     action IsReadyToFire returns boolean
@@ -407,6 +446,14 @@ main:GetStatDisplay():ShowLoseLabel()
     action OnBlockDestruction(Block block)
         if priorityBlocks:Has(block)
             priorityBlocks:Remove(block)
+        end
+        
+        sounds:PlaySound(sounds:BLOCK_POP)
+        
+        if block:IsGold()
+            sounds:PlaySound(sounds:GOLD_GET)
+            coinsCollected = coinsCollected + 1
+            UpdateTopBar()
         end
         
         integer x = block:GetGridX()
@@ -486,6 +533,7 @@ if block:HasBug()
         end
         
         if x < 0 or x >= columns or y < 0 or y >= rows
+            sounds:PlaySound(sounds:MOVE_ERROR)
             return now
         end
         
@@ -519,6 +567,23 @@ return undefined
         end
         
         return undefined
+    end
+    
+    action ChangeWeapon
+        if values:GetShotgunPurchased() = false
+            sounds:PlaySound(sounds:MOVE_ERROR)
+            return now
+        end
+        
+        sounds:PlaySound(sounds:WEAPON_SHIFT)
+        
+        shotType = (shotType + 1) mod 2
+        debugger:AnnounceWeapon()
+        UpdateBottomBar()
+    end
+    
+    action GetShotType returns integer
+        return shotType
     end
     
 end

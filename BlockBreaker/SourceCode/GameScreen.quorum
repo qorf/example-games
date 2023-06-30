@@ -6,12 +6,18 @@ use Libraries.Game.GameStateManager
 class GameScreen is Item2D
     Color backgroundColor
     GameStateManager manager
+    SoundManager sounds
+    text musicKey = ""
     
     on create
         backgroundColor:SetColor(1, 1, 1, 1)
     end
     
     action SwapTo
+        if musicKey not= ""
+            sounds:PlayMusic(musicKey)
+        end
+        
         SetClearColor()
         OnSwapTo()
         Item2D focus = GetFirstFocus()
@@ -60,4 +66,13 @@ class GameScreen is Item2D
     Main main = cast(Main, manager:GetGame())
         main:SetBackgroundColor(backgroundColor)
     end
+    
+    action SetMusicKey(text key)
+        musicKey = key
+    end
+    
+    action GetMusicKey returns text
+        return musicKey
+    end
+    
 end

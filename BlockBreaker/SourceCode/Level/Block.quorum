@@ -65,7 +65,6 @@ main:MarkForRemoval(me)
     action OnDestroy
         if blockType = constants:GOLD
             values:SetCoins(values:GetCoins() + 1)
-            output "Set coins to " + values:GetCoins()
         end
         
         if HasBug()

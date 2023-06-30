@@ -13,7 +13,6 @@ shared class LevelConstants
     public constant integer GOLD = 20
     public constant integer EXPLOSIVE = 30
     
-    
     // Bug types
     public constant integer NO_BUG = 0
     public constant integer SLEEPY_BUG = 1

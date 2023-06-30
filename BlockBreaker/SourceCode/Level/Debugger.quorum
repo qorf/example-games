@@ -81,4 +81,23 @@ dummy:SetName(angle + " degrees" + angleText)
         dummy:Focus()
     end
     
+    action AnnounceWeapon
+        Item2D dummy = dummy1
+        if activeDummy = dummy
+            dummy = dummy2
+        end
+        
+        Level level = GetLevel()
+integer type = level:GetShotType()
+        
+        if type = level:BASIC_SHOT
+            dummy:SetName("Basic Shot")
+        elseif type = level:SHOTGUN_SHOT
+            dummy:SetName("Shotgun!")
+        end
+        
+        activeDummy = dummy
+        dummy:Focus()
+    end
+    
 end

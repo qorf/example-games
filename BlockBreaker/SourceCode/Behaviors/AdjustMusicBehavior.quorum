@@ -8,6 +8,7 @@ class AdjustMusicBehavior is GameBehavior
         SharedPlayerValues values
         values:SetMusicVolume(values:GetMusicVolume() + amount)
         main:GetMusicLabel():SetText(cast(integer, values:GetMusicVolume() * 100) + "%")
+        main:GetSoundManager():UpdateMusicVolume()
     end
 
     action SetAmount(number value)

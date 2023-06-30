@@ -105,6 +105,14 @@ action CalculateHeight returns number
         end
         
         bugCounter:SetText("" + level:GetBugCount())
+        
+        integer shotType = level:GetShotType()
+        if shotType = level:BASIC_SHOT
+            shotTypeLabel:SetText("Basic Shot")
+        elseif shotType = level:SHOTGUN_SHOT
+            shotTypeLabel:SetText("Shotgun")
+        end
+        
         PositionCenterElements()
     end
     

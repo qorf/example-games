@@ -13,7 +13,7 @@ GameStateManager manager
     Vector2 direction
     Vector2 lastPosition
     number velocity = 0
-    integer hitPoints = values:GetBaseBallHP()
+    integer hitPoints = values:GetBaseBallHP() + values:GetBonusHP()
     
     Color baseColor
     

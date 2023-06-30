@@ -6,6 +6,8 @@ use Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Labeluse Librar
     
 class LevelDisplayLayer is Layer2D
     GameStateManager manager
+    SoundManager sounds
+    
     DisplayTopBar topBar
     DisplayBottomBar bottomBar
     Label loseLabel
@@ -95,11 +97,13 @@ if bottomBar:IsInitialized()
     action ShowWinLabel
 UpdateResultLabelPosition()
         winLabel:Show()
+        sounds:PlaySound(sounds:LEVEL_WIN)
     end
     
     action ShowLoseLabel
         UpdateResultLabelPosition()
         loseLabel:Show()
+        sounds:PlaySound(sounds:LEVEL_LOSE)
     end
     
     action UpdateResultLabelPosition

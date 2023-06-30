@@ -17,11 +17,13 @@ use Libraries.Game.Graphics.Label
 
 class Main is Game
     GameStateManager manager
+    SoundManager sounds
     GameScreen activeScreen = undefined
     
     GamePage startPage
     GamePage optionsPage
     GamePage levelSelect1
+    UpgradePage upgradePage
     
     NavigationMenu levelMenu
     
@@ -44,6 +46,9 @@ class Main is Game
         ManualLayout layout
         SetLayout(layout)
         
+        sounds:PreloadMusic()
+        sounds:PreloadSounds()
+        
         levelMenu:Initialize()
         
         SetupInputSets()
@@ -65,6 +70,7 @@ class Main is Game
         File file
         file:SetPath("Levels/Level 1.json")
         level1:Load(file)
+        level1:SetMusicKey(sounds:LEVEL_1_MUSIC)
         
         Level level2
         levels:Add(level2)
@@ -72,6 +78,15 @@ class Main is Game
         File file2
         file2:SetPath("Levels/Level 2.json")
         level2:Load(file2)
+        level2:SetMusicKey(sounds:LEVEL_2_MUSIC)
+        
+        Level level3
+        levels:Add(level3)
+        
+        File file3
+        file3:SetPath("Levels/Level 3.json")
+        level3:Load(file3)
+        level3:SetMusicKey(sounds:LEVEL_3_MUSIC)
     end
     
     action InitializePages
@@ -80,6 +95,7 @@ class Main is Game
         // Initialize the start page
         startPage:SetTitleSizeHuge()
         startPage:SetTitle("Block BREAKER")
+startPage:SetMusicKey(sounds:MENU_MUSIC)
         
         Grouping startOptions = startPage:AddGrouping("Start Menu Buttons")
         startOptions:PositionFromBottom()
@@ -88,10 +104,12 @@ Button optionsButton = startOptions:AddButton("Options")
         Button startGameButton = startOptions:AddButton("START!")
 Button exitButton = startOptions:AddButton("Exit")
         
-        startGameButton:SetToLargeFont()
+        startGameButton:SetToHugeFont()
         startGameButton:SetBackgroundColor(color:CustomColor(0.8, 1, 0.85, 1))
         optionsButton:SetBackgroundColor(color:CustomColor(0.8, 0.85, 1, 1))
+        optionsButton:SetToLargeFont()
         exitButton:SetBackgroundColor(color:CustomColor(1, 0.8, 0.75, 1))
+        exitButton:SetToLargeFont()
         
         ScreenNavigationBehavior goToOptions
         goToOptions:SetScreen(optionsPage)
@@ -141,9 +159,9 @@ Button exitButton = startOptions:AddButton("Exit")
         soundUp:SetToHugeFont()
 
         AdjustSoundBehavior doSoundDown
-        doSoundDown:SetAmount(-0.1)
+        doSoundDown:SetAmount(-0.05)
         AdjustSoundBehavior doSoundUp
-        doSoundUp:SetAmount(0.1)
+        doSoundUp:SetAmount(0.05)
         soundDown:SetBehavior(doSoundDown)
         soundUp:SetBehavior(doSoundUp)
 
@@ -160,9 +178,9 @@ Button exitButton = startOptions:AddButton("Exit")
         musicUp:SetToHugeFont()
 
         AdjustMusicBehavior doMusicDown
-        doMusicDown:SetAmount(-0.1)
+        doMusicDown:SetAmount(-0.05)
         AdjustMusicBehavior doMusicUp
-        doMusicUp:SetAmount(0.1)
+        doMusicUp:SetAmount(0.05)
         musicDown:SetBehavior(doMusicDown)
         musicUp:SetBehavior(doMusicUp)
         
@@ -176,35 +194,37 @@ Button exitButton = startOptions:AddButton("Exit")
         
         
         // Initialize the first level select page.
-        levelSelect1:SetTitle("Levels 1 - 6")
+        levelSelect1:SetTitle("Level Selection")
         levelSelect1:SetTitleSizeLarge()
+        levelSelect1:SetMusicKey(sounds:MENU_MUSIC)
         
         Grouping levelsGrouping1 = levelSelect1:AddGrouping("Levels")
 levelsGrouping1:SetColumns(3)
         Button level1 = levelsGrouping1:AddButton("Level 1")
         Button level2 = levelsGrouping1:AddButton("Level 2")
         Button level3 = levelsGrouping1:AddButton("Level 3")
-        levelsGrouping1:AddLabel("0/2 Coins")
-levelsGrouping1:AddLabel("0/2 Coins")
-levelsGrouping1:AddLabel("0/2 Coins")
         level1:SetToLargeFont()
 level2:SetToLargeFont()
 level3:SetToLargeFont()
-Button level4 = levelsGrouping1:AddButton("Level 4")
-        Button level5 = levelsGrouping1:AddButton("Level 5")
-        Button level6 = levelsGrouping1:AddButton("Level 6")
-        levelsGrouping1:AddLabel("0/2 Coins")
-levelsGrouping1:AddLabel("0/2 Coins")
-levelsGrouping1:AddLabel("0/2 Coins")
+        levelsGrouping1:PositionFromCenter()
+        
+        Grouping levelsGrouping2 = levelSelect1:AddGrouping("Levels Continued")
+        levelsGrouping2:PositionFromCenter()
+Button level4 = levelsGrouping2:AddButton("Level 4")
+        Button level5 = levelsGrouping2:AddButton("Level 5")
         level4:SetToLargeFont()
         level5:SetToLargeFont()
-        level6:SetToLargeFont()
         
         Grouping levelReturnGroup = levelSelect1:AddGrouping("Return Row")
         levelReturnGroup:PositionFromBottom()
         Button level1Upgrades = levelReturnGroup:AddButton("Upgrades")
         Button level1Return = levelReturnGroup:AddButton("Return")
         level1Return:SetBehavior(goToStart)
+        
+        upgradePage:Initialize()
+        ScreenNavigationBehavior goToUpgrades
+        goToUpgrades:SetScreen(upgradePage)
+        level1Upgrades:SetBehavior(goToUpgrades)
         
         ScreenNavigationBehavior goToLevel1
         goToLevel1:SetScreen(levels:Get(0))
@@ -213,6 +233,10 @@ levelsGrouping1:AddLabel("0/2 Coins")
         ScreenNavigationBehavior goToLevel2
         goToLevel2:SetScreen(levels:Get(1))
         level2:SetBehavior(goToLevel2)
+        
+        ScreenNavigationBehavior goToLevel3
+        goToLevel3:SetScreen(levels:Get(2))
+        level3:SetBehavior(goToLevel3)
     end
     
     action SwapScreen(GameScreen screen)
@@ -268,6 +292,10 @@ InputSet downSet
         rightRotate:SetRotationSpeed(90)
         debuggerTable:Add(rightContinueSet,rightRotate)
 
+        ChangeWeaponBehavior changeWeapon
+        debuggerTable:Add(upSet, changeWeapon)
+        debuggerTable:Add(downSet, changeWeapon)
+        
         AddInputTable(debuggerTable)
         
         InputTable defaultTable = GetDefaultInputTable()
@@ -386,6 +414,14 @@ item:GetParent():Remove(item)
 
     action GetMusicLabel returns Label
         return musicLabel
+    end
+    
+    action GetSoundManager returns SoundManager
+        return sounds
+    end
+    
+    action GetUpgradePage returns UpgradePage
+        return upgradePage
     end
 
 end
