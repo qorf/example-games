@@ -1,5 +1,9 @@
 use Libraries.Game.Graphics.Drawable
-use Libraries.Game.Graphics.Labeluse Libraries.Interface.Controls.Buttonuse Libraries.Game.GameStateManageruse Libraries.Game.Graphics.Coloruse Libraries.Containers.Array
+use Libraries.Game.Graphics.Label
+use Libraries.Interface.Controls.Button
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+use Libraries.Containers.Array
 
 
 
@@ -36,6 +40,7 @@ levelLabel:SetToLargeFont()
         coinCounter:SetText("0 / 0")
         coinCounter:SetPositionOnBaseLine(false)
         coinCounter:SetName("Coins Collected")
+        coinCounter:SetFontColor(color:White())
         Add(coinIcon)
         Add(coinCounter)
         PositionLeftElements()
@@ -58,6 +63,7 @@ levelLabel:SetToLargeFont()
         
         levelLabel:SetText("Level 0: Prologue")
         levelLabel:SetPositionOnBaseLine(false)
+        levelLabel:SetFontColor(color:White())
         Add(levelLabel)
         PositionCenterElements()
         

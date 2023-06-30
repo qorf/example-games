@@ -9,6 +9,8 @@ shared class SoundManager
     public constant text LEVEL_1_MUSIC = "Past Sadness.ogg"
     public constant text LEVEL_2_MUSIC = "Smooth Lovin.ogg"
     public constant text LEVEL_3_MUSIC = "Late Night Radio.ogg"
+public constant text LEVEL_4_MUSIC = "Pleasant Porridge.ogg"
+public constant text LEVEL_5_MUSIC = "Screen Saver.ogg"
     
     public constant text BLOCK_POP = "Block Pop.wav"
     public constant text BALL_POP = "Ball Pop.wav"
@@ -49,6 +51,16 @@ Audio level2
         level3:Load(MUSIC_PREFIX + LEVEL_3_MUSIC)
         level3:EnableLooping()
         music:Add(LEVEL_3_MUSIC, level3)
+        
+Audio level4
+        level4:Load(MUSIC_PREFIX + LEVEL_4_MUSIC)
+        level4:EnableLooping()
+        music:Add(LEVEL_4_MUSIC, level4)
+        
+Audio level5
+        level5:Load(MUSIC_PREFIX + LEVEL_5_MUSIC)
+        level5:EnableLooping()
+        music:Add(LEVEL_5_MUSIC, level5)
     end
     
     action PreloadSounds

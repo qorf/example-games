@@ -11,7 +11,7 @@ shared class SharedPlayerValues
     
     Texture ballTexture = undefined
     integer baseBallHP = 5
-    integer coins = 10
+    integer coins = 0
     
     integer bonusShots = 0
     integer bonusHP = 0

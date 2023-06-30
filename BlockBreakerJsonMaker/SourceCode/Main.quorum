@@ -42,7 +42,7 @@ class Main
         map2:Add("Coin Count", 3)
         map2:Add("Width", 17)
         map2:Add("Height", 17)
-        map2:Add("Shots", 10)
+        map2:Add("Shots", 12)
         
         map2:Add("16", ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10))
         map2:Add("15", ToRow(10, 10, 10, 10, 11, 10, 10, 10, 10, 10, 10, 10, 11, 10, 10, 10, 10))
@@ -74,7 +74,7 @@ map2:Add("0", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
         map3:Add("Coin Count", 9)
         map3:Add("Width", 19)
         map3:Add("Height", 14)
-        map3:Add("Shots", 12)
+        map3:Add("Shots", 14)
 
         map3:Add("13", ToRow(10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10))
         map3:Add("12", ToRow(10, 11, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 11, 10))
@@ -92,6 +92,65 @@ map2:Add("0", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
         map3:Add("0",  ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
 
         level3:Write(map3:ToText())
+        
+        File level4
+        level4:SetPath("Level 4.json")
+        
+        JavaScriptObjectNotation map4
+        map4:Add("Name", "Off the Backboard")
+        map4:Add("Stage", 4)
+        map4:Add("Coin Count", 4)
+        map4:Add("Width", 19)
+        map4:Add("Height", 14)
+        map4:Add("Shots", 12)
+
+        map4:Add("13", ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10))
+        map4:Add("12", ToRow(10, 11, 11, 11, 10, 10, 20, 10, 10, 11, 10, 10, 20, 10, 10, 11, 11, 11, 10))
+        map4:Add("11", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("10", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("9",  ToRow(00, 00, 00, 20, 10, 00, 00, 00, 10, 10, 10, 00, 00, 00, 10, 20, 00, 00, 00))
+        map4:Add("8",  ToRow(00, 00, 00, 10, 10, 00, 00, 00, 10, 10, 10, 00, 00, 00, 10, 10, 00, 00, 00))
+        map4:Add("7", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("6", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("5", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("4", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("3", ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map4:Add("2", ToRow(10, 10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10, 10))
+        map4:Add("1", ToRow(10, 10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10, 10))
+        map4:Add("0", ToRow(10, 11, 11, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 11, 11, 10))
+        
+        level4:Write(map4:ToText())
+
+        
+        File level5
+        level5:SetPath("Level 5.json")
+        
+        JavaScriptObjectNotation map5
+        map5:Add("Name", "The Finale")
+        map5:Add("Stage", 5)
+        map5:Add("Coin Count", 8)
+        map5:Add("Width", 22)
+        map5:Add("Height", 16)
+        map5:Add("Shots", 18)
+
+        map5:Add("15", ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 20, 20, 20, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10))
+        map5:Add("14", ToRow(10, 10, 10, 10, 11, 11, 11, 10, 10, 10, 20, 20, 10, 10, 10, 11, 11, 11, 10, 10, 10, 10))
+        map5:Add("13", ToRow(10, 10, 10, 10, 10, 10, 10, 11, 10, 10, 10, 10, 10, 10, 11, 10, 10, 10, 10, 10, 10, 10))
+        map5:Add("12", ToRow(10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10))
+        map5:Add("11", ToRow(10, 11, 00, 00, 10, 10, 10, 10, 10, 00, 00, 00, 00, 10, 10, 10, 10, 10, 00, 00, 11, 10))
+        map5:Add("10", ToRow(10, 11, 00, 20, 10, 10, 10, 10, 10, 00, 00, 00, 00, 10, 10, 10, 10, 10, 20, 00, 11, 10))
+        map5:Add("9",  ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10))
+        map5:Add("8",  ToRow(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10))
+        map5:Add("7",  ToRow(10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10))
+        map5:Add("6",  ToRow(10, 10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10, 10))
+        map5:Add("5",  ToRow(10, 10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10, 10))
+        map5:Add("4",  ToRow(10, 10, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 10, 10, 10))
+        map5:Add("3",  ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map5:Add("2",  ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map5:Add("1",  ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+        map5:Add("0",  ToRow(00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00))
+
+        level5:Write(map5:ToText())
     end
 
     action ToRow(number x1, number x2, number x3, number x4, number x5, number x6, number x7, number x8, number x9, number x10, number x11) returns JavaScriptObjectNotation
@@ -156,6 +215,34 @@ map2:Add("0", ToRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
         row:Add(x17)
         row:Add(x18)
         row:Add(x19)
+        return row
+    end
+
+    action ToRow(number x1, number x2, number x3, number x4, number x5, number x6, number x7, number x8, number x9, number x10, number x11, number x12, number x13, number x14, number x15, number x16, number x17, number x18, number x19, number x20, number x21, number x22) returns JavaScriptObjectNotation
+        JavaScriptObjectNotation row
+        row:SetArray()
+        row:Add(x1)
+        row:Add(x2)
+        row:Add(x3)
+        row:Add(x4)
+        row:Add(x5)
+        row:Add(x6)
+        row:Add(x7)
+        row:Add(x8)
+        row:Add(x9)
+        row:Add(x10)
+        row:Add(x11)
+        row:Add(x12)
+        row:Add(x13)
+        row:Add(x14)
+        row:Add(x15)
+        row:Add(x16)
+        row:Add(x17)
+        row:Add(x18)
+        row:Add(x19)
+        row:Add(x20)
+        row:Add(x21)
+        row:Add(x22)
         return row
     end
 end

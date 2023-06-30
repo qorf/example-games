@@ -42,6 +42,7 @@ Color color
         ballCounter:SetText("0 / 0")
         ballCounter:SetPositionOnBaseLine(false)
         ballCounter:SetName("Shots Left")
+        ballCounter:SetFontColor(color:White())
         Add(ballIcon)
         Add(ballCounter)
         PositionLeftElements()
@@ -52,6 +53,7 @@ bugIcon:Load("Resources/Sleepy Bug.png")
         bugCounter:SetText("0")
         bugCounter:SetPositionOnBaseLine(false)
         bugCounter:SetName("Bugs Left")
+        bugCounter:SetFontColor(color:White())
         Add(bugIcon)
         Add(bugCounter)
         PositionRightElements()
@@ -114,6 +116,7 @@ action CalculateHeight returns number
         end
         
         PositionCenterElements()
+        PositionRightElements()
     end
     
     action GetFocusableElements(Array<Item2D> result)

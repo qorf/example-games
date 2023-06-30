@@ -12,6 +12,9 @@ use Libraries.Interface.Events.KeyboardEvent
 use Libraries.Game.InputSet
 use Libraries.Interface.Item2D
 use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Skybox
+use Libraries.Interface.Forms.Banner
+use Libraries.Compute.Math
 
 
 
@@ -36,6 +39,12 @@ class Main is Game
     Label speedLabel = undefined
     Label soundLabel = undefined
     Label musicLabel = undefined
+
+    Label mainTitle = undefined
+    number titleAnimationTimer = 0
+    Math math
+
+    Skybox skybox
     
     action Main
         SetScreenSize(1600, 1000)
@@ -54,6 +63,7 @@ class Main is Game
         SetupInputSets()
         InitializeLevels()
         InitializePages()
+        InitializeSkybox()
         
         LevelDisplayLayer layer
         AddLayer(layer)
@@ -61,6 +71,13 @@ class Main is Game
         statDisplay:Hide()
         
         SwapScreen(startPage)
+    end
+
+    action InitializeSkybox
+        text prefix = "Resources/Skyboxes/LightBlue/"
+        skybox:Load(prefix + "right.png", prefix + "left.png", prefix + "top.png", prefix + "bottom.png", prefix + "front.png", prefix + "back.png")
+
+        SetSkybox(skybox)
     end
     
     action InitializeLevels
@@ -87,22 +104,43 @@ class Main is Game
         file3:SetPath("Levels/Level 3.json")
         level3:Load(file3)
         level3:SetMusicKey(sounds:LEVEL_3_MUSIC)
+        
+        Level level4
+        levels:Add(level4)
+        
+        File file4
+        file4:SetPath("Levels/Level 4.json")
+        level4:Load(file4)
+        level4:SetMusicKey(sounds:LEVEL_4_MUSIC)
+        
+        Level level5
+        levels:Add(level5)
+        
+        File file5
+        file5:SetPath("Levels/Level 5.json")
+        level5:Load(file5)
+        level5:SetMusicKey(sounds:LEVEL_5_MUSIC)
     end
     
     action InitializePages
         Color color
         
         // Initialize the start page
-        startPage:SetTitleSizeHuge()
+        startPage:SetName("Start Screen")
+        startPage:SetTitleFontSize(90)
         startPage:SetTitle("Block BREAKER")
-startPage:SetMusicKey(sounds:MENU_MUSIC)
+        mainTitle = startPage:GetTitleLabel()
+        startPage:SetMusicKey(sounds:MENU_MUSIC)
+        mainTitle:SetFontColor(color:White())
+        mainTitle:SetFontOutlineColor(color:Teal())
+        mainTitle:SetFontOutlineThickness(1)
         
         Grouping startOptions = startPage:AddGrouping("Start Menu Buttons")
         startOptions:PositionFromBottom()
         
-Button optionsButton = startOptions:AddButton("Options")
+        Button optionsButton = startOptions:AddButton("Options")
         Button startGameButton = startOptions:AddButton("START!")
-Button exitButton = startOptions:AddButton("Exit")
+        Button exitButton = startOptions:AddButton("Exit")
         
         startGameButton:SetToHugeFont()
         startGameButton:SetBackgroundColor(color:CustomColor(0.8, 1, 0.85, 1))
@@ -123,18 +161,21 @@ Button exitButton = startOptions:AddButton("Exit")
         optionsButton:SetBehavior(goToOptions)
         
         // Initialize the options page.
-        optionsPage:SetTitleSizeHuge()
-        optionsPage:SetTitle("Game Options")
-        optionsPage:SetBackgroundColor(0.9, 0.925, 0.9, 1)
+        Banner optionsBanner = optionsPage:AddBanner("Game Options")
+        optionsBanner:SetTitleSizeHuge()
+        optionsBanner:SetBackgroundColor(color:CustomColor(0, 0, 1, 0.5))
+        optionsBanner:GetTitleLabel():SetFontColor(color:White())
         
         Grouping speedGroup = optionsPage:AddGrouping("Speed Options")
         speedGroup:SetTitle("Ball Speed")
+        speedGroup:GetTitleLabel():SetFontColor(color:White())
         speedGroup:SetTitleSizeLarge()
         Button speedDown = speedGroup:AddButton("Ball Speed Down")
         speedDown:SetLabelText("-")
         speedDown:SetToHugeFont()
         speedLabel = speedGroup:AddLabel("Ball Speed", "" + cast(integer, values:GetBallVelocity()))
         speedLabel:SetToLargeFont()
+        speedLabel:SetFontColor(color:White())
         Button speedUp = speedGroup:AddButton("Ball Speed Up")
         speedUp:SetLabelText("+")
         speedUp:SetToHugeFont()
@@ -149,11 +190,13 @@ Button exitButton = startOptions:AddButton("Exit")
         Grouping soundGroup = optionsPage:AddGrouping("Sound Options")
         soundGroup:SetTitle("Sound Volume")
         soundGroup:SetTitleSizeLarge()
+        soundGroup:GetTitleLabel():SetFontColor(color:White())
         Button soundDown = soundGroup:AddButton("Sound Volume Down")
         soundDown:SetLabelText("-")
         soundDown:SetToHugeFont()
         soundLabel = soundGroup:AddLabel("Sound Volume", cast(integer, values:GetSoundVolume() * 100) + "%")
         soundLabel:SetToLargeFont()
+        soundLabel:SetFontColor(color:White())
         Button soundUp = soundGroup:AddButton("Sound Volume Up")
         soundUp:SetLabelText("+")
         soundUp:SetToHugeFont()
@@ -168,11 +211,13 @@ Button exitButton = startOptions:AddButton("Exit")
         Grouping musicGroup = optionsPage:AddGrouping("Music Options")
         musicGroup:SetTitle("Music Volume")
         musicGroup:SetTitleSizeLarge()
+        musicGroup:GetTitleLabel():SetFontColor(color:White())
         Button musicDown = musicGroup:AddButton("Music Volume Down")
         musicDown:SetLabelText("-")
         musicDown:SetToHugeFont()
         musicLabel = musicGroup:AddLabel("Music Volume", cast(integer, values:GetMusicVolume() * 100) + "%")
         musicLabel:SetToLargeFont()
+        musicLabel:SetFontColor(color:White())
         Button musicUp = musicGroup:AddButton("Music Volume Up")
         musicUp:SetLabelText("+")
         musicUp:SetToHugeFont()
@@ -194,8 +239,10 @@ Button exitButton = startOptions:AddButton("Exit")
         
         
         // Initialize the first level select page.
-        levelSelect1:SetTitle("Level Selection")
-        levelSelect1:SetTitleSizeLarge()
+        Banner selectBanner = levelSelect1:AddBanner("Level Selection")
+        selectBanner:SetBackgroundColor(color:CustomColor(0, 0, 1, 0.5))
+        selectBanner:SetTitleSizeHuge()
+        selectBanner:GetTitleLabel():SetFontColor(color:White())
         levelSelect1:SetMusicKey(sounds:MENU_MUSIC)
         
         Grouping levelsGrouping1 = levelSelect1:AddGrouping("Levels")
@@ -237,6 +284,14 @@ Button level4 = levelsGrouping2:AddButton("Level 4")
         ScreenNavigationBehavior goToLevel3
         goToLevel3:SetScreen(levels:Get(2))
         level3:SetBehavior(goToLevel3)
+        
+ScreenNavigationBehavior goToLevel4
+        goToLevel4:SetScreen(levels:Get(3))
+        level4:SetBehavior(goToLevel4)
+        
+ScreenNavigationBehavior goToLevel5
+        goToLevel5:SetScreen(levels:Get(4))
+        level5:SetBehavior(goToLevel5)
     end
     
     action SwapScreen(GameScreen screen)
@@ -366,6 +421,13 @@ blockSelectTable:Add(tabSet, nextPriority)
     
     action Update(number seconds)
         RemoveMarkedItems()
+        skybox:Rotate(0, 1, 0, 0.25 * seconds)
+
+        titleAnimationTimer = titleAnimationTimer + seconds * 0.25
+        if activeScreen not= undefined and activeScreen:Equals(startPage)
+            Color color
+            mainTitle:SetFontOutlineThickness(0.01 + 6 * math:AbsoluteValue(math:Sine(titleAnimationTimer)))
+        end
     end
     
     action MarkForRemoval(Item2D item)

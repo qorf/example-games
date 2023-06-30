@@ -20,7 +20,10 @@ SharedPlayerValues values
     Button unlockShotgun = undefined
     
     action Initialize
+        Color color
         Banner banner = AddBanner("Upgrades")
+        banner:SetBackgroundColor(color:CustomColor(0, 0, 1, 0.5))
+        banner:GetTitleLabel():SetFontColor(color:White())
         
         Grouping coinGroup = AddGrouping("Coins")
         Icon coin1 = coinGroup:AddIcon("Coin Icon", "Resources/Coin.png")
@@ -29,6 +32,7 @@ SharedPlayerValues values
         coinLabel = coinGroup:AddLabel("Coins", "0")
         coinLabel:SetToHugeFont()
         coinLabel:SetPositionOnBaseLine(false)
+        coinLabel:SetColor(color:White())
         
         Icon coin2 = coinGroup:AddIcon("Coin Icon 2", "Resources/Coin.png")
         coin2:SetFocusable(false)
