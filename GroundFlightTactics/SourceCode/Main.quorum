@@ -44,6 +44,7 @@ class Main is Game, KeyboardListener
     constant integer totalLevels = 3
 
     action Main
+        SetScreenSize(1600, 1200)
         SetGameName("Ground Flight Tactics")
         StartGame()
     end
@@ -146,6 +147,7 @@ class Main is Game, KeyboardListener
         Add(playerCursor)
 
         PerspectiveCamera perspective = cast(PerspectiveCamera, GetCamera3D())
+        perspective:SetSize(GetScreenWidth(), GetScreenHeight())
         camera:Load(perspective, playerCursor)
 
         EnablePhysics3D(true)
