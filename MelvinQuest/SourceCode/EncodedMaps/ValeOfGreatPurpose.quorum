@@ -1,0 +1,59 @@
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+use Libraries.Game.Layer2D
+use Libraries.Game.Graphics.Drawable
+
+class ValeOfGreatPurpose is EncodedMap
+    
+    on create
+        SetName("Vale of Great Purpose")
+    end
+    
+    action GetSceneFile returns text
+        return GetSceneFolder() + "/ValeOfGreatPurpose.qs"
+    end
+    
+    action LoadEncodedRows(Array<text> array)
+        array:Set(12, "TTTTTTTTTTTTT")
+array:Set(11, "TTGGGGTTTTTTT")
+array:Set(10, "TTGGGGTTTTTTT")
+array:Set(9,  "GDDDDGTTTTTTT")
+array:Set(8,  "GDDDDGTTTTYTT")
+array:Set(7,  "TTTRDGTTTTDTT")
+array:Set(6,  "TTTGDGTTGDDGT")
+array:Set(5,  "TGDDDGTTGDLGT")
+array:Set(4,  "TGDGTGTTRDDGT")
+array:Set(3,  "TGDGTGTGGTDGT")
+array:Set(2,  "TGDDDDDDDDDGT")
+array:Set(1,  "TGGGGGGGGGGGT")
+array:Set(0,  "TTTTTTTTTTTTT")
+    end
+    
+    action GetMapDescription returns text
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        text value = ""
+        if main:GetGameProgress() = main:PROGRESS_GOT_KEY
+            value = "The home stretch! Literally! With key in hand, Melvin need only follow the dirt path to his home to reach"
++ " the conclusion of his quest (and his nice soft bed)."
+        else
+value = "Melvin delves deeper into the forest in pursuit of his destiny. As he goes, he notices " + 
+"a winding dirt path leading him onward. Surely if he follows the road, he will find " +
+"his home to the east, where a heroic nap awaits him."
+        end
+        return value
+    end
+    
+action OnMapLoad
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        Layer2D layer = main:GetMapLayer()
+        
+        Drawable house
+        house:Load("Resources/House.png")
+        house:SetPosition(256, 260)
+        layer:Add(house)
+        
+    end
+    
+end

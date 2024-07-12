@@ -1,0 +1,31 @@
+use Libraries.Containers.Array
+
+class EffectQueue
+    Array<TimedEffect> queue
+    TimedEffect currentEffect = undefined
+    
+    action Add(TimedEffect effect)
+        queue:Add(effect)
+    end
+    
+    action Update(number seconds)
+        boolean processing = true
+        repeat while processing = true
+            if currentEffect not= undefined
+                currentEffect:Update(seconds)
+                if currentEffect:IsFinished()
+                    currentEffect:OnFinish()
+                    currentEffect = undefined
+                else
+                    processing = false
+                end
+            elseif queue:IsEmpty() = false
+                currentEffect = queue:RemoveFromFront()
+                currentEffect:OnStart()
+            else
+                processing = false
+            end
+        end
+    end
+    
+end

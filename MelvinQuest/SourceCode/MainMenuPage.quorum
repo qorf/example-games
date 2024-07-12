@@ -1,0 +1,33 @@
+use Libraries.Interface.Pages.StackedRowPage
+use Libraries.Interface.Forms.Grouping
+use Libraries.Interface.Controls.Button
+
+class MainMenuPage is StackedRowPage
+    boolean initialized = false
+    
+    action IsInitialized returns boolean
+        return initialized
+    end
+    
+    action Initialize
+        SetTitle("Escape from Mystery Island")
+        SetTitleSizeHuge()
+        
+        Grouping buttonGroup = AddGrouping("Buttons")
+        Button newGame = buttonGroup:AddButton("New Game")
+        Button continue = buttonGroup:AddButton("Continue")
+        Button options = buttonGroup:AddButton("Options")
+        Button exit = buttonGroup:AddButton("Exit Game")
+        
+        ExitButtonBehavior exitBehavior
+        exit:SetBehavior(exitBehavior)
+        
+        buttonGroup:PositionFromBottom()
+        
+        Grouping bottomGroup = AddGrouping("Bottom Group")
+        bottomGroup:AddLabel(" "):SetToHugeFont()
+        bottomGroup:PositionFromBottom()
+        
+        initialized = true
+    end
+end

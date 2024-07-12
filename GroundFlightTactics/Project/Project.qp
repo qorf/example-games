@@ -1,13 +1,15 @@
 {
-    "DevelopmentEnvironmentVersion" : "Quorum Studio 3.0",
+    "AndroidAssets" : "media",
+    "DevelopmentEnvironmentVersion" : "Quorum Studio 5.1.0",
     "ExecutableName" : "Default",
+    "IOSAssets" : "media",
     "IOS_BUNDLE" : "org.quorumlanguage",
     "IOS_DEVICE" : "iPhone 12",
     "ImageSheetBuildPath" : "resources",
     "ImageSheetEnabled" : false,
     "ImageSheetRebuildOnCompile" : false,
     "Main" : "/SourceCode/Main.quorum",
-    "MobileAssets" : "media",
+    "Project Version" : "1.0",
     "ProjectName" : "GroundFlightTactics",
     "ProjectType" : "JavaType",
     "iosVersion" : "14.1"

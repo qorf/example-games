@@ -1,0 +1,80 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Layer2D
+
+class SceneTransitionEffect is TimedEffect
+    
+    Drawable blackScreen
+    Color color
+    boolean fadeIn = true
+    
+    integer targetPlayerX = 0
+    integer targetPlayerY = 0
+    EncodedMap targetMap = undefined
+    
+    on create
+        SetDuration(1.2)
+    end
+    
+    action OnStart
+        Main main = GetMain()
+        
+        blackScreen:LoadFilledRectangle(832, 832, color:CustomColor(0, 0, 0, 0))
+        Layer2D effectLayer = main:GetEffectLayer()
+        effectLayer:Add(blackScreen)
+        
+        main:GetMovementManager():SetMovementEnabled(false)
+    end
+    
+    action OnUpdate(number seconds)
+        Color screenColor = blackScreen:GetColor()
+        if fadeIn
+            number fullFadeInTime = GetDuration() * 0.4
+            number opacity = GetTimer() / fullFadeInTime
+            //screenColor:SetAlpha(opacity)
+            blackScreen:SetColor(color:CustomColor(0, 0, 0, opacity))
+            
+            if GetTimer() >= fullFadeInTime
+                fadeIn = false
+                Main main = GetMain()
+                main:EmptyMapLayer()
+                
+                MovementManager movement = main:GetMovementManager()
+                movement:WarpToCoordinates(targetPlayerX, targetPlayerY)
+                
+main:LoadMap(targetMap)
+            end
+        else
+            number fadeOutTime = GetDuration() * 0.4
+            number fadeTimer = GetTimer() - GetDuration() * 0.6
+            number opacity = 1 - (fadeTimer / fadeOutTime)
+            if opacity > 1
+                opacity = 1
+            end
+            //screenColor:SetAlpha(opacity)
+            blackScreen:SetColor(color:CustomColor(0, 0, 0, opacity))
+        end
+    end
+    
+    action OnFinish
+Main main = GetMain()
+Layer2D effectLayer = main:GetEffectLayer()
+        effectLayer:Remove(blackScreen)
+        main:GetMovementManager():SetMovementEnabled(true)
+    end
+    
+    // Sets the grid coordinates the player will appear on after the transition finishes.
+    action SetTargetPlayerCoordinates(integer x, integer y)
+        targetPlayerX = x
+        targetPlayerY = y
+    end
+    
+    action GetTargetMap returns EncodedMap
+        return targetMap
+    end
+
+    action SetTargetMap(EncodedMap targetMap)
+        me:targetMap = targetMap
+    end
+
+end

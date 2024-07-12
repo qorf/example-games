@@ -1,0 +1,276 @@
+use Libraries.Compute.Vector2
+use Libraries.Game.GameStateManager
+
+class MovementManager
+    public constant integer IDLE = 0
+    public constant integer LEFT = 1
+    public constant integer RIGHT = 2
+    public constant integer UP = 3
+    public constant integer DOWN = 4
+    
+    // The player's default move speed, in pixels.
+    public constant number DEFAULT_MOVE_SPEED = 128
+    
+    // What direction the player is currently moving in. Fixed in one direction while the player is in motion.
+    integer currentMoveDirection = IDLE
+    // The direction the player wants to move next, because they're currently holding a move key.
+    integer pendingMoveDirection = IDLE
+    boolean movementEnabled = true
+    
+    Player player = undefined
+    integer playerX = 6
+    integer playerY = 5
+    number moveSpeed = DEFAULT_MOVE_SPEED
+    
+    // Whether or not the player is currently trying to move into a space they're not allowed to.
+    boolean movingIntoWall = false
+    // A timer for giving auditory feedback due to moving into a wall.
+    number wallBumpTimer = 0
+    number wallBumpTimerThreshold = 0.5
+    
+    MapConstants constants
+    EncodedMap currentMap = undefined
+    
+    action Update(number seconds)
+        if player = undefined
+            return now
+        end
+        
+        integer pendingMove = pendingMoveDirection
+        if movementEnabled = false 
+            pendingMove = IDLE
+        end
+        
+        if wallBumpTimer <= wallBumpTimerThreshold
+wallBumpTimer = wallBumpTimer + seconds
+        end
+        
+        boolean reachedTarget = false
+Vector2 target = GetTileCoordinates(playerX, playerY)
+        boolean wallBumpSound = false
+if currentMoveDirection not= IDLE
+if movingIntoWall = false
+if currentMoveDirection = LEFT
+            player:MoveX(-moveSpeed * seconds)
+                if player:GetX() <= target:GetX()
+                    reachedTarget = true
+                end
+        elseif currentMoveDirection = RIGHT
+            player:MoveX(moveSpeed * seconds)
+if player:GetX() >= target:GetX()
+                    reachedTarget = true
+                end
+        elseif currentMoveDirection = UP
+            player:MoveY(moveSpeed * seconds)
+if player:GetY() >= target:GetY()
+                    reachedTarget = true
+                end
+        elseif currentMoveDirection = DOWN
+            player:MoveY(-moveSpeed * seconds)
+if player:GetY() <= target:GetY()
+                    reachedTarget = true
+                end
+        end
+            else
+                if wallBumpTimer >= wallBumpTimerThreshold 
+                    SoundManager sounds = GetSoundManager()
+                    sounds:PlaySound("Move Bump.wav")
+                    wallBumpTimer = 0
+                    wallBumpSound = true
+                end
+            end
+        end
+        
+        boolean goingToBump = false
+        integer terrainType = -1
+        if pendingMove = LEFT
+            goingToBump = not currentMap:IsWalkableAt(playerX - 1, playerY)
+            terrainType = currentMap:GetTerrainAt(playerX - 1, playerY)
+        elseif pendingMove = RIGHT
+goingToBump = not currentMap:IsWalkableAt(playerX + 1, playerY)
+            terrainType = currentMap:GetTerrainAt(playerX + 1, playerY)
+        elseif pendingMove = UP
+goingToBump = not currentMap:IsWalkableAt(playerX, playerY + 1)
+            terrainType = currentMap:GetTerrainAt(playerX, playerY + 1)
+        elseif pendingMove = DOWN
+goingToBump = not currentMap:IsWalkableAt(playerX, playerY - 1)
+            terrainType = currentMap:GetTerrainAt(playerX, playerY - 1)
+        end
+        
+        if wallBumpSound
+            if terrainType = constants:SIGN or terrainType = constants:DOOR or terrainType = constants:KEY
+                SoundManager sounds = GetSoundManager()
+                sounds:PlaySound("Jump.wav", 0.6)
+            end
+        end
+        
+        if reachedTarget = true and (currentMoveDirection not= pendingMove or goingToBump = true)
+            player:SetPosition(target:GetX(), target:GetY())
+        end
+        
+        boolean readyToMove = reachedTarget or currentMoveDirection = IDLE or movingIntoWall
+        
+        if readyToMove
+currentMoveDirection = pendingMove
+            movingIntoWall = false
+            if pendingMove = IDLE
+                player:IdleAnimation()
+            elseif pendingMove = LEFT
+player:MoveLeftAnimation()
+                if goingToBump 
+movingIntoWall = true
+                else
+                    playerX = playerX - 1
+                    if playerX < 0
+                        TransitionToMap(constants:MAP_WIDTH - 1, playerY, currentMap:GetLeftMap())
+                    end
+                end
+            elseif pendingMove = RIGHT
+player:MoveRightAnimation()
+                if goingToBump 
+movingIntoWall = true
+                else
+                    playerX = playerX + 1
+if playerX >= constants:MAP_WIDTH
+                        TransitionToMap(0, playerY, currentMap:GetRightMap())
+                    end
+                end
+            elseif pendingMove = UP
+player:MoveUpAnimation()
+                if goingToBump 
+movingIntoWall = true
+                else
+                    playerY = playerY + 1
+if playerY >= constants:MAP_HEIGHT
+                        TransitionToMap(playerX, 0, currentMap:GetUpMap())
+                    end
+                end
+            elseif pendingMove = DOWN
+player:MoveDownAnimation()
+                if goingToBump 
+movingIntoWall = true
+                else
+                    playerY = playerY - 1
+if playerY < 0
+                        TransitionToMap(playerX, constants:MAP_HEIGHT - 1, currentMap:GetDownMap())
+                    end
+                end
+            end
+            
+            if pendingMove not= IDLE and movingIntoWall = false
+                SoundManager sounds = GetSoundManager()
+                sounds:PlayStepAudio(terrainType)
+            end
+        end
+
+    end
+    
+    action GetTileCoordinates(integer x, integer y) returns Vector2
+        Vector2 result
+        result:Set(x * constants:TILE_PIXEL_WIDTH, y * constants:TILE_PIXEL_HEIGHT)
+        return result
+    end
+    
+    action SetMap(EncodedMap map)
+        currentMap = map
+    end
+    
+    action GetMap returns EncodedMap
+        return currentMap
+    end
+    
+    action SetMovementIdle
+        pendingMoveDirection = IDLE
+    end
+    
+    action SetMovementLeft
+        pendingMoveDirection = LEFT
+    end
+    
+    action SetMovementRight
+        pendingMoveDirection = RIGHT
+    end
+    
+    action SetMovementUp
+        pendingMoveDirection = UP
+    end
+    
+    action SetMovementDown
+        pendingMoveDirection = DOWN
+    end
+    
+    action GetPlayer returns Player
+        return player
+    end
+
+    action SetPlayer(Player player)
+        me:player = player
+    end
+
+    action GetCurrentMap returns EncodedMap
+        return currentMap
+    end
+
+    action SetCurrentMap(EncodedMap currentMap)
+        me:currentMap = currentMap
+    end
+
+    action GetMovementEnabled returns boolean
+        return movementEnabled
+    end
+
+    action SetMovementEnabled(boolean movementEnabled)
+        me:movementEnabled = movementEnabled
+    end
+    
+    // Instantly places the player at the grid coordinates without trigger regular types of movement.
+    action WarpToCoordinates(integer x, integer y)
+        Vector2 location = GetTileCoordinates(x, y)
+        playerX = x
+        playerY = y
+        player:SetPosition(location:GetX(), location:GetY())
+        movingIntoWall = false
+    end
+    
+    action TransitionToMap(integer playerX, integer playerY, EncodedMap map)
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        EffectQueue effects = main:GetEffects()
+        
+        SceneTransitionEffect transition
+        transition:SetTargetPlayerCoordinates(playerX, playerY)
+        transition:SetTargetMap(map)
+        effects:Add(transition)
+    end
+    
+    action IsNextToSign returns boolean
+        boolean nextTo = (currentMap:GetTerrainAt(playerX - 1, playerY) = constants:SIGN)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX + 1, playerY) = constants:SIGN)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY - 1) = constants:SIGN)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY + 1) = constants:SIGN)
+        return nextTo
+    end
+    
+action IsNextToDoor returns boolean
+        boolean nextTo = (currentMap:GetTerrainAt(playerX - 1, playerY) = constants:DOOR)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX + 1, playerY) = constants:DOOR)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY - 1) = constants:DOOR)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY + 1) = constants:DOOR)
+        return nextTo
+    end
+    
+action IsNextToKey returns boolean
+        boolean nextTo = (currentMap:GetTerrainAt(playerX - 1, playerY) = constants:KEY)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX + 1, playerY) = constants:KEY)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY - 1) = constants:KEY)
+nextTo = nextTo or (currentMap:GetTerrainAt(playerX, playerY + 1) = constants:KEY)
+        return nextTo
+    end
+    
+    action GetSoundManager returns SoundManager
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        return main:GetSounds()
+    end
+
+end

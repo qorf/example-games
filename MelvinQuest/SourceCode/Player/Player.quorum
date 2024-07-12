@@ -1,0 +1,175 @@
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+
+class Player is Item2D
+    
+    boolean animationsLoaded = false
+    
+    Array<Drawable> currentAnimations = undefined
+    Drawable currentDrawable = undefined
+    integer animationIndex = 0
+    number animationTimer = 0
+    number animationTimerThreshold = 0.18
+    
+    Array<Drawable> idleAnimations
+    Array<Drawable> moveLeftAnimations
+    Array<Drawable> moveRightAnimations
+    Array<Drawable> moveUpAnimations
+    Array<Drawable> moveDownAnimations
+    
+    on create
+        MapConstants constants
+        SetSize(constants:TILE_PIXEL_WIDTH, constants:TILE_PIXEL_HEIGHT)
+    end
+    
+    action LoadAnimations
+        animationsLoaded = true
+        
+        Drawable idle1
+        idle1:Load("Resources/Melvin Forward 2.png")
+        idleAnimations:Add(idle1)
+        
+        Drawable forward1
+        forward1:Load("Resources/Melvin Forward 1.png")
+        moveDownAnimations:Add(forward1)
+Drawable forward2
+        forward2:Load("Resources/Melvin Forward 2.png")
+        moveDownAnimations:Add(forward2)
+Drawable forward3
+        forward3:Load("Resources/Melvin Forward 3.png")
+        moveDownAnimations:Add(forward3)
+moveDownAnimations:Add(forward2)
+        
+        Drawable back1
+        back1:Load("Resources/Melvin Back 1.png")
+        moveUpAnimations:Add(back1)
+Drawable back2
+        back2:Load("Resources/Melvin Back 2.png")
+        moveUpAnimations:Add(back2)
+Drawable back3
+        back3:Load("Resources/Melvin Back 3.png")
+        moveUpAnimations:Add(back3)
+moveUpAnimations:Add(back2)
+        
+Drawable left1
+        left1:Load("Resources/Melvin Left 1.png")
+        moveLeftAnimations:Add(left1)
+Drawable left2
+        left2:Load("Resources/Melvin Left 2.png")
+        moveLeftAnimations:Add(left2)
+Drawable left3
+        left3:Load("Resources/Melvin Left 3.png")
+        moveLeftAnimations:Add(left3)
+moveLeftAnimations:Add(left2)
+        
+Drawable right1
+        right1:Load("Resources/Melvin Right 1.png")
+        moveRightAnimations:Add(right1)
+Drawable right2
+        right2:Load("Resources/Melvin Right 2.png")
+        moveRightAnimations:Add(right2)
+Drawable right3
+        right3:Load("Resources/Melvin Right 3.png")
+        moveRightAnimations:Add(right3)
+moveRightAnimations:Add(right2)
+    end
+    
+    action AreAnimationsLoaded returns boolean
+        return animationsLoaded
+    end
+    
+    action SetAnimationIndex(integer index)
+        index = index mod currentAnimations:GetSize()
+        Drawable nextDrawable = currentAnimations:Get(index)
+        if currentDrawable not= undefined
+            Remove(currentDrawable)
+        end
+        
+        if nextDrawable not= undefined
+nextDrawable:SetSize(GetWidth(), GetHeight())
+        nextDrawable:SetPosition(0, 0)
+        Add(nextDrawable)
+        end
+        
+        currentDrawable = nextDrawable
+        
+        animationIndex = index
+        animationTimer = 0
+    end
+    
+    action IdleAnimation
+        if AreAnimationsLoaded() = false
+            LoadAnimations()
+        end
+        
+if currentAnimations = idleAnimations
+            return now
+        end
+        
+        currentAnimations = idleAnimations
+        SetAnimationIndex(0)
+    end
+    
+    action MoveLeftAnimation
+if AreAnimationsLoaded() = false
+            LoadAnimations()
+        end
+        
+if currentAnimations = moveLeftAnimations
+            return now
+        end
+        
+        currentAnimations = moveLeftAnimations
+        SetAnimationIndex(0)
+    end
+    
+    action MoveRightAnimation
+if AreAnimationsLoaded() = false
+            LoadAnimations()
+        end
+        
+if currentAnimations = moveRightAnimations
+            return now
+        end
+        
+currentAnimations = moveRightAnimations
+        SetAnimationIndex(0)
+    end
+    
+    action MoveUpAnimation
+if AreAnimationsLoaded() = false
+            LoadAnimations()
+        end
+        
+if currentAnimations = moveUpAnimations
+            return now
+        end
+        
+currentAnimations = moveUpAnimations
+        SetAnimationIndex(0)
+    end
+    
+    action MoveDownAnimation
+if AreAnimationsLoaded() = false
+            LoadAnimations()
+        end
+        
+        if currentAnimations = moveDownAnimations
+            return now
+        end
+        
+currentAnimations = moveDownAnimations
+        SetAnimationIndex(0)
+    end
+    
+    action Update(number seconds)
+        animationTimer = animationTimer + seconds
+        if animationTimer > animationTimerThreshold
+            animationTimer = 0
+            if currentAnimations:GetSize() > 1
+                SetAnimationIndex(animationIndex + 1)
+            end
+        end
+    end
+end
