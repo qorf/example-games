@@ -1,0 +1,143 @@
+//----------------------------------------
+//      Connect 4 Mobile Game
+//----------------------------------------
+
+use Libraries.Interface.Forms.Form
+use Libraries.Interface.Forms.Page
+use Libraries.Interface.Forms.Grouping
+use Libraries.Interface.Forms.FormLabel
+use Libraries.Interface.Forms.Banner
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Forms.FormBehavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.ColorGroup
+use Libraries.Game.Graphics.Gradient
+use Libraries.Game.Graphics.Drawable
+
+class Main
+    action Main
+        Form form
+        Page page = form:GetMainPage()
+
+        // Border color for cells
+        Color buttonColor
+        buttonColor:SetRed(5000)
+
+        page:AddBanner("Quorum Connect 4")
+
+        // Row for choosing team
+        page:AddBanner("Choose Your Team!")
+        Grouping row0 = page:AddGrouping("Row 0")
+
+        // For player X
+        Button playerX
+        playerX:SetName("Red")
+        playerX:SetCornerRounding(15, 15, 15, 15)
+        playerX:SetDescription("Button to select Red")
+        row0:Add(playerX)
+        playerX:SetToHugeFont()
+
+        // For player O
+        Button playerO
+        playerO:SetName("Blue")
+        playerO:SetCornerRounding(10, 10, 10, 10)
+        playerO:SetDescription("Button to select Blue")
+        row0:Add(playerO)
+        playerO:SetToHugeFont()
+
+        page:AddBanner("")
+
+        // 6 rows for the Connect 4 grid
+        Grouping row1 = page:AddGrouping("Row 1")
+        Grouping row2 = page:AddGrouping("Row 2")
+        Grouping row3 = page:AddGrouping("Row 3")
+        Grouping row4 = page:AddGrouping("Row 4")
+        Grouping row5 = page:AddGrouping("Row 5")
+        Grouping row6 = page:AddGrouping("Row 6")
+
+        // Row 1
+        AddCell(row1, "Row 1, Column 1", buttonColor)
+        AddCell(row1, "Row 1, Column 2", buttonColor)
+        AddCell(row1, "Row 1, Column 3", buttonColor)
+        AddCell(row1, "Row 1, Column 4", buttonColor)
+        AddCell(row1, "Row 1, Column 5", buttonColor)
+        AddCell(row1, "Row 1, Column 6", buttonColor)
+        AddCell(row1, "Row 1, Column 7", buttonColor)
+
+        // Row 2
+        AddCell(row2, "Row 2, Column 1", buttonColor)
+        AddCell(row2, "Row 2, Column 2", buttonColor)
+        AddCell(row2, "Row 2, Column 3", buttonColor)
+        AddCell(row2, "Row 2, Column 4", buttonColor)
+        AddCell(row2, "Row 2, Column 5", buttonColor)
+        AddCell(row2, "Row 2, Column 6", buttonColor)
+        AddCell(row2, "Row 2, Column 7", buttonColor)
+
+        // Row 3
+        AddCell(row3, "Row 3, Column 1", buttonColor)
+        AddCell(row3, "Row 3, Column 2", buttonColor)
+        AddCell(row3, "Row 3, Column 3", buttonColor)
+        AddCell(row3, "Row 3, Column 4", buttonColor)
+        AddCell(row3, "Row 3, Column 5", buttonColor)
+        AddCell(row3, "Row 3, Column 6", buttonColor)
+        AddCell(row3, "Row 3, Column 7", buttonColor)
+
+        // Row 4
+        AddCell(row4, "Row 4, Column 1", buttonColor)
+        AddCell(row4, "Row 4, Column 2", buttonColor)
+        AddCell(row4, "Row 4, Column 3", buttonColor)
+        AddCell(row4, "Row 4, Column 4", buttonColor)
+        AddCell(row4, "Row 4, Column 5", buttonColor)
+        AddCell(row4, "Row 4, Column 6", buttonColor)
+        AddCell(row4, "Row 4, Column 7", buttonColor)
+
+        // Row 5
+        AddCell(row5, "Row 5, Column 1", buttonColor)
+        AddCell(row5, "Row 5, Column 2", buttonColor)
+        AddCell(row5, "Row 5, Column 3", buttonColor)
+        AddCell(row5, "Row 5, Column 4", buttonColor)
+        AddCell(row5, "Row 5, Column 5", buttonColor)
+        AddCell(row5, "Row 5, Column 6", buttonColor)
+        AddCell(row5, "Row 5, Column 7", buttonColor)
+
+        // Row 6
+        AddCell(row6, "Row 6, Column 1", buttonColor)
+        AddCell(row6, "Row 6, Column 2", buttonColor)
+        AddCell(row6, "Row 6, Column 3", buttonColor)
+        AddCell(row6, "Row 6, Column 4", buttonColor)
+        AddCell(row6, "Row 6, Column 5", buttonColor)
+        AddCell(row6, "Row 6, Column 6", buttonColor)
+        AddCell(row6, "Row 6, Column 7", buttonColor)
+
+        form:Display()
+    end
+action AddCell(Grouping row, text description, Color border) returns Button
+    Button b
+    b:SetBorderColor(border)
+    b:SetBorderThickness(5)
+    b:SetName(" ")
+    b:SetDescription(description)
+
+    // Make a circle
+    b:SetWidth(80)
+    b:SetHeight(80)
+    b:SetCornerRounding(40, 40, 40, 40)
+
+    row:Add(b)
+    b:SetToHugeFont()
+
+    // Instance for each button
+    CellBehavior CB
+    CB:SetCell(b)
+    b:SetBehavior(CB)
+
+    return b
+end
+
+end
+
+//----------------------------------------
+//              END OF FILE
+//----------------------------------------
