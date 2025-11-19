@@ -23,30 +23,9 @@ class Main
 
         // Border color for cells
         Color buttonColor
-        buttonColor:SetRed(5000)
+        buttonColor:SetColor(0, 0, 0, 0)
 
-        page:AddBanner("Quorum Connect 4")
-
-        // Row for choosing team
-        page:AddBanner("Choose Your Team!")
-        Grouping row0 = page:AddGrouping("Row 0")
-
-        // For player X
-        Button playerX
-        playerX:SetName("Red")
-        playerX:SetCornerRounding(15, 15, 15, 15)
-        playerX:SetDescription("Button to select Red")
-        row0:Add(playerX)
-        playerX:SetToHugeFont()
-
-        // For player O
-        Button playerO
-        playerO:SetName("Blue")
-        playerO:SetCornerRounding(10, 10, 10, 10)
-        playerO:SetDescription("Button to select Blue")
-        row0:Add(playerO)
-        playerO:SetToHugeFont()
-
+        page:AddBanner("Connect 4")
         page:AddBanner("")
 
         // 6 rows for the Connect 4 grid
@@ -110,20 +89,23 @@ class Main
         AddCell(row6, "Row 6, Column 5", buttonColor)
         AddCell(row6, "Row 6, Column 6", buttonColor)
         AddCell(row6, "Row 6, Column 7", buttonColor)
+        
+        // Directions for game with spacing
+        page:AddBanner("")
+        page:AddBanner("Directions")
+        page:AddBanner("One Click -> Red Chip                             Two Clicks -> Blue Chip                     Three Clicks -> Reset Chip")        
 
         form:Display()
     end
 action AddCell(Grouping row, text description, Color border) returns Button
     Button b
     b:SetBorderColor(border)
-    b:SetBorderThickness(5)
-    b:SetName(" ")
+    //b:SetBorderThickness(2)
+    b:SetName("   ")
     b:SetDescription(description)
 
     // Make a circle
-    b:SetWidth(80)
-    b:SetHeight(80)
-    b:SetCornerRounding(40, 40, 40, 40)
+    b:SetCornerRounding(60, 60, 60, 60)
 
     row:Add(b)
     b:SetToHugeFont()
