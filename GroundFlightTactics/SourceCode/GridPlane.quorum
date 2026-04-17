@@ -1,12 +1,13 @@
 use Libraries.Game.Graphics.Model
 use Libraries.Containers.Array
-use Libraries.Game.Graphics.Material
-use Libraries.Game.Graphics.BlendingAttribute
-use Libraries.Game.Graphics.ColorAttribute
-use Libraries.Game.Graphics.TextureAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.Material
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.BlendingAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.ColorAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.TextureAttribute
 use Libraries.Game.Graphics.Texture
 use Libraries.Game.Graphics.TextureWrap
-use Libraries.Game.Graphics.NumberAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.NumberAttribute
+use Libraries.Game.Graphics.Models.OpenGL.ModelResourcesOpenGL
 
 class GridPlane is Model
 
@@ -19,7 +20,8 @@ class GridPlane is Model
         LoadPlane(1, 1, "Resources/GridSquare.png", true)
         Scale(scaleFactor, 1, scaleFactor)
 
-        Array<Material> value = GetMaterials()
+        ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
+        Array<Material> value = resources:GetMaterials()
         Material material = value:Get(0)
         
         BlendingAttribute blend

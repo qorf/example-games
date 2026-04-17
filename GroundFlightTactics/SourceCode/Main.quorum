@@ -19,6 +19,7 @@ use Libraries.Game.Graphics.Camera
 use Libraries.Compute.Vector3
 use Libraries.Game.InputMonitor
 use Libraries.Compute.Random
+use Libraries.Game.DesktopConfiguration
 
 class Main is Game, KeyboardListener
 
@@ -44,6 +45,8 @@ class Main is Game, KeyboardListener
     constant integer totalLevels = 3
 
     action Main
+        DesktopConfiguration config = GetDesktopConfiguration()
+        config:useVulkan = false
         SetScreenSize(1600, 1200)
         SetGameName("Ground Flight Tactics")
         StartGame()
@@ -59,7 +62,7 @@ class Main is Game, KeyboardListener
 
         GameStateManager manager
         GraphicsManager graphics = manager:GetGameGraphics()
-        graphics:ClearScreenColor(0.1, 0.1, 0.1, 1)
+        graphics:SetClearScreenColor(0.1, 0.1, 0.1, 1)
 
         hud:Initialize(player)
         FlowLayout layout

@@ -1,8 +1,9 @@
 use Libraries.Game.Graphics.Model
-use Libraries.Game.Graphics.ColorAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.ColorAttribute
 use Libraries.Containers.Array
 use Libraries.Game.Graphics.Color
-use Libraries.Game.Graphics.Material
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.Material
+use Libraries.Game.Graphics.Models.OpenGL.ModelResourcesOpenGL
 
 class GameItem
 
@@ -35,7 +36,8 @@ class GameItem
     end
 
     action SetMaterialColor(integer materialIndex, Color color)
-        Array<Material> materials = model:GetMaterials()
+        ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, model:GetResources())
+        Array<Material> materials = resources:GetMaterials()
         Material material = materials:Get(materialIndex)
 
         ColorAttribute attribute

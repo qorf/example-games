@@ -1,11 +1,12 @@
 use Libraries.Game.Graphics.Model
 use Libraries.Containers.Array
-use Libraries.Game.Graphics.Material
-use Libraries.Game.Graphics.BlendingAttribute
-use Libraries.Game.Graphics.ColorAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.Material
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.BlendingAttribute
+use Libraries.Game.Graphics.Models.OpenGL.Attributes.ColorAttribute
 use Libraries.Game.Graphics.Color
 use Libraries.Compute.Math
 use Libraries.Sound.Audio
+use Libraries.Game.Graphics.Models.OpenGL.ModelResourcesOpenGL
 
 class PlayerActionCursor is Model
 
@@ -44,7 +45,8 @@ class PlayerActionCursor is Model
 
         LoadPlane(0.95, 0.95, "Resources/GridSquare.png", true)
 
-        Array<Material> value = GetMaterials()
+        ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
+        Array<Material> value = resources:GetMaterials()
         Material material = value:Get(0)
         
         BlendingAttribute blend
