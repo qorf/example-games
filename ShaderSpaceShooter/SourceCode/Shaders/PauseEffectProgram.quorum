@@ -2,6 +2,7 @@ use Libraries.Game.Graphics.Shaders.ShaderProgram
 use Libraries.Game.Graphics.Shaders.ShaderManager
 use Libraries.Game.Graphics.Shaders.Shader
 use Libraries.Game.Graphics.Shaders.ControlFragmentShader
+use Libraries.Game.GameStateManager
 
 class PauseEffectProgram is ShaderProgram
 
@@ -10,7 +11,8 @@ class PauseEffectProgram is ShaderProgram
 
     on create
         SetName(DEFAULT_NAME)
-        ShaderManager manager
+GameStateManager gameState
+        ShaderManager manager = gameState:GetShaderManager()
         Shader vertex = manager:GetDefaultVertexShader2D()
         Add(vertex)
 

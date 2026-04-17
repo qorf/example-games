@@ -1,0 +1,34 @@
+
+shared class MapConstants
+    // Constants representing the type of terrain on a tile. Used to calculate movement and movement sounds.
+public constant integer UNKNOWN = 0
+    public constant integer MAP_EDGE = 1
+    public constant integer GRASS = 2
+    public constant integer DIRT = 3
+    public constant integer TREE = 10
+    public constant integer SIGN = 11
+    public constant integer ROCK = 12
+    public constant integer LOG = 13
+    public constant integer DOOR = 14
+    public constant integer KEY = 15
+    
+    // The encoded characters used by EncodedMaps to represent movement as text strings.
+    public constant text MAP_EDGE_ENCODING = "X"
+    public constant text GRASS_ENCODING = "G"
+    public constant text DIRT_ENCODING = "D"
+    public constant text TREE_ENCODING = "T"
+public constant text SIGN_ENCODING = "X"
+public constant text ROCK_ENCODING = "R"
+public constant text LOG_ENCODING = "L"
+    public constant text DOOR_ENCODING = "Y"
+    public constant text KEY_ENCODING = "K"
+    
+// How wide or tall each tile of the map is, measured in pixels.
+    public constant integer TILE_PIXEL_WIDTH = 32
+    public constant integer TILE_PIXEL_HEIGHT = 32
+    
+    // The width and height of the map, measured in tiles.
+    public constant integer MAP_WIDTH = 13
+    public constant integer MAP_HEIGHT = 13
+    
+end

@@ -1,0 +1,38 @@
+use Libraries.Containers.Array
+
+class GladeOfOrigins is EncodedMap
+    
+    on create
+        SetName("Glade of Origins")
+    end
+    
+    action GetSceneFile returns text
+        return GetSceneFolder() + "/GladeOfOrigins.qs"
+    end
+    
+    action LoadEncodedRows(Array<text> array)
+        array:Set(12, "TTTTTGGGTTTTT")
+array:Set(11, "TTTTTGGGTTTTT")
+array:Set(10, "TTTTGGGGGTTTT")
+array:Set(9,  "TTTGGGGGGGTTT")
+array:Set(8,  "TTGGGGGGGGGTT")
+array:Set(7,  "TTGGGGGGGGGTT")
+array:Set(6,  "TTGGGDDDGGGTT")
+array:Set(5,  "TTGGGDDDGGGTT")
+array:Set(4,  "TTGGGDDDGGGTT")
+array:Set(3,  "TTTGGGGGGGTTT")
+array:Set(2,  "TTTTGGGGGTTTT")
+array:Set(1,  "TTTTTTTTTTTTT")
+array:Set(0,  "TTTTTTTTTTTTT")
+    end
+    
+    action GetMapDescription returns text
+        text value = "Melvin finds himself standing amidst a patch of dirt deep within the magical forest. " + 
+"He doesn't quite remember how he got here, on account of all the very legitimate wizardry " +
+"he was doing last night. 
+
+He sees a single path leading north, further into the forest. And so begins Melvin's quest..."
+        return value
+    end
+    
+end

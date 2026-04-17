@@ -1,0 +1,147 @@
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+
+// A class that represents the layout of the static elements of the map of a level.
+// Each map is described using a single character to represent each tile of the map.
+// The character corresponds to walkable terrain, like grass or dirt,
+// or unwalkable terrain, like trees.
+// Each class that inherits from this provides its own mapping of its terrain by loading text
+// into the encodedRows array using the LoadEncodedRows action.
+// All maps are 13 by 13 tiles.
+class EncodedMap
+    
+    MapConstants constants
+    text name = ""
+    Array<text> encodedRows
+    
+    // The maps that can be reached by walking off the edges of this map.
+    // For example, the left map can be reached by walking off the left edge of this map.
+    // If there isn't a map in this direction, this is undefined.
+    EncodedMap leftMap = undefined
+    EncodedMap rightMap = undefined
+    EncodedMap upMap = undefined
+    EncodedMap downMap = undefined
+    
+    on create
+        encodedRows:SetSize(constants:MAP_HEIGHT)
+        LoadEncodedRows(encodedRows)
+    end
+    
+    blueprint action LoadEncodedRows(Array<text> array)
+    
+    blueprint action GetSceneFile returns text
+    
+    action GetSceneFolder returns text
+        return "Scenes"
+    end
+    
+    action SetName(text name)
+        me:name = name
+    end
+    
+    action GetName returns text
+        return name
+    end
+    
+    action GetRow(integer y) returns text
+        return encodedRows:Get(y)
+    end
+    
+    action GetEncodedTerrainAt(integer x, integer y) returns text
+        if x < 0 or x >= constants:MAP_WIDTH or y < 0 or y >= constants:MAP_HEIGHT
+            return constants:MAP_EDGE_ENCODING
+        end
+        text row = GetRow(y)
+        return row:GetCharacter(x)
+    end
+    
+    action GetTerrainAt(integer x, integer y) returns integer
+        text encoding = GetEncodedTerrainAt(x, y)
+if encoding = constants:GRASS_ENCODING
+            return constants:GRASS
+        elseif encoding = constants:DIRT_ENCODING
+            return constants:DIRT
+        elseif encoding = constants:TREE_ENCODING
+            return constants:TREE
+        elseif encoding = constants:SIGN_ENCODING
+            return constants:SIGN
+        elseif encoding = constants:MAP_EDGE_ENCODING
+            return constants:MAP_EDGE
+        elseif encoding = constants:ROCK_ENCODING
+            return constants:ROCK
+        elseif encoding = constants:LOG_ENCODING
+            return constants:LOG
+        elseif encoding = constants:DOOR_ENCODING
+            return constants:DOOR
+        elseif encoding = constants:KEY_ENCODING
+            GameStateManager manager
+            Main main = cast(Main, manager:GetGame())
+            if main:GetGameProgress() = main:PROGRESS_TALK_2
+                return constants:KEY
+            else
+                return constants:GRASS
+            end
+        end
+        
+        return constants:UNKNOWN
+    end
+    
+    action IsWalkableAt(integer x, integer y) returns boolean
+        /* If looking at terrain off the edge of the map, 
+it's only walkable if there's an adjacent map in that direction.*/
+        if x < 0
+            return leftMap not= undefined
+        end
+        if x >= constants:MAP_WIDTH
+            return rightMap not= undefined
+        end
+        if y < 0
+            return downMap not= undefined
+        end
+        if y >= constants:MAP_HEIGHT
+            return upMap not= undefined
+        end
+        
+        integer code = GetTerrainAt(x, y)
+        return code < constants:TREE
+    end
+    
+    action GetLeftMap returns EncodedMap
+        return leftMap
+    end
+
+    action SetLeftMap(EncodedMap leftMap)
+        me:leftMap = leftMap
+    end
+
+    action GetRightMap returns EncodedMap
+        return rightMap
+    end
+
+    action SetRightMap(EncodedMap rightMap)
+        me:rightMap = rightMap
+    end
+
+    action GetUpMap returns EncodedMap
+        return upMap
+    end
+
+    action SetUpMap(EncodedMap upMap)
+        me:upMap = upMap
+    end
+
+    action GetDownMap returns EncodedMap
+        return downMap
+    end
+
+    action SetDownMap(EncodedMap downMap)
+        me:downMap = downMap
+    end
+    
+    blueprint action GetMapDescription returns text
+    
+    action OnMapLoad
+        
+    end
+
+end

@@ -26,16 +26,16 @@ SharedPlayerValues values
         banner:GetTitleLabel():SetFontColor(color:White())
         
         Grouping coinGroup = AddGrouping("Coins")
-        Icon coin1 = coinGroup:AddIcon("Coin Icon", "Resources/Coin.png")
-        coin1:SetFocusable(false)
+        //Icon coin1 = coinGroup:AddIcon("Coin Icon", "Resources/Coin.png")
+        //coin1:SetFocusable(false)
         
         coinLabel = coinGroup:AddLabel("Coins", "0")
         coinLabel:SetToHugeFont()
         coinLabel:SetPositionOnBaseLine(false)
         coinLabel:SetColor(color:White())
         
-        Icon coin2 = coinGroup:AddIcon("Coin Icon 2", "Resources/Coin.png")
-        coin2:SetFocusable(false)
+        //Icon coin2 = coinGroup:AddIcon("Coin Icon 2", "Resources/Coin.png")
+        //coin2:SetFocusable(false)
         
 Grouping middleGroup = AddGrouping("Unlocks")
         middleGroup:SetColumns(1)

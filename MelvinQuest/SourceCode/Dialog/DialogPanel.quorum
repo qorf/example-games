@@ -1,0 +1,57 @@
+use Libraries.Game.Graphics.Label
+use Libraries.Interface.Pages.StackedRowPage
+use Libraries.Interface.Forms.Banner
+use Libraries.Game.Graphics.Color
+use Libraries.Interface.Forms.Grouping
+
+class DialogPanel is StackedRowPage
+    
+Color color
+    Banner titleBanner = undefined
+    Label label = undefined
+    
+    on create
+        SetBackgroundColor(color:CustomColor(0.97, 0.81, 0.61, 1))
+        SetBorderThickness(2)
+        SetBorderColor(color:Black())
+    end
+    
+    action Load(text title, text description)
+        titleBanner = AddBanner(title)
+titleBanner:SetToHugeFont()
+        label = AddLabel(description)
+        label:SetToLargeFont()
+        titleBanner:SetBackgroundColor(color:CustomColor(1, 0.72, 0.08, 1))
+    end
+    
+    action LoadDialog(text name, text dialog)
+titleBanner = AddBanner(name)
+        titleBanner:SetToHugeFont()
+        label = AddLabel(dialog)
+label:SetToLargeFont()
+        titleBanner:SetBackgroundColor(color:CustomColor(1, 0.72, 0.08, 1))
+        
+        Grouping endGroup = AddGrouping("Instructions")
+        endGroup:AddLabel("(Press Space to Continue...)")
+        endGroup:PositionFromBottom()
+    end
+    
+    action SetToInternalMonologueColors
+        titleBanner:SetBackgroundColor(color:CustomColor(0.91, 0.53, 0.9, 1))
+        SetBackgroundColor(color:CustomColor(1, 0.85, 0.99, 1))
+    end
+    
+    action SetToDialogColors
+titleBanner:SetBackgroundColor(color:CustomColor(0.53, 0.78, 0.91, 1))
+        SetBackgroundColor(color:CustomColor(0.89, 0.95, 0.99, 1))
+    end
+    
+    action FocusBanner
+        titleBanner:GetTitleLabel():Focus()
+    end
+    
+    action FocusText
+        label:Focus()
+    end
+    
+end

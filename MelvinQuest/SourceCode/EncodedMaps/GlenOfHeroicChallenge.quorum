@@ -1,0 +1,66 @@
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+
+class GlenOfHeroicChallenge is EncodedMap
+    Drawable key = undefined
+    
+    on create
+        SetName("Glen of Heroic Challenge")
+    end
+    
+    action GetSceneFile returns text
+        return GetSceneFolder() + "/GlenOfHeroicChallenge.qs"
+    end
+    
+    action LoadEncodedRows(Array<text> array)
+        array:Set(12, "TTTTTTTTTTTTT")
+array:Set(11, "TTTTTTTTTTTTT")
+array:Set(10, "TTTTTTTTTTTTT")
+array:Set(9,  "TTTTTTTTTGGGG")
+array:Set(8,  "TTTKTTTTGGGGG")
+array:Set(7,  "TTGGGTTGGGTTT")
+array:Set(6,  "TTGGGTTGGGTTT")
+array:Set(5,  "TGGGGTGGGTTTT")
+array:Set(4,  "TTGGGGGGTTTTT")
+array:Set(3,  "TTTTGGTTTTTTT")
+array:Set(2,  "TTTTTTTTTTTTT")
+array:Set(1,  "TTTTTTTTTTTTT")
+array:Set(0,  "TTTTTTTTTTTTT")
+    end
+    
+    action GetMapDescription returns text
+        text value = "Melvin girds himself for the inevitable travails ahead. He can feel that this place holds " + 
+"something vitally important, but like the stories of myth, no doubt some heroic obstacle " +
+"shall rise to face him -- for example, the forest path might get a little twisty, going a bit " +
+"southwest and then back up to the north a little." 
+        return value
+    end
+    
+    action OnMapLoad
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        MapConstants constants
+        
+        if key = undefined
+            Drawable drawable
+            key = drawable
+            key:Load("Resources/Key.png")
+            key:SetPosition(3 * constants:TILE_PIXEL_WIDTH, 8 * constants:TILE_PIXEL_HEIGHT)
+        end
+        
+        if main:GetGameProgress() = main:PROGRESS_TALK_2
+            main:GetMapLayer():Add(key)
+            key:Show()
+        else
+            key:Hide()
+        end
+        
+    end
+    
+    action HideKey
+        key:Hide()
+    end
+    
+end
+

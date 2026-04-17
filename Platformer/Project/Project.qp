@@ -1,6 +1,6 @@
 {
     "AndroidAssets" : "media",
-    "DevelopmentEnvironmentVersion" : "Quorum Studio 6.5.0",
+    "DevelopmentEnvironmentVersion" : "Quorum Studio 6.1.0",
     "ExecutableName" : "Default",
     "IOSAssets" : "media",
     "IOS_BUNDLE" : "org.quorumlanguage",

@@ -1,0 +1,476 @@
+use Libraries.Game.Game
+use Libraries.Interface.Layouts.ManualLayout
+use Libraries.Game.Layer2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Containers.Array
+use Libraries.Interface.Controls.Control
+use Libraries.Interface.Layouts.FlowLayout
+use Libraries.Interface.Item
+
+class Main is Game, KeyboardListener
+    
+    MainMenuPage mainMenu
+    Layer2D mapLayer = undefined
+    Layer2D effectLayer = undefined
+    Layer2D dialogLayer = undefined
+    
+    Player player
+    MovementManager movement
+    EffectQueue effects
+    DialogPanel dialogPanel = undefined
+    Control dialogPanelContainer
+    
+    SoundManager sounds
+    
+    Array<EncodedMap> maps
+    
+    /*Game progress has several steps:
+0. The player has just started.
+1. The player has talked to the sign for the first time.
+2. The player has tried to go into their house.
+3. The player has talked to the sign for the second time.
+4. The player has picked up the key.*/
+    public constant integer PROGRESS_START = 0
+    public constant integer PROGRESS_TALK_1 = 1
+    public constant integer PROGRESS_HOUSE = 2
+    public constant integer PROGRESS_TALK_2 = 3
+    public constant integer PROGRESS_GOT_KEY = 4
+    integer gameProgress = 0
+    
+    integer dialogIndex = 0
+    boolean talking = false
+    
+    on create
+        movement:SetPlayer(player)
+    end
+    
+    action Main
+        SetGameName("Melvin's Quest")
+        SetScreenSize(1282, 832)
+        StartGame()
+    end
+    
+    action CreateGame
+        sounds:StartMusic()
+        
+        AddKeyboardListener(me)
+        InitializeMaps()
+        
+        Layer2D mapLayer
+        me:mapLayer = mapLayer
+mapLayer:SetName("Map Layer")
+        mapLayer:SetViewport(0, 0, 832, 832)
+        AddLayer(mapLayer)
+        
+        Layer2D effectLayer
+        me:effectLayer = effectLayer
+        effectLayer:SetName("Effect Layer")
+        effectLayer:SetViewport(0, 0, 832, 832)
+        effectLayer:GetCamera():SetPosition(416, 416, effectLayer:GetCamera():GetPosition():GetZ())
+        effectLayer:GetCamera():SetSize(832, 832)
+        AddLayer(effectLayer)
+        
+        Layer2D dialogLayer
+        dialogLayer:SetName("Dialog Layer")
+        ManualLayout dialogLayout
+        dialogLayer:SetLayout(dialogLayout)
+        AddLayer(dialogLayer)
+        
+        dialogPanelContainer:SetPixelX(832)
+        dialogPanelContainer:SetPixelWidth(450)
+        dialogPanelContainer:SetPixelHeight(832)
+        dialogLayer:Add(dialogPanelContainer)
+        FlowLayout flow
+        dialogPanelContainer:SetLayout(flow)
+        
+ManualLayout layout
+        SetLayout(layout)
+        //LoadMainMenu()
+        
+        LoadMap(maps:GetFromFront())
+        
+        player:LoadAnimations()
+        player:IdleAnimation()
+        mapLayer:Add(player)
+movement:WarpToCoordinates(6, 5)
+    end
+    
+    action InitializeMaps
+        GladeOfOrigins map1
+        ClearingOfExposition map2
+        ValeOfGreatPurpose map3
+        GlenOfHeroicChallenge map4
+        
+        map1:SetUpMap(map2)
+        map2:SetDownMap(map1)
+        
+        map2:SetRightMap(map3)
+        map3:SetLeftMap(map2)
+        
+        map2:SetLeftMap(map4)
+        map4:SetRightMap(map2)
+        
+        maps:Add(map1)
+        maps:Add(map2)
+        maps:Add(map3)
+        maps:Add(map4)
+    end
+    
+    action Update(number seconds)
+        effects:Update(seconds)
+        movement:Update(seconds)
+    end
+    
+    action LoadMap(EncodedMap map)
+LoadScene(map:GetSceneFile())
+        movement:SetCurrentMap(map)
+        
+        if player:GetLayer() = undefined
+            mapLayer:Add(player)
+        end
+        
+        map:OnMapLoad()
+        
+        LoadMapInfoPanel(map)
+    end
+    
+    action LoadMapInfoPanel(EncodedMap map)
+if dialogPanel not= undefined
+            dialogPanelContainer:Remove(dialogPanel)
+        end
+        
+        DialogPanel newPanel
+        dialogPanel = newPanel
+        newPanel:Load(map:GetName(), map:GetMapDescription())
+        dialogPanelContainer:Add(dialogPanel)
+        
+dialogPanel:FocusBanner()
+    end
+    
+action LoadMapInfoPanel(text name, text description)
+if dialogPanel not= undefined
+            dialogPanelContainer:Remove(dialogPanel)
+        end
+        
+        DialogPanel newPanel
+        dialogPanel = newPanel
+        newPanel:Load(name, description)
+        dialogPanelContainer:Add(dialogPanel)
+        
+        dialogPanel:FocusBanner()
+    end
+    
+    action LoadDialogPanel(text name, text dialog)
+if dialogPanel not= undefined
+            dialogPanelContainer:Remove(dialogPanel)
+        end
+        
+        DialogPanel newPanel
+        dialogPanel = newPanel
+        newPanel:LoadDialog(name, dialog)
+        dialogPanelContainer:Add(dialogPanel)
+        
+        dialogPanel:SetToDialogColors()
+        dialogPanel:FocusBanner()
+    end
+    
+action LoadInternalDialogPanel(text name, text dialog)
+if dialogPanel not= undefined
+            dialogPanelContainer:Remove(dialogPanel)
+        end
+        
+        DialogPanel newPanel
+        dialogPanel = newPanel
+        newPanel:LoadDialog(name, dialog)
+        dialogPanelContainer:Add(dialogPanel)
+        
+        dialogPanel:SetToInternalMonologueColors()
+        dialogPanel:FocusBanner()
+    end
+    
+    action EmptyGame
+        // NYI: Remove all elements from the game, stop all sounds, stop all behaviors
+    end
+    
+    action EmptyMapLayer
+        mapLayer:Empty()
+    end
+    
+    action GetPlayer returns Player
+        return player
+    end
+    
+    action GetMovementManager returns MovementManager
+        return movement
+    end
+    
+    action LoadMainMenu
+        EmptyGame()
+        
+        if mainMenu:IsInitialized() = false
+            mainMenu:Initialize()
+        end
+        
+        Add(mainMenu)
+    end
+    
+    action RequestExit
+        Exit()
+    end
+    
+    action PressedKey(KeyboardEvent event)
+        if movement:GetMovementEnabled()
+            if event:keyCode = event:LEFT
+                movement:SetMovementLeft()
+            elseif event:keyCode = event:RIGHT
+                movement:SetMovementRight()
+            elseif event:keyCode = event:UP
+                movement:SetMovementUp()
+            elseif event:keyCode = event:DOWN
+                movement:SetMovementDown()
+            end
+        end
+        
+        if event:keyCode = event:SPACE
+if movement:IsNextToSign()
+                TalkToSign()
+            elseif movement:IsNextToDoor()
+                InteractWithDoor()
+            elseif movement:IsNextToKey()
+                InteractWithKey()
+            end
+        end
+        
+        if event:keyCode = event:MINUS
+            sounds:DecreaseMasterVolume()
+        elseif event:keyCode = event:EQUALS
+            sounds:IncreaseMasterVolume()
+        end
+    end
+    
+    action ReleasedKey(KeyboardEvent event)
+        if event:keyCode = event:LEFT or event:keyCode = event:RIGHT
+or event:keyCode = event:UP or event:keyCode = event:DOWN
+            movement:SetMovementIdle()
+        end
+    end
+    
+    action GetMapLayer returns Layer2D
+        return mapLayer
+    end
+    
+    action GetEffectLayer returns Layer2D
+        return effectLayer
+    end
+    
+    action GetEffects returns EffectQueue
+        return effects
+    end
+    
+    action TalkToSign
+        if talking = false
+            movement:SetMovementEnabled(false)
+            talking = true
+        end
+        
+        if gameProgress = PROGRESS_START
+            if dialogIndex = 0
+                LoadDialogPanel("Mysterious Sign?", "Whoa, hey pal! Long time no see!")
+            elseif dialogIndex = 1
+LoadDialogPanel("Mysterious Sign?", "You look rough, buddy. You doing okay?")
+                dialogPanel:FocusText()
+elseif dialogIndex = 2
+LoadDialogPanel("Mysterious Sign?", "Huh? Who, me? Of course you know me!")
+dialogPanel:FocusText()
+elseif dialogIndex = 3
+LoadDialogPanel("Mysterious Sign?", "I'm your good pal, T.S. Eliot!")
+dialogPanel:FocusText()
+elseif dialogIndex = 4
+                text quote = ""
+                quote = quote:GetDoubleQuote()
+LoadDialogPanel("T.S. Eliot", "(The " + quote + "T.S." + quote + " stands for " +
+quote + "Talking Sign." + quote + ")")
+dialogPanel:FocusText()
+elseif dialogIndex = 5
+LoadDialogPanel("T.S. Eliot", "You had a real long night out wizarding, huh? Well no worries, " + 
+"I can help you out! All you gotta do...")
+dialogPanel:FocusText()
+elseif dialogIndex = 6
+                LoadDialogPanel("T.S. Eliot", "Is get a good night's sleep! Am I right, or am I right?")
+dialogPanel:FocusText()
+            elseif dialogIndex = 7
+                LoadDialogPanel("T.S. Eliot", "Just follow the path to the east, your house is right there.")
+dialogPanel:FocusText()
+            elseif dialogIndex = 8
+                dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+                gameProgress = PROGRESS_TALK_1
+                LoadMapInfoPanel("Clearing of Exposition", "Having spoken with his new (or old) friend, Melvin now knows"
++ " his next destination: his house to the east. Melvin walks confidently eastward, now armed with " +
+"the greatest weapon of all: knowledge!
+
+What a nice sign.") 
+            end
+        elseif gameProgress = PROGRESS_HOUSE
+if dialogIndex = 0
+                LoadDialogPanel("T.S. Eliot", "Hey pal! Back again already?")
+            elseif dialogIndex = 1
+LoadDialogPanel("T.S. Eliot", "Huh? Reggie won't let you in without the house key?")
+dialogPanel:FocusText()
+elseif dialogIndex = 2
+LoadDialogPanel("T.S. Eliot", "That's rough, buddy. Lost your keys, huh?")
+dialogPanel:FocusText()
+elseif dialogIndex = 3
+LoadDialogPanel("T.S. Eliot", "Hey, maybe check the glen to the west? Can't hurt to look!")
+dialogPanel:FocusText()
+elseif dialogIndex = 4
+                dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+                gameProgress = PROGRESS_TALK_2
+                LoadMapInfoPanel("Clearing of Exposition", "It seems there is surely no path forward but to find the lost key. Melvin, "
++ "having conferred with the wise sage, T.S. Eliot, resolves to travel westward. Surely, there he shall find his destiny.
+
+Or at least, he hopes so. He really doesn't want to call a magical locksmith again.") 
+            end
+            
+        else
+dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+        end
+        
+        dialogIndex = dialogIndex + 1
+    end
+    
+    action InteractWithDoor
+if talking = false
+            movement:SetMovementEnabled(false)
+            talking = true
+        end
+        
+        if gameProgress = 1
+if dialogIndex = 0
+                LoadDialogPanel("Talking Door?", "Hmm? Oh, it's you. Good day, Master Melvin.")
+            elseif dialogIndex = 1
+LoadDialogPanel("Talking Door?", "Why, me? I am your ever faithful servant, Reginald Pinesly.")
+dialogPanel:FocusText()
+elseif dialogIndex = 2
+LoadDialogPanel("Reginald Pinesly", "...What's that you say? That's a silly name?")
+dialogPanel:FocusText()
+elseif dialogIndex = 3
+LoadDialogPanel("Reginald Pinesly", "Harrumph! Of course it's a ridiculous name! YOU named me, after all!")
+dialogPanel:FocusText()
+elseif dialogIndex = 4
+LoadDialogPanel("Reginald Pinesly", "I'm not even made of lousy pine! I am made only of beautiful, high " +
+"quality oak!")
+dialogPanel:FocusText()
+elseif dialogIndex = 5
+LoadDialogPanel("Reginald Pinesly", "Well that quite settles it. So sorry sir, but if you don't have your" + 
+" house key, I'm quite afraid I can't let you in. I MIGHT have made an exception, but... Well, now it's rather out of the question.")
+dialogPanel:FocusText()
+elseif dialogIndex = 6
+                LoadDialogPanel("Reginald Pinesly", "Off you go, sir! Come back once you have the key!")
+dialogPanel:FocusText()
+            elseif dialogIndex = 7
+                dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+                gameProgress = PROGRESS_HOUSE
+                LoadMapInfoPanel("Vale of Annoying Butlers", "So close, yet so far! Though Melvin has found his way back home, his obstinate" +
+" door/butler has refused him entry, a situation that is certainly not Melvin's fault. Reginald Pinesly the talking door will" +
+" only allow him entry if he has the key.
+
+Perhaps Melvin's good sign friend, T.S. Eliot, can help?") 
+            end
+            
+        elseif gameProgress = PROGRESS_GOT_KEY
+            if dialogIndex = 0
+                LoadDialogPanel("Reginald Pinesly", "Hmm. Back again already?")
+            elseif dialogIndex = 1
+                LoadDialogPanel("Reginald Pinesly", "Oh, I see you found the key. Very well, sir. Please enter.")
+dialogPanel:FocusText()
+            elseif dialogIndex = 2
+                LoadDialogPanel("Reginald Pinesly", "And, Master Melvin? Welcome home, sir.")
+dialogPanel:FocusText()
+            elseif dialogIndex = 3
+                sounds:StopMusic()
+                sounds:PlaySound("Victory.wav", 0.8)
+                LoadMapInfoPanel("Quest Complete!", "With house key firmly in hand, Melvin steps inside his home. With a swelling sense of pride"
++ " and accomplishment, he fetches himself a nice glass of water and prepares to take a leisurely nap in his soft, warm bed.
+
+Thanks for playing!")
+            end
+        else
+dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+        end
+        
+dialogIndex = dialogIndex + 1
+    end
+    
+    action InteractWithKey
+if talking = false
+            movement:SetMovementEnabled(false)
+            talking = true
+        end
+        
+        if gameProgress = PROGRESS_TALK_2
+            if dialogIndex = 0
+LoadInternalDialogPanel("Melvin's Musings", "At last! Surely guided by fate, Melvin finds the key resting in the grass amid a field of wild mushrooms.")
+            elseif dialogIndex = 1
+                LoadInternalDialogPanel("Melvin's Musings", "At this moment, however, a thought occurs to Melvin.")
+dialogPanel:FocusText()
+            elseif dialogIndex = 2
+                LoadInternalDialogPanel("Melvin's Musings", "While traveling this forest, Melvin has now encountered two odd beings. First, a"
++ " talking sign, and then a talking door.")
+dialogPanel:FocusText()
+            elseif dialogIndex = 3
+                LoadInternalDialogPanel("Melvin's Musings", "Would it be so odd to encounter a third? Could it perhaps be possible that this"
++ " key was a magical, talking being as well?")
+dialogPanel:FocusText()
+            elseif dialogIndex = 4
+                LoadDialogPanel("Totally Normal Key", "I am a completely normal key.")
+            elseif dialogIndex = 5
+                LoadInternalDialogPanel("Melvin's Musings", "Well, can't argue with that! Melvin scoops up the key and puts it in his pocket.")
+            elseif dialogIndex = 6
+dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+                gameProgress = PROGRESS_GOT_KEY
+                LoadMapInfoPanel("Glen of Totally Normal Keys", "Great success! Melvin has found the key to his home, and with it,"
++ " secured his eventual victory over his annoying butler and/or door, Reginald Pinesly. Now he need only return"
++ " home, to his house on the east side of the forest.")
+                EncodedMap map = movement:GetCurrentMap()
+                if map is GlenOfHeroicChallenge
+                    GlenOfHeroicChallenge glen = cast(GlenOfHeroicChallenge, map)
+                    glen:HideKey()
+                    sounds:PlaySound("Gold Get.wav")
+                end
+            end
+        else
+dialogIndex = -1
+                movement:SetMovementEnabled(true)
+                talking = false
+        end
+        
+dialogIndex = dialogIndex + 1
+    end
+
+    action GetGameProgress returns integer
+        return gameProgress
+    end
+
+    action SetGameProgress(integer gameProgress)
+        me:gameProgress = gameProgress
+    end
+
+    action GetSounds returns SoundManager
+        return sounds
+    end
+
+end

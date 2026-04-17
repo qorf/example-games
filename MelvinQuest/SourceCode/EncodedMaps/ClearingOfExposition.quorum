@@ -1,0 +1,50 @@
+use Libraries.Containers.Array
+use Libraries.Game.GameStateManager
+
+class ClearingOfExposition is EncodedMap
+    
+    on create
+        SetName("Clearing of Exposition")
+    end
+    
+    action GetSceneFile returns text
+        return GetSceneFolder() + "/ClearingOfExposition.qs"
+    end
+    
+    action LoadEncodedRows(Array<text> array)
+        array:Set(12, "TTTTTTTTTTTTT")
+array:Set(11, "TTTTTTTTTTTTT")
+array:Set(10, "TTTTDDXDDTTTT")
+array:Set(9,  "GGGGDDDDDGGGG")
+array:Set(8,  "GGGGDDDDDGGGG")
+array:Set(7,  "TTTGGDDDGGTTT")
+array:Set(6,  "TTTTGGGGGTTTT")
+array:Set(5,  "TTTTTGGGTTTTT")
+array:Set(4,  "TTTTTGGGTTTTT")
+array:Set(3,  "TTTTTGGGTTTTT")
+array:Set(2,  "TTTTTGGGTTTTT")
+array:Set(1,  "TTTTTGGGTTTTT")
+array:Set(0,  "TTTTTGGGTTTTT")
+    end
+    
+    action GetMapDescription returns text
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        text value = ""
+        if main:GetGameProgress() = main:PROGRESS_GOT_KEY
+            value = "Melvin considers speaking with T.S. Eliot again as he's passing by with the key, but that sounds like "
++ "extra work for the guy programming this game, so he decides to pass on it and just heads east to his house."
+        elseif main:GetGameProgress() = main:PROGRESS_HOUSE
+            value = "Melvin returns to the fork in the road. Once again, his trusty friend T.S. Eliot, who he has known for"
++ " at least several minutes now, awaits in the dirt patch at the northern end of the intersection."
+        else
+value = "The clearing ahead forms a T-intersection, paths extending west, east, and south. But why " +
+"is Melvin here? If only he could remember...
+
+But forsooth!! A very conveniently placed sign rests in another patch of dirt at the northern end " +
+"of the clearing. Melvin knows deep within his heart it shall be important to his quest."
+        end
+        return value
+    end
+    
+end

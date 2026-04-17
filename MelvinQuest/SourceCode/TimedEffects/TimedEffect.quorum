@@ -1,0 +1,54 @@
+use Libraries.Game.GameStateManager
+
+class TimedEffect
+    
+    GameStateManager manager
+    number duration = 0
+    number timer = 0
+    
+    action OnStart
+        
+    end
+    
+    action Update(number seconds)
+        timer = timer + seconds
+        OnUpdate(seconds)
+    end
+    
+    action OnUpdate(number seconds)
+        
+    end
+    
+    action OnFinish
+        
+    end
+    
+    action GetDuration returns number
+        return duration
+    end
+
+    action SetDuration(number duration)
+        me:duration = duration
+    end
+    
+    action IsFinished returns boolean
+        return timer >= duration
+    end
+    
+    action GetMain returns Main
+        return cast(Main, manager:GetGame())
+    end
+    
+    action GetPlayer returns Player
+        return GetMain():GetPlayer()
+    end
+    
+    action GetMovementManager returns MovementManager
+        return GetMain():GetMovementManager()
+    end
+
+    action GetTimer returns number
+        return timer
+    end
+
+end

@@ -1,0 +1,72 @@
+use Libraries.Containers.HashTable
+use Libraries.Sound.Audio
+
+class SoundManager
+    HashTable<text, Audio> sounds
+    MapConstants constants
+    
+    number masterVolume = 1
+    number musicVolume = 0.25
+    
+    Audio music
+    
+    action PlaySound(text fileName)
+        PlaySound(fileName, 1)
+    end
+    
+    action PlaySound(text fileName, number volume)
+        Audio audio = undefined
+        if sounds:HasKey(fileName)
+            audio = sounds:GetValue(fileName)
+        else
+            Audio newAudio
+            newAudio:Load("Resources/Audio/" + fileName)
+            audio = newAudio
+            sounds:Add(fileName, audio)
+        end
+        
+        audio:SetVolume(volume * masterVolume)
+        audio:Play()
+    end
+    
+    action PlayStepAudio(integer terrainType)
+        if terrainType = constants:GRASS
+            PlaySound("Grass Step.wav")
+        elseif terrainType = constants:DIRT
+            PlaySound("Dirt Step.ogg")
+        end
+    end
+    
+    action IncreaseMasterVolume
+        masterVolume = masterVolume + 0.1
+        if masterVolume > 1
+            masterVolume = 1
+        end
+music:SetVolume(musicVolume * masterVolume)
+        
+        output "Master volume increased to " + masterVolume
+    end
+    
+    action DecreaseMasterVolume
+        masterVolume = masterVolume - 0.1
+        if masterVolume < 0
+            masterVolume = 0
+        end
+        music:SetVolume(musicVolume * masterVolume)
+        
+        output "Master volume decreased to " + masterVolume
+    end
+    
+    action StartMusic
+        if music:IsLoaded() = false
+            music:Load("Resources/Audio/March of the Spoons.ogg")
+        end
+        music:SetVolume(musicVolume * masterVolume)
+        music:EnableLooping()
+        music:Play()
+    end
+    
+    action StopMusic
+        music:Stop()
+    end
+end
