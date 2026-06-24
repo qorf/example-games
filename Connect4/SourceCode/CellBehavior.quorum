@@ -1,0 +1,47 @@
+use Libraries.Interface.Forms.FormBehavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Interface.Controls.Button
+use Libraries.Game.Graphics.Color
+
+class CellBehavior is FormBehavior
+    Button cell
+    integer clickCount = 0
+
+    Color color1
+    Color color2
+    Color color3
+
+    action SetCell(Button b)
+        cell = b
+
+        // First click color (red)
+        color1:SetColor(0.8, 0.2, 0.2, 1)
+
+        // Second click color (blue)
+        color2:SetColor(0.537, 0.812, 0.941, 1)
+
+        // Third click reset (white)
+        color3:SetColor(1, 1, 1,1)
+    end
+
+    action Run(BehaviorEvent event)
+        clickCount = clickCount + 1
+
+        if clickCount = 1
+            // first click -> first color
+            cell:SetBackgroundColor(color1)
+
+        elseif clickCount = 2
+            // second click -> second color
+            cell:SetBackgroundColor(color2)
+
+        elseif clickCount = 3
+            // third click -> reset
+            cell:SetBackgroundColor(color3)
+
+            // after 3 clicks start over from 0
+        else clickCount = 0
+            
+        end
+    end
+end
