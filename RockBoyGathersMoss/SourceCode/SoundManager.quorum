@@ -1,0 +1,81 @@
+use Libraries.Sound.Audio
+
+class SoundManager
+    public constant text AUDIO_PATH = "Resources/Audio/"
+    constant number RADAR_DISTANCE = 8
+    
+    Audio music
+    Audio mossCollected
+    Audio jump
+    Audio running
+    Audio groundImpact
+    Audio mossRadar
+    
+    number pitchModifier = 0
+    
+    action Load
+        music:Load(AUDIO_PATH + "Fuzzball Parade.ogg")
+        mossCollected:Load(AUDIO_PATH + "Gold Get.wav")
+        jump:Load(AUDIO_PATH + "Boing.wav")
+        running:Load(AUDIO_PATH + "Running.wav")
+        groundImpact:Load(AUDIO_PATH + "Ground_Impact.wav")
+        mossRadar:Load(AUDIO_PATH + "AltitudePing.wav")
+        
+        running:EnableLooping()
+        mossRadar:EnableLooping()
+        music:EnableLooping()
+        music:SetVolume(0.3)
+        SetPitchModifier(pitchModifier)
+    end
+
+action SetPitchModifier(number pitch)
+        pitchModifier = pitch
+        mossCollected:SetPitch(0.9 + pitchModifier)
+        jump:SetPitch(1 + pitchModifier)
+        running:SetPitch(0.6 + pitchModifier)
+        groundImpact:SetPitch(1 + pitchModifier)
+        music:SetPitch(0.8 + pitchModifier)
+    end
+    
+    action PlayMusic
+        music:Play()
+    end
+    
+    action StopMusic
+        music:Stop()
+    end
+    
+    action UpdateMossRadar(number distance)
+        if distance < 0 or distance > RADAR_DISTANCE
+            if mossRadar:IsPlaying()
+                mossRadar:Stop()
+            end
+        else
+            if mossRadar:IsPlaying() = false
+                mossRadar:Play()
+            end
+            mossRadar:SetPitch(1 - distance / (RADAR_DISTANCE * 2))
+        end
+    end
+    
+    action PlayJump
+        jump:Play()
+    end
+    
+    action PlayMossCollected
+        mossCollected:Play()
+    end
+    
+    action PlayRunning
+        running:Play()
+    end
+    
+    action StopRunning
+        running:Stop()
+    end
+    
+    action PlayGroundImpact
+        groundImpact:Play()
+    end
+    
+end

@@ -1,0 +1,59 @@
+use Libraries.Interface.Item3D
+use Libraries.Game.Graphics.Camera
+use Libraries.Compute.Vector3
+
+class CameraController
+    Vector3 cameraDirection
+    number distance = 10
+    
+    Camera camera = undefined
+    Item3D target = undefined
+    Vector3 targetOffset
+    
+    on create
+        cameraDirection:Set(0, -4, 10)
+        cameraDirection:Normalize()
+        
+        targetOffset:Set(3, 1, 0)
+    end
+    
+    action Update(number seconds)
+        if target = undefined or camera = undefined
+            return now
+        end
+        
+        Vector3 cameraPosition
+        cameraPosition:Set(cameraDirection):Scale(-distance)
+        cameraPosition:Add(target:GetPosition():GetX(), 0, target:GetPosition():GetZ())
+        cameraPosition:Add(targetOffset)
+        
+        camera:SetPosition(cameraPosition)
+        camera:SetDirection(cameraDirection)
+        camera:Update()
+    end
+    
+    action SetTargetOffset(Vector3 target)
+        targetOffset:Set(target)
+    end
+    
+    action SetTargetOffset(number x, number y, number z)
+        targetOffset:Set(x, y, z)
+    end
+    
+    action GetCamera returns Camera
+        return camera
+    end
+
+    action SetCamera(Camera camera)
+        me:camera = camera
+    end
+
+    action GetTarget returns Item3D
+        return target
+    end
+
+    action SetTarget(Item3D target)
+        me:target = target
+    end
+
+end

@@ -1,0 +1,60 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Compute.Math
+
+class MossBlob is Model
+    
+    public constant number DEFAULT_WIDTH = 1
+    public constant number BOUNCE_Y = 0.25
+    public constant number BOUNCE_TIME = 3
+    public constant number COLLECTION_TIME = 1
+    public constant number COLLECTION_SPIN = 360
+    public constant number COLLECTION_RISE = 4
+    
+    Math math
+    number anchorY = 0
+    number timer = 0
+    boolean collected = false
+    
+    action Load(number x, number y, number z)
+        anchorY = y
+        LoadPlane(DEFAULT_WIDTH, DEFAULT_WIDTH, GetFilePath())
+        Rotate(1, 0, 0, -90)
+        SetPosition(x, y, z)
+    end
+    
+    action Update(number seconds)
+        timer = timer + seconds
+        if collected
+            Rotate(0, 0, 1, COLLECTION_SPIN * seconds)
+            SetY(anchorY + COLLECTION_RISE * timer / COLLECTION_TIME)
+        else
+        SetY(math:Sine(2 * math:pi / BOUNCE_TIME * timer) * BOUNCE_Y + anchorY)
+        end
+    end
+    
+    action OnCollect
+        collected = true
+        timer = 0
+    end
+    
+    action GetFilePath returns text
+        return "Resources\Images\Bright Moss Blob Black Outline.png"
+    end
+    
+    action GetAnchorY returns number
+        return anchorY
+    end
+
+    action SetAnchorY(number anchorY)
+        me:anchorY = anchorY
+end
+
+    action IsCollected returns boolean
+        return collected
+    end
+    
+    action NeedsRemoval returns boolean
+        return IsCollected() and timer >= COLLECTION_TIME
+    end
+
+end

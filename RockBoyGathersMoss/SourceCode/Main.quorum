@@ -1,0 +1,248 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.AmbientLight
+use Libraries.Game.Graphics.DirectionalLight
+use Libraries.Game.Graphics.PointLight
+use Libraries.Containers.Array
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Interface.Item3D
+use Libraries.Compute.Vector3
+use Libraries.Game.Layer2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Models.Data.AnimationState
+
+class Main is Game, KeyboardListener
+    Player player
+    
+    AmbientLight ambientLight
+    DirectionalLight directionalLight
+    
+    SoundManager sounds
+    LandChunkManager chunkManager
+    CameraController cameraController
+    
+    boolean loadingChunks = true
+    
+    Array<LandChunk> activeChunks
+    Array<LandChunk> fallingChunks
+    number nextChunkLoadBoundary = 0
+    integer nextChunkID = 0
+    number nextChunkX = 0
+    
+    Array<MossBlob> activeMoss
+    Array<MossBlob> disappearingMoss
+    integer score = 0
+    
+    boolean jumping = false
+    
+    constant number MOSS_SPEED_INCREASE = 0.1
+    
+    integer sillyScoreThreshold = 70
+    boolean maximumSilliness = false
+    Model robo
+    
+    action Main
+        SetScreenSize(1400, 900)
+        UseVulkan(true)
+        StartGame()
+        output "Game Over! You collected " + score + " moss."
+    end
+    
+    action CreateGame
+        chunkManager:Create()
+        cameraController:SetTarget(player)
+        cameraController:SetCamera(GetCamera3D())
+        AddDefaultLights()
+        sounds:Load()
+        
+        Layer2D backgroundLayer
+        AddLayer(0, backgroundLayer)
+        
+        Drawable background
+        background:Load("Resources/Images/sky1.png")
+        background:SetSize(GetScreenWidth(), GetScreenHeight())
+        backgroundLayer:Add(background)
+        
+        player:Load()
+        Add(player)
+        
+        player:SetX(-5)
+        
+        LoadStartChunks()
+        AddKeyboardListener(me)
+        
+        sounds:PlayMusic()
+        
+        player:Focus()
+    end
+    
+    action LoadStartChunks
+        number x = -chunkManager:LAND_CHUNK_WIDTH
+        repeat chunkManager:VISIBLE_CHUNKS times
+            LandChunk chunk = chunkManager:GetChunk(0, nextChunkID)
+            chunk:SetX(x)
+            activeChunks:Add(chunk)
+            
+            i = 0
+        Array<MossBlob> blobs = chunk:GetMossBlobs()
+        repeat while i < blobs:GetSize()
+            activeMoss:Add(blobs:Get(i))
+            i = i + 1
+        end
+            
+            Add(chunk)
+            nextChunkID = nextChunkID + 1
+            x = x + chunkManager:LAND_CHUNK_WIDTH
+        end
+        nextChunkLoadBoundary = chunkManager:LAND_CHUNK_WIDTH / 2.0
+        nextChunkX = x
+    end
+    
+    action CycleNextChunk
+        number chunkSpeed = -chunkManager:CHUNK_ORIGIN_Y / chunkManager:CHUNK_APPEAR_TIME * player:GetMoveSpeedModifier()
+        LandChunk chunk = activeChunks:RemoveFromFront()
+        chunk:DescendTo(chunkManager:CHUNK_ORIGIN_Y, chunkSpeed)
+        fallingChunks:Add(chunk)
+        
+        integer i = 0
+        Array<MossBlob> blobs = chunk:GetMossBlobs()
+        repeat while i < blobs:GetSize()
+            MossBlob blob = blobs:Get(i)
+            if activeMoss:Has(blob)
+                activeMoss:Remove(blob)
+            end
+            i = i + 1
+        end
+        
+        LandChunk newChunk = chunkManager:GetChunk(0, nextChunkID)
+        newChunk:SetX(nextChunkX)
+        newChunk:RiseFrom(chunkManager:CHUNK_ORIGIN_Y, chunkSpeed)
+        activeChunks:Add(newChunk)
+            Add(newChunk)
+        
+        i = 0
+        blobs = newChunk:GetMossBlobs()
+        repeat while i < blobs:GetSize()
+            activeMoss:Add(blobs:Get(i))
+            i = i + 1
+        end
+        
+            nextChunkID = nextChunkID + 1
+            nextChunkX = nextChunkX + chunkManager:LAND_CHUNK_WIDTH
+        nextChunkLoadBoundary = nextChunkLoadBoundary + chunkManager:LAND_CHUNK_WIDTH
+    end
+    
+    action AddDefaultLights
+        ambientLight:SetColor(0.2, 0.2, 0.2, 1)
+        SetAmbientLight(ambientLight)
+        
+        directionalLight:SetColor(0.8, 0.8, 0.8, 1)
+        directionalLight:SetDirection(-2, -5, 3)
+        Add(directionalLight)
+    end
+    
+    action AddDancingRobot
+        robo:Load("Resources/BrainStem/BrainStem.gltf")
+        robo:SetScale(14, 14, 14)
+        robo:SetPosition(0, -16, 30)
+        Add(robo)
+        
+        AnimationState state
+        state:SetAnimationIndex(0)
+        state:SetEndBehavior(state:LOOP_ON_COMPLETE)
+        state:SetStarted(true)
+        state:SetAnimationSpeed(3)
+        robo:SetAnimationState(state)
+    end
+    
+    action Update(number seconds)
+        if player:GetX() > nextChunkLoadBoundary
+            CycleNextChunk()
+        end
+        
+        if score >= sillyScoreThreshold and maximumSilliness = false
+            AddDancingRobot()
+            maximumSilliness = true
+        end
+        
+        if jumping and player:IsJumping() = false
+            jumping = false
+            sounds:PlayGroundImpact()
+            sounds:PlayRunning()
+        end
+        
+        cameraController:Update(seconds)
+        
+        if maximumSilliness
+            robo:SetX(player:GetX())
+        end
+        
+        integer i = 0
+        repeat while i < fallingChunks:GetSize()
+            if fallingChunks:Get(i):NeedsRemoval()
+                Remove(fallingChunks:Get(i))
+                fallingChunks:RemoveAt(i)
+            else
+                i = i + 1
+            end
+        end
+        
+        Vector3 playerPoint
+            playerPoint:Set(player:GetX(), player:GetY() + 0.5, player:GetZ())
+        number shortestDistance = -1
+        i = 0
+        repeat while i < activeMoss:GetSize()
+            MossBlob blob = activeMoss:Get(i)
+            Vector3 blobPoint = blob:GetGlobalPosition()
+            number distance = playerPoint:Distance(blobPoint)
+            boolean collected = false
+            if distance <= 1.5
+                blob:OnCollect()
+                score = score + 1
+                player:SetMoveSpeedModifier(1 + (score * MOSS_SPEED_INCREASE))
+                sounds:SetPitchModifier(score * (MOSS_SPEED_INCREASE / 4))
+                sounds:PlayMossCollected()
+                activeMoss:Remove(blob)
+                collected = true
+            elseif shortestDistance < 0 or distance < shortestDistance
+                shortestDistance = distance
+            end
+            
+            // Only increment counter if we didn't remove from the array. If we removed, the size already changed, so it's like iterating.
+            if not collected
+                i = i + 1
+            end
+        end
+        sounds:UpdateMossRadar(shortestDistance)
+        
+        i = 0
+        repeat while i < disappearingMoss:GetSize()
+            MossBlob blob = disappearingMoss:Get(i)
+            if blob:NeedsRemoval()
+                Item3D parentItem = blob:GetParent()
+                if parentItem not= undefined
+                    parentItem:Remove(blob)
+                end
+            end
+            i = i + 1
+        end
+    end
+    
+    action PressedKey(KeyboardEvent event)
+        if event:keyCode = event:SPACE
+            if player:IsRunning()
+                if player:IsJumping() = false
+                    player:Jump()
+                    sounds:PlayJump()
+                    sounds:StopRunning()
+                    jumping = true
+                end
+            else
+                player:StartRunning()
+                sounds:PlayRunning()
+            end
+        end
+    end
+    
+end

@@ -1,0 +1,143 @@
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Models.Data.AnimationState
+use Libraries.Game.Graphics.Models.Data.Animation
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Vector3
+
+class Player is Model
+    
+    public constant text PLAYER_FILE = "Resources/AnimatedRockMan/scene.gltf"
+    
+    public constant integer DEFEAT_ANIMATION = 0
+    public constant integer IDLE_ANIMATION = 1
+    public constant integer JUMP_ANIMATION = 2
+    public constant integer RUN_ANIMATION = 3
+    public constant integer TRIP_ANIMATION = 4
+    public constant integer VICTORY_ANIMATION = 5
+    
+    public constant integer STOP_ON_COMPLETE = 0
+    public constant integer LOOP_ON_COMPLETE = 1
+    public constant integer PAUSE_ON_COMPLETE = 2
+    
+    public constant number BASE_MOVE_SPEED = 3
+    constant number INTERNAL_ANIMATION_MODIFIER = 1
+    constant number JUMP_PEAK = 2.5
+    
+    integer currentAnimation = IDLE_ANIMATION
+    number moveSpeedModifier = 1
+    boolean moving = false
+    boolean jumping = false
+    
+    Vector3 moveDirection
+    
+    on create
+        SetName("Rock Boy")
+        SetFocusable(true)
+        SetAccessibilityCode(1)
+    end
+    
+    action Load
+        Load(PLAYER_FILE)
+        Rotate(0, 1, 0, -90)
+        moveDirection:Set(1, 0, 0)
+        
+        integer i = 0
+        repeat while i < GetAnimationsSize()
+            Animation animation = GetAnimation(i)
+            if i = DEFEAT_ANIMATION
+                animation:SetName("Groan of Despair")
+            elseif i = IDLE_ANIMATION
+                animation:SetName("Ready to Rock")
+            elseif i = JUMP_ANIMATION
+                animation:SetName("Jumping")
+            elseif i = RUN_ANIMATION
+                animation:SetName("Running")
+            elseif i = TRIP_ANIMATION
+                animation:SetName("Tripped")
+            elseif i = VICTORY_ANIMATION
+                animation:SetName("Victory Cheer")
+            end
+            i = i + 1
+        end
+        
+        ResetToIdle()
+    end
+    
+    action ResetToIdle
+        moving = false
+        PlayAnimation(IDLE_ANIMATION, LOOP_ON_COMPLETE)
+    end
+    
+    action StartRunning
+        moving = true
+        PlayAnimation(RUN_ANIMATION, LOOP_ON_COMPLETE)
+    end
+    
+    action PlayAnimation(integer animation, integer endCondition)
+        PlayAnimation(animation, endCondition, 1)
+    end
+    
+    action PlayAnimation(integer animation, integer endCondition, number extraModifier)
+        AnimationState state
+        state:SetStarted(true)
+        state:SetAnimationIndex(animation)
+        state:SetAnimationSpeed(moveSpeedModifier * INTERNAL_ANIMATION_MODIFIER * extraModifier)
+        state:SetEndBehavior(endCondition)
+        SetAnimationState(state)
+    end
+    
+    action Jump
+        jumping = true
+        PlayAnimation(JUMP_ANIMATION, STOP_ON_COMPLETE, 0.5)
+    end
+    
+    action Update(number seconds)
+        if moving
+            number modifier = BASE_MOVE_SPEED * INTERNAL_ANIMATION_MODIFIER * moveSpeedModifier * seconds
+            Move(moveDirection:GetX() * modifier, moveDirection:GetY() * modifier, moveDirection:GetZ() * modifier)
+        end
+        if jumping
+            Animation animation = GetAnimation(GetAnimationState():GetAnimationIndex())
+            number halfDuration = (animation:GetFrames():GetSize() * animation:GetMilliseconds() / 1000) / 2.0
+            number animationProgress = GetAnimationState():GetCurrentTime() / halfDuration
+            if animationProgress > 1
+                animationProgress = 1 - (animationProgress - 1)
+            end
+            SetY(animationProgress * JUMP_PEAK)
+        else
+            SetY(0)
+        end
+    end
+    
+    action GetMoveSpeedModifier returns number
+        return moveSpeedModifier
+    end
+
+    action SetMoveSpeedModifier(number moveSpeedModifier)
+        me:moveSpeedModifier = moveSpeedModifier
+    end
+    
+    action UpdateAll(number seconds)
+        parent:Model:UpdateAll(seconds)
+        if GetAnimationState() = undefined
+            if jumping
+                jumping = false
+            end
+            if moving
+                StartRunning()
+            else
+                ResetToIdle()
+            end
+            UpdateAnimationState(seconds)
+        end
+    end
+    
+    action IsRunning returns boolean
+        return moving
+    end
+    
+    action IsJumping returns boolean
+        return jumping
+    end
+
+end

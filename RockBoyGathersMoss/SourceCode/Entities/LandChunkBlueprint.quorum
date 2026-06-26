@@ -1,0 +1,38 @@
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Models.ModelBlueprint
+use Libraries.Game.Graphics.Model
+
+class LandChunkBlueprint
+    
+    public constant integer LAND_CHUNK_WIDTH = 7
+    public constant integer LAND_CHUNK_DEPTH = 7
+    
+    ModelBlueprint landFill = undefined
+    Array<Model> details
+    Array<MossBlobBlueprint> mossBlobs
+    
+    action SetLandFill(ModelBlueprint modelBlueprint)
+        landFill = modelBlueprint
+    end
+    
+    action GetLandFill returns ModelBlueprint
+        return landFill
+    end
+    
+    action AddDetail(Model model)
+        details:Add(model)
+    end
+    
+    action GetDetails returns Array<Model>
+        return details
+    end
+    
+    action AddMoss(MossBlobBlueprint moss)
+        mossBlobs:Add(moss)
+    end
+    
+    action GetMossBlobs returns Array<MossBlobBlueprint>
+        return mossBlobs
+    end
+
+end

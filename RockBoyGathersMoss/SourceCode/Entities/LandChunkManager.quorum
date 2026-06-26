@@ -1,0 +1,147 @@
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Models.ModelBlueprint
+use Libraries.Compute.Vector3
+use Libraries.Game.Graphics.Color
+
+class LandChunkManager
+    
+    public constant integer GRASS_BIOME = 0
+    
+    public constant text DEFAULT_GRASS_FILL_PATH = "Resources\Tilesets3D\kenney_natureKit_2.1\Models\OBJ format\cliff_block_rock.obj"
+    
+    public constant integer LAND_CHUNK_WIDTH = 7
+    public constant integer LAND_CHUNK_DEPTH = 7
+    public constant integer VISIBLE_CHUNKS = 4
+    public constant number CHUNK_ORIGIN_Y = -20
+    public constant number CHUNK_APPEAR_TIME = 1
+    
+    Array<Array<LandChunkBlueprint>> landChunkBlueprints
+    
+    ModelBlueprint grassFill = undefined
+    
+    action Create
+        Vector3 smallScale
+        smallScale:Set(1, 1, 1)
+        Vector3 defaultScale
+        defaultScale:Set(2, 2, 2)
+        Vector3 largeScale
+        largeScale:Set(3, 3, 3)
+        Vector3 hugeScale
+        hugeScale:Set(4, 4, 4)
+        
+        Array<LandChunkBlueprint> grassChunks
+        landChunkBlueprints:Add(grassChunks)
+        
+        Model grassModel
+        grassModel:Load(DEFAULT_GRASS_FILL_PATH)
+        grassFill = grassModel:GetModelBlueprint()
+        
+        NewChunk(GRASS_BIOME, 1)
+        NewChunk(GRASS_BIOME, 2)
+        NewChunk(GRASS_BIOME, 2)
+        
+        LandChunkBlueprint grass1 = NewChunk(GRASS_BIOME, 3)
+        grass1:AddDetail(GetTree(-3, 0, 3, hugeScale))
+        grass1:AddDetail(GetTree(2, 0, 2, largeScale))
+        grass1:AddMoss(NewMossBlob(0, 1, 0))
+        
+        NewChunk(GRASS_BIOME, 3)
+        
+        LandChunkBlueprint grass2 = NewChunk(GRASS_BIOME, 2)
+        grass2:AddDetail(GetTree(-3, 0, 3, hugeScale))
+        grass2:AddDetail(GetTree(-1, 0, 3, largeScale))
+        grass2:AddDetail(GetTree(1, 0, 2, largeScale))
+        grass2:AddDetail(GetTree(3, 0, 2, defaultScale))
+        grass2:AddMoss(NewMossBlob(0, 1, 0))
+        
+        LandChunkBlueprint grass3 = NewChunk(GRASS_BIOME, 2)
+        grass3:AddDetail(GetRock1(-2, 0, 3, largeScale))
+        grass3:AddDetail(GetTree(2, 0, 3, largeScale))
+        
+        NewChunk(GRASS_BIOME, 3)
+        
+        LandChunkBlueprint grass4 = NewChunk(GRASS_BIOME, 3)
+        grass4:AddDetail(GetRock2(-2, 0, 3, largeScale))
+        grass4:AddDetail(GetTree(0, 0, 3, defaultScale))
+        grass4:AddDetail(GetTree(2, 0, 2, largeScale))
+        
+        LandChunkBlueprint grass5 = NewChunk(GRASS_BIOME, 4)
+        grass5:AddDetail(GetTree(-3, 0, 3, largeScale))
+        grass5:AddDetail(GetTree(-2, 0, 2, defaultScale))
+        grass5:AddDetail(GetTree(0, 0, 3, hugeScale))
+        grass5:AddDetail(GetTree(2, 0, 2, defaultScale))
+        grass5:AddDetail(GetTree(3, 0, 3, largeScale))
+        grass5:AddDetail(GetRock1(-2.5, 0, -2, smallScale))
+        grass5:AddDetail(GetRock2(2.5, 0, 2, defaultScale))
+        grass5:AddMoss(NewMossBlob(-2, 3, 0))
+        grass5:AddMoss(NewMossBlob(-1, 3, 0))
+        grass5:AddMoss(NewMossBlob(0, 3, 0))
+        grass5:AddMoss(NewMossBlob(1, 3, 0))
+        grass5:AddMoss(NewMossBlob(2, 3, 0))
+        
+        NewChunk(GRASS_BIOME, 2)
+    end
+    
+    action NewChunk(integer biomeID, number wallHeight) returns LandChunkBlueprint
+        LandChunkBlueprint chunk
+        chunk:SetLandFill(grassFill)
+        if wallHeight > 0
+            chunk:AddDetail(GetBackWall(wallHeight))
+        end
+        
+        Array<LandChunkBlueprint> chunks = landChunkBlueprints:Get(biomeID)
+        chunks:Add(chunk)
+        return chunk
+    end
+    
+    action NewMossBlob(number x, number y, number z) returns MossBlobBlueprint
+        MossBlobBlueprint blob
+        blob:SetPosition(x, y, z)
+        return blob
+    end
+    
+    action GetTree(number x, number y, number z, Vector3 scale) returns Model
+        Model model
+        model:Load("Resources\Tilesets3D\kenney_natureKit_2.1\Models\OBJ format\tree_detailed.obj")
+        model:SetPosition(x, y, z)
+        model:SetScale(scale:GetX(), scale:GetY(), scale:GetZ())
+        return model
+    end
+    
+    action GetRock1(number x, number y, number z, Vector3 scale) returns Model
+        Model model
+        model:Load("Resources\Tilesets3D\kenney_natureKit_2.1\Models\OBJ format\rock_largeA.obj")
+        model:SetPosition(x, y, z)
+        model:SetScale(scale:GetX(), scale:GetY(), scale:GetZ())
+        return model
+    end
+    
+    action GetRock2(number x, number y, number z, Vector3 scale) returns Model
+        Model model
+        model:Load("Resources\Tilesets3D\kenney_natureKit_2.1\Models\OBJ format\rock_largeB.obj")
+        model:SetPosition(x, y, z)
+        model:SetScale(scale:GetX(), scale:GetY(), scale:GetZ())
+        return model
+    end
+    
+    action GetBackWall(number scale) returns Model
+        Model model
+        model:Load(DEFAULT_GRASS_FILL_PATH)
+        model:SetScale(LAND_CHUNK_WIDTH, scale, 1)
+        model:SetPosition(0, 0, (LAND_CHUNK_DEPTH + 1) / 2)
+        Color color
+        model:SetColor(0, color:CustomColor(0.3, 0.5, 0.6, 1))
+        model:SetColor(1, color:CustomColor(0.5, 0.25, 0.15, 1))
+        return model
+    end
+    
+    action GetChunk(integer biomeID, integer element) returns LandChunk
+        Array<LandChunkBlueprint> biomeArray = landChunkBlueprints:Get(biomeID)
+        LandChunkBlueprint schematic = biomeArray:Get(element mod biomeArray:GetSize())
+        LandChunk chunk
+        chunk:Load(schematic)
+        return chunk
+    end
+    
+end

@@ -1,0 +1,57 @@
+
+class MossBlobBlueprint
+    public constant integer NORMAL_MOSS = 0
+    
+    number x = 0
+    number z = 0
+    number y = 0
+    integer pointValue = 1
+    integer type = NORMAL_MOSS
+    
+    action SetPosition(number x, number y, number z)
+        me:x = x
+        me:y = y
+        me:z = z
+    end
+    
+    action GetY returns number
+        return y
+    end
+
+    action SetY(number y)
+        me:y = y
+    end
+
+    action GetPointValue returns integer
+        return pointValue
+    end
+
+    action SetPointValue(integer pointValue)
+        me:pointValue = pointValue
+    end
+
+    action GetType returns integer
+        return type
+    end
+
+    action SetType(integer type)
+        me:type = type
+    end
+
+    action GetX returns number
+        return x
+    end
+
+    action SetX(number x)
+        me:x = x
+    end
+
+    action GetZ returns number
+        return z
+    end
+
+    action SetZ(number z)
+        me:z = z
+    end
+
+end
