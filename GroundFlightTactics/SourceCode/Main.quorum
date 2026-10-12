@@ -45,8 +45,7 @@ class Main is Game, KeyboardListener
     constant integer totalLevels = 3
 
     action Main
-        DesktopConfiguration config = GetDesktopConfiguration()
-        config:useVulkan = false
+        UseVulkan(true)
         SetScreenSize(1600, 1200)
         SetGameName("Ground Flight Tactics")
         StartGame()

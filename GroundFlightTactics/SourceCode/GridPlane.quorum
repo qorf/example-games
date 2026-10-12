@@ -8,6 +8,8 @@ use Libraries.Game.Graphics.Texture
 use Libraries.Game.Graphics.TextureWrap
 use Libraries.Game.Graphics.Models.OpenGL.Attributes.NumberAttribute
 use Libraries.Game.Graphics.Models.OpenGL.ModelResourcesOpenGL
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Vector4
 
 class GridPlane is Model
 
@@ -16,11 +18,14 @@ class GridPlane is Model
     action Load
         SetFocusable(false)
         SetAccessibilityCode(parent:Item:NOT_ACCESSIBLE)
+        
+        Color color
 
-        LoadPlane(1, 1, "Resources/GridSquare.png", true)
+        if GetResources() is ModelResourcesOpenGL
+            LoadPlane(1, 1, "Resources/GridSquare.png", true)
         Scale(scaleFactor, 1, scaleFactor)
-
-        ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
+            
+            ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
         Array<Material> value = resources:GetMaterials()
         Material material = value:Get(0)
         
@@ -51,6 +56,16 @@ class GridPlane is Model
         constant number alphaThreshold = 0.05
         alphaTestAttribute:SetAttribute(alphaTestAttribute:GetAlphaTestValue(), alphaThreshold)
         material:Add(alphaTestAttribute)
+        else
+            Texture texture
+            texture:LoadFromFile("Resources/GridSquare.png")
+            Vector4 textureCoords
+            textureCoords:Set(0, 0, 60, 60)
+            LoadPlane(1, 1, texture, textureCoords, true)
+        Scale(scaleFactor, 1, scaleFactor)
+            
+            SetColor(0, color:CustomColor(0, 0, 0, 0.15))
+        end
 
         SetAcceptsMouseInput(false)
 

@@ -45,7 +45,8 @@ class PlayerActionCursor is Model
 
         LoadPlane(0.95, 0.95, "Resources/GridSquare.png", true)
 
-        ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
+        if GetResources() is ModelResourcesOpenGL
+            ModelResourcesOpenGL resources = cast(ModelResourcesOpenGL, GetResources())
         Array<Material> value = resources:GetMaterials()
         Material material = value:Get(0)
         
@@ -58,6 +59,7 @@ class PlayerActionCursor is Model
 
         ColorAttribute diffuseAttribute = lightAttribute:CreateDiffuse(0, 0, 0, 0.1)
         material:Add(diffuseAttribute)
+        end
 
         SetAcceptsMouseInput(false)
 
@@ -73,7 +75,7 @@ class PlayerActionCursor is Model
 
     action Update(number seconds)
         spinTimer = spinTimer + seconds * spinModifier
-        spinnerCube:SetPosition(GetX(), bounceBaseOffset + math:Sine(spinTimer) * bounceMax, GetZ())
+        spinnerCube:SetPosition(0, bounceBaseOffset + math:Sine(spinTimer) * bounceMax, 0)
         spinnerCube:Rotate(1, 1, 0, spinSpeed * spinModifier * seconds)
     end
     action GetGridX returns integer
