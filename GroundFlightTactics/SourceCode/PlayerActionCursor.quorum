@@ -75,6 +75,7 @@ class PlayerActionCursor is Model
 
     action Update(number seconds)
         spinTimer = spinTimer + seconds * spinModifier
+        // The spinner is a child of the cursor, so its position is relative to the cursor.
         spinnerCube:SetPosition(0, bounceBaseOffset + math:Sine(spinTimer) * bounceMax, 0)
         spinnerCube:Rotate(1, 1, 0, spinSpeed * spinModifier * seconds)
     end
