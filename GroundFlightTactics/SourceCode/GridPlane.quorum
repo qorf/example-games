@@ -10,6 +10,8 @@ use Libraries.Game.Graphics.Models.OpenGL.Attributes.NumberAttribute
 use Libraries.Game.Graphics.Models.OpenGL.ModelResourcesOpenGL
 use Libraries.Game.Graphics.Color
 use Libraries.Compute.Vector4
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Vulkan.VulkanGraphics
 
 class GridPlane is Model
 
@@ -21,7 +23,10 @@ class GridPlane is Model
         
         Color color
 
-        if GetResources() is ModelResourcesOpenGL
+        // The plane has not been loaded yet, so its resources are still
+        // undefined. Ask the game which graphics system it is using instead.
+        GameStateManager manager
+        if not (manager:GetGameGraphics() is VulkanGraphics)
             LoadPlane(1, 1, "Resources/GridSquare.png", true)
         Scale(scaleFactor, 1, scaleFactor)
             
